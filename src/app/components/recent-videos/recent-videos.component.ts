@@ -1,10 +1,10 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { PostsService } from 'app/posts.services';
 import { Router } from '@angular/router';
 import { DatabaseFile, FileType, FileTypeFilter, Sort } from '../../../api-types';
 import { MatPaginator } from '@angular/material/paginator';
-import { Subject } from 'rxjs';
-import { distinctUntilChanged } from 'rxjs/operators';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, skip, take, takeUntil } from 'rxjs/operators';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MatChipListboxChange } from '@angular/material/chips';
 import { MatSelectionListChange } from '@angular/material/list';
@@ -14,7 +14,7 @@ import { MatSelectionListChange } from '@angular/material/list';
   templateUrl: './recent-videos.component.html',
   styleUrls: ['./recent-videos.component.scss']
 })
-export class RecentVideosComponent implements OnInit {
+export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
 
   @Input() usePaginator = true;
 
@@ -72,16 +72,16 @@ export class RecentVideosComponent implements OnInit {
   
   playlists = null;
 
+  private componentInitialized = false;
+  private destroy$ = new Subject<void>();
+  private fileRequest: Subscription = null;
+  private playlistRequest: Subscription = null;
+  private fileRequestGeneration = 0;
+  private filterChangeTimer: number = null;
+
   @ViewChild('paginator') paginator: MatPaginator
 
   constructor(public postsService: PostsService, private router: Router) {
-    // get cached file count
-    const sub_id_appendix = this.sub_id ? `_${this.sub_id}` : ''
-    if (localStorage.getItem(`cached_file_count${sub_id_appendix}`)) {
-      this.cached_file_count = +localStorage.getItem(`cached_file_count${sub_id_appendix}`) <= 10 ? +localStorage.getItem(`cached_file_count${sub_id_appendix}`) : 10;
-      this.loading_files = Array(this.cached_file_count).fill(0);
-    }
-
     // set filter property to cached value
     const cached_sort_property = localStorage.getItem('sort_property');
     if (cached_sort_property) {
@@ -103,32 +103,49 @@ export class RecentVideosComponent implements OnInit {
     }
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!changes.sub_id) {
+      return;
+    }
+
+    this.resetSubscriptionState();
+    if (changes.sub_id.firstChange) {
+      return;
+    }
+
+    if (this.componentInitialized && this.postsService.initialized) {
+      this.getAllFiles();
+    }
+  }
+
   ngOnInit(): void {
+    this.componentInitialized = true;
+    if (this.loading_files === null) {
+      this.resetSubscriptionState();
+    }
+
     if (this.sub_id) {
       // subscriptions can't download both audio and video (for now), so don't let users filter for these
       delete this.fileFilters['audio_only'];
       delete this.fileFilters['video_only'];
     }
 
-    if (this.postsService.initialized) {
+    this.postsService.service_initialized.pipe(
+      filter(init => init),
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
       this.getAllFiles();
       this.getAllPlaylists();
-    }
-
-    this.postsService.service_initialized.subscribe(init => {
-      if (init) {
-        this.getAllFiles();
-        this.getAllPlaylists();
-      }
     });
 
-    this.postsService.files_changed.subscribe(changed => {
+    this.postsService.files_changed.pipe(skip(1), takeUntil(this.destroy$)).subscribe(changed => {
       if (changed) {
         this.getAllFiles();
       }
     });
 
-    this.postsService.playlists_changed.subscribe(changed => {
+    this.postsService.playlists_changed.pipe(skip(1), takeUntil(this.destroy$)).subscribe(changed => {
       if (changed) {
         this.getAllPlaylists();
       }
@@ -139,8 +156,7 @@ export class RecentVideosComponent implements OnInit {
     this.selected_data_objs = this.defaultSelected;    
 
     this.searchChangedSubject
-      .debounceTime(500)
-      .pipe(distinctUntilChanged()
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntil(this.destroy$)
       ).subscribe(model => {
         if (model.length > 0) {
           this.search_mode = true;
@@ -151,8 +167,19 @@ export class RecentVideosComponent implements OnInit {
       });
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.cancelPendingFileRequest();
+    this.playlistRequest?.unsubscribe();
+    if (this.filterChangeTimer !== null) {
+      window.clearTimeout(this.filterChangeTimer);
+    }
+  }
+
   getAllPlaylists(): void {
-    this.postsService.getPlaylists().subscribe(res => {
+    this.playlistRequest?.unsubscribe();
+    this.playlistRequest = this.postsService.getPlaylists().subscribe(res => {
       this.playlists = res['playlists'];
     });
   }
@@ -176,7 +203,13 @@ export class RecentVideosComponent implements OnInit {
   filterChanged(value: string): void {
     localStorage.setItem('file_filter', value);
     // wait a bit for the animation to finish
-    setTimeout(() => this.getAllFiles(), 150);
+    if (this.filterChangeTimer !== null) {
+      window.clearTimeout(this.filterChangeTimer);
+    }
+    this.filterChangeTimer = window.setTimeout(() => {
+      this.filterChangeTimer = null;
+      this.getAllFiles();
+    }, 150);
   }
 
   selectedFiltersChanged(event: MatChipListboxChange): void {
@@ -210,13 +243,19 @@ export class RecentVideosComponent implements OnInit {
   // get files
 
   getAllFiles(cache_mode = false): void {
+    this.cancelPendingFileRequest();
+    const requestGeneration = ++this.fileRequestGeneration;
+    const requestSubId = this.sub_id;
     this.normal_files_received = cache_mode;
     const current_file_index = (this.paginator?.pageIndex ? this.paginator.pageIndex : 0)*this.pageSize;
     const sort = {by: this.sortProperty, order: this.descendingMode ? -1 : 1};
     const range = [current_file_index, current_file_index + this.pageSize];
     const fileTypeFilter = this.getFileTypeFilter();
     const favoriteFilter = this.getFavoriteFilter();
-    this.postsService.getAllFiles(sort, this.usePaginator ? range : null, this.search_mode ? this.search_text : null, fileTypeFilter as FileTypeFilter, favoriteFilter, this.sub_id).subscribe(res => {
+    this.fileRequest = this.postsService.getAllFiles(sort, this.usePaginator ? range : null, this.search_mode ? this.search_text : null, fileTypeFilter as FileTypeFilter, favoriteFilter, requestSubId).subscribe(res => {
+      if (requestGeneration !== this.fileRequestGeneration || requestSubId !== this.sub_id) {
+        return;
+      }
       this.file_count = res['file_count'];
       this.paged_data = res['files'];
       for (let i = 0; i < this.paged_data.length; i++) {
@@ -225,11 +264,46 @@ export class RecentVideosComponent implements OnInit {
       }
 
       // set cached file count for future use, note that we convert the amount of files to a string
-      localStorage.setItem('cached_file_count', '' + this.file_count);
+      localStorage.setItem(this.getCachedFileCountKey(), '' + this.file_count);
 
       this.normal_files_received = true;
 
     });
+  }
+
+  private resetSubscriptionState(): void {
+    this.cancelPendingFileRequest();
+    this.fileRequestGeneration++;
+
+    if (this.filterChangeTimer !== null) {
+      window.clearTimeout(this.filterChangeTimer);
+      this.filterChangeTimer = null;
+    }
+
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
+
+    this.paged_data = null;
+    this.file_count = 0;
+    this.normal_files_received = false;
+    this.subscription_files_received = false;
+    this.search_mode = false;
+    this.search_text = '';
+    this.downloading_content = {};
+
+    const cachedFileCount = Number(localStorage.getItem(this.getCachedFileCountKey()));
+    this.cached_file_count = Number.isFinite(cachedFileCount) ? Math.min(Math.max(cachedFileCount, 0), this.pageSize) : 0;
+    this.loading_files = Array(this.cached_file_count || this.pageSize).fill(0);
+  }
+
+  private cancelPendingFileRequest(): void {
+    this.fileRequest?.unsubscribe();
+    this.fileRequest = null;
+  }
+
+  private getCachedFileCountKey(): string {
+    return `cached_file_count${this.sub_id ? `_${this.sub_id}` : ''}`;
   }
 
   // navigation

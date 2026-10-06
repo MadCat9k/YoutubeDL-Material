@@ -4,6 +4,8 @@ import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { EditSubscriptionDialogComponent } from 'app/dialogs/edit-subscription-dialog/edit-subscription-dialog.component';
 import { Subscription } from 'api-types';
+import { Subject, Subscription as RxSubscription } from 'rxjs';
+import { distinctUntilChanged, filter, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-subscription',
@@ -20,30 +22,40 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   sub_interval = null;
   check_clicked = false;
   cancel_clicked = false;
+  private destroy$ = new Subject<void>();
+  private subscriptionRequest: RxSubscription = null;
+  private requestGeneration = 0;
 
   constructor(private postsService: PostsService, private route: ActivatedRoute, private router: Router, private dialog: MatDialog) { }
 
   ngOnInit() {
-    this.route.params.subscribe(params => {
-      this.id = params['id'];
-
-      if (this.sub_interval) { clearInterval(this.sub_interval); }
-
-      this.postsService.service_initialized.subscribe(init => {
-        if (init) {
-          this.getConfig();
-          this.getSubscription();
-          this.sub_interval = setInterval(() => this.getSubscription(true), 1000);
-        }
-      });
+    this.route.params.pipe(
+      map(params => params['id']),
+      distinctUntilChanged(),
+      tap(id => {
+        this.stopSubscriptionPolling();
+        this.cancelSubscriptionRequest();
+        this.requestGeneration++;
+        this.id = id;
+        this.subscription = null;
+      }),
+      switchMap(() => this.postsService.service_initialized.pipe(
+        filter(init => init),
+        take(1)
+      )),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.getConfig();
+      this.getSubscription();
+      this.sub_interval = window.setInterval(() => this.getSubscription(true), 1000);
     });
   }
 
   ngOnDestroy() {
-    // prevents subscription getter from running in the background
-    if (this.sub_interval) {
-      clearInterval(this.sub_interval);
-    }
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.stopSubscriptionPolling();
+    this.cancelSubscriptionRequest();
   }
 
   goBack() {
@@ -51,7 +63,16 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   }
 
   getSubscription(low_cost = false) {
-    this.postsService.getSubscription(this.id).subscribe(res => {
+    if (low_cost && this.subscriptionRequest && !this.subscriptionRequest.closed) {
+      return;
+    }
+    this.cancelSubscriptionRequest();
+    const requestedId = this.id;
+    const requestGeneration = ++this.requestGeneration;
+    const request = this.postsService.getSubscription(requestedId).subscribe(res => {
+      if (requestGeneration !== this.requestGeneration || requestedId !== this.id) {
+        return;
+      }
       if (low_cost && res['subscription'].videos.length === this.subscription?.videos.length) {
         if (res['subscription']['downloading'] !== this.subscription['downloading']) {
           this.subscription['downloading'] = res['subscription']['downloading'];
@@ -63,6 +84,24 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
       }
       this.subscription = res['subscription'];
     });
+    this.subscriptionRequest = request;
+    request.add(() => {
+      if (this.subscriptionRequest === request) {
+        this.subscriptionRequest = null;
+      }
+    });
+  }
+
+  private stopSubscriptionPolling(): void {
+    if (this.sub_interval !== null) {
+      window.clearInterval(this.sub_interval);
+      this.sub_interval = null;
+    }
+  }
+
+  private cancelSubscriptionRequest(): void {
+    this.subscriptionRequest?.unsubscribe();
+    this.subscriptionRequest = null;
   }
 
   getConfig(): void {

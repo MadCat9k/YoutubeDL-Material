@@ -118,6 +118,51 @@ Acceptance criteria:
 - No request for A overwrites B if responses arrive out of order.
 - Only one polling/request stream remains after repeated navigation.
 
+#### Implementation status (2026-10-06)
+
+Implemented on `codex/initial-fork-plan`:
+
+- `RecentVideosComponent` now handles `sub_id` changes on the same component
+  instance. It resets the paginator, search/list/loading state, and reads/writes
+  the file-count cache under a subscription-specific key before requesting the
+  newly selected subscription.
+- A newly started file request cancels its predecessor. A request generation and
+  captured subscription ID also guard the response handler, so a stale response
+  cannot replace the current subscription's files even if its source ignores
+  cancellation.
+- Component event subscriptions, search debounce work, playlist requests, and
+  delayed filter refreshes are torn down with the component. Initial
+  `BehaviorSubject` values are skipped for change-event streams to avoid a
+  duplicate initial fetch.
+- `SubscriptionComponent` now owns one route subscription, one polling interval,
+  and at most one subscription request. Route changes cancel the old request and
+  interval; a slow active poll is not overlapped by the next timer tick.
+- The Angular 15 test bootstrap now leaves test discovery/startup to the CLI. A
+  stale directive smoke test was updated to provide its required `ElementRef`,
+  which was necessary for any selected Karma spec to compile.
+
+Verification:
+
+- Focused Karma run: 4 specs passed in headless Chrome, covering A-to-B input
+  changes on one `RecentVideosComponent`, state/cache reset, out-of-order
+  responses, repeated navigation, polling, and teardown.
+- Production frontend build: completed successfully with the existing Angular
+  Material theme and `file-saver` CommonJS warnings.
+
+Remaining risks:
+
+- A manual browser pass against real subscriptions is still needed to confirm
+  the heading/list transition and observe backend cancellation behavior over the
+  deployed network path.
+- `package.json` and `package-lock.json` are already out of sync for `ajv`, so
+  current npm cannot use `npm ci`. Verification required installing the exact
+  frontend versions recorded in the lockfile without changing dependency
+  metadata. Dependency reproducibility remains a separate project task.
+- Karma 6 prints a post-result "full page reload" message with the installed
+  Chrome after reporting all specs successful; the command exits successfully,
+  but the runner/browser compatibility should be cleaned up with the planned
+  dependency modernization.
+
 ### 4. Open videos in a new tab
 
 Current upstream already includes "Open file in new tab" in the card context
