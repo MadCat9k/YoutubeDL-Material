@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { LocationStrategy } from '@angular/common';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 
 import { PostsService } from 'app/posts.services';
@@ -15,6 +16,8 @@ describe('RecentVideosComponent', () => {
     initialized: boolean;
   };
   let fileResponses: {[subId: string]: Subject<any>};
+  let router: jasmine.SpyObj<Router>;
+  let locationStrategy: jasmine.SpyObj<LocationStrategy>;
 
   beforeEach(async () => {
     fileResponses = {
@@ -29,17 +32,25 @@ describe('RecentVideosComponent', () => {
         service_initialized: new BehaviorSubject(true),
         files_changed: new BehaviorSubject(true),
         playlists_changed: new BehaviorSubject(true),
-        initialized: true
+        initialized: true,
+        config: {Extra: {download_only_mode: false}}
       }
     );
     postsService.getAllFiles.and.callFake((sort, range, text, type, favorite, subId) => fileResponses[subId]);
     postsService.getPlaylists.and.returnValue(of({playlists: []} as any));
 
+    router = jasmine.createSpyObj<Router>('Router', ['navigate', 'createUrlTree', 'serializeUrl']);
+    Object.defineProperty(router, 'url', {value: '/subscription;id=subscriptionA'});
+    router.createUrlTree.and.returnValue({} as any);
+    router.serializeUrl.and.returnValue('/player;uid=file-1;type=video');
+    locationStrategy = jasmine.createSpyObj<LocationStrategy>('LocationStrategy', ['prepareExternalUrl']);
+
     await TestBed.configureTestingModule({
       declarations: [RecentVideosComponent],
       providers: [
         {provide: PostsService, useValue: postsService},
-        {provide: Router, useValue: jasmine.createSpyObj<Router>('Router', ['navigate'])}
+        {provide: Router, useValue: router},
+        {provide: LocationStrategy, useValue: locationStrategy}
       ]
     })
       .overrideComponent(RecentVideosComponent, {set: {template: ''}})
@@ -127,5 +138,33 @@ describe('RecentVideosComponent', () => {
     postsService.files_changed.next(true);
     expect(postsService.getAllFiles).toHaveBeenCalledTimes(4);
     expect(fileResponses.subscriptionC.observers.length).toBe(0);
+  });
+
+  it('opens an Angular-generated player URL in a new tab for root and subpath hosting', () => {
+    const openSpy = spyOn(window, 'open');
+    const file = {uid: 'file-1', isAudio: false} as any;
+
+    locationStrategy.prepareExternalUrl.and.returnValue('/#/player;uid=file-1;type=video');
+    component.navigateToFile(file, true);
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/player', {uid: 'file-1', type: 'video'}]);
+    expect(locationStrategy.prepareExternalUrl).toHaveBeenCalledWith('/player;uid=file-1;type=video');
+    expect(openSpy).toHaveBeenCalledWith('/#/player;uid=file-1;type=video', '_blank', 'noopener');
+
+    openSpy.calls.reset();
+    locationStrategy.prepareExternalUrl.and.returnValue('/youtube-dl/#/player;uid=file-1;type=video');
+    component.navigateToFile(file, true);
+    expect(openSpy).toHaveBeenCalledWith('/youtube-dl/#/player;uid=file-1;type=video', '_blank', 'noopener');
+  });
+
+  it('treats Cmd-click and middle-click as new-tab navigation', () => {
+    const file = {uid: 'file-1', isAudio: false} as any;
+    const navigateSpy = spyOn(component, 'navigateToFile');
+
+    component.goToFile({file, event: {ctrlKey: false, metaKey: true, button: 0}});
+    expect(component.navigateToFile).toHaveBeenCalledWith(file, true);
+
+    navigateSpy.calls.reset();
+    component.goToFile({file, event: {ctrlKey: false, metaKey: false, button: 1}});
+    expect(component.navigateToFile).toHaveBeenCalledWith(file, true);
   });
 });

@@ -8,6 +8,7 @@ import { debounceTime, distinctUntilChanged, filter, skip, take, takeUntil } fro
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MatChipListboxChange } from '@angular/material/chips';
 import { MatSelectionListChange } from '@angular/material/list';
+import { LocationStrategy } from '@angular/common';
 
 @Component({
   selector: 'app-recent-videos',
@@ -81,7 +82,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
 
   @ViewChild('paginator') paginator: MatPaginator
 
-  constructor(public postsService: PostsService, private router: Router) {
+  constructor(public postsService: PostsService, private router: Router, private locationStrategy: LocationStrategy) {
     // set filter property to cached value
     const cached_sort_property = localStorage.getItem('sort_property');
     if (cached_sort_property) {
@@ -314,20 +315,19 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
     if (this.postsService.config['Extra']['download_only_mode']) {
       this.downloadFile(file);
     } else {
-      this.navigateToFile(file, event.ctrlKey);
+      this.navigateToFile(file, event.ctrlKey || event.metaKey || event.button === 1);
     }
   }
 
   navigateToFile(file: DatabaseFile, new_tab: boolean): void {
     localStorage.setItem('player_navigator', this.router.url);
-    if (file.sub_id) {
-        !new_tab ? this.router.navigate(['/player', {uid: file.uid,
-                                        type: file.isAudio ? 'audio' : 'video'}]) 
-                 : window.open(`/#/player;uid=${file.uid};type=${file.isAudio ? 'audio' : 'video'}`);
+    const commands = ['/player', {uid: file.uid, type: file.isAudio ? 'audio' : 'video'}];
+    if (new_tab) {
+      const urlTree = this.router.createUrlTree(commands);
+      const externalUrl = this.locationStrategy.prepareExternalUrl(this.router.serializeUrl(urlTree));
+      window.open(externalUrl, '_blank', 'noopener');
     } else {
-      // normal files
-      !new_tab ? this.router.navigate(['/player', {type: file.isAudio ? 'audio' : 'video', uid: file.uid}])
-               : window.open(`/#/player;type=${file.isAudio ? 'audio' : 'video'};uid=${file.uid}`);
+      this.router.navigate(commands);
     }
   }
 

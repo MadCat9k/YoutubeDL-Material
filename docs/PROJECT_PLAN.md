@@ -202,14 +202,26 @@ menu and Ctrl-click behavior in `RecentVideosComponent`. This may be absent from
 the deployed nightly image, or its synthetic `window.open('/#/...')` route may
 not work under a reverse-proxy subpath.
 
-Implementation plan:
+Implementation status (completed in the fork):
 
-1. Verify the existing item in the fork image on Synology.
-2. Generate the player URL through Angular's router and serialize it relative to
-   the configured base URL instead of hard-coding `/#/`.
-3. Prefer a real anchor where practical so the browser provides its native
-   context menu and middle-click behavior.
-4. Add tests for root hosting and a reverse-proxy subpath.
+- `RecentVideosComponent` now creates the player `UrlTree` with Angular's
+  router, serializes it, and passes it through `LocationStrategy`. New-tab URLs
+  therefore use the configured application base path instead of hard-coding
+  `/#/`.
+- Ctrl-click, Cmd-click, and middle-click all request a new tab. The existing
+  card context-menu action uses the same routing path.
+- The file card handles the browser's auxiliary-click event so middle-click
+  reaches the navigation handler.
+- Focused tests cover root hosting, reverse-proxy subpath hosting, Cmd-click,
+  and middle-click.
+
+Verification:
+
+- Focused Karma suite: 5 tests passed in Chrome Headless 154.
+- Production frontend build: completed successfully with the existing
+  `file-saver` CommonJS warning.
+- Visible Chrome smoke test: opening a subscription card in a new tab produced
+  the Angular player URL while the original subscription page remained open.
 
 Acceptance criteria:
 
@@ -217,6 +229,17 @@ Acceptance criteria:
   in a new tab.
 - The current tab stays on the file list.
 - Authentication and reverse-proxy base paths continue to work.
+
+Remaining risks:
+
+- The local smoke fixture intentionally has no playable media file, so this
+  pass verified routing and tab behavior rather than video playback.
+- The serialized subpath behavior is covered by a focused test, but the actual
+  Synology reverse-proxy configuration still needs verification during the
+  deployment phase.
+- A real anchor was not introduced because the card also supports download-only
+  mode and multiple actions; the explicit auxiliary-click handler preserves the
+  current interaction model with a smaller change.
 
 ## Delivery sequence
 
