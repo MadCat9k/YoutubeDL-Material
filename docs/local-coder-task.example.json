@@ -1,0 +1,13 @@
+{
+  "title": "Short, concrete implementation task",
+  "objective": "Describe one bounded outcome. Ollama drafts; Codex owns architecture, review, tests, and acceptance.",
+  "allowedPaths": ["src/app/example/example.component.spec.ts"],
+  "acceptanceCriteria": [
+    "State the observable behavior that must work",
+    "State the regression that must remain prevented"
+  ],
+  "checks": [
+    "npm test -- --watch=false --browsers=ChromeHeadless --include=src/app/example/example.component.spec.ts"
+  ],
+  "context": ["src/app/example/example.component.ts"]
+}

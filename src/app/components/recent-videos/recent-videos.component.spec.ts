@@ -167,4 +167,16 @@ describe('RecentVideosComponent', () => {
     component.goToFile({file, event: {ctrlKey: false, metaKey: false, button: 1}});
     expect(component.navigateToFile).toHaveBeenCalledWith(file, true);
   });
+
+  it('generates and opens the audio player route correctly in a new tab', () => {
+    const openSpy = spyOn(window, 'open');
+    const file = {uid: 'file-2', isAudio: true} as any;
+
+    router.serializeUrl.and.returnValue('/player;uid=file-2;type=audio');
+    locationStrategy.prepareExternalUrl.and.returnValue('/#/player;uid=file-2;type=audio');
+    component.navigateToFile(file, true);
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/player', {uid: 'file-2', type: 'audio'}]);
+    expect(locationStrategy.prepareExternalUrl).toHaveBeenCalledWith('/player;uid=file-2;type=audio');
+    expect(openSpy).toHaveBeenCalledWith('/#/player;uid=file-2;type=audio', '_blank', 'noopener');
+  });
 });
