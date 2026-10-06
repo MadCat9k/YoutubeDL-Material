@@ -1620,7 +1620,10 @@ app.get('/api/stream', optionalJwt, async (req, res) => {
 app.get('/api/thumbnail/:path', optionalJwt, async (req, res) => {
     let file_path = decodeURIComponent(req.params.path);
     if (fs.existsSync(file_path)) path.isAbsolute(file_path) ? res.sendFile(file_path) : res.sendFile(path.join(__dirname, file_path));
-    else res.sendStatus(404);
+    else {
+        logger.warn(`Local thumbnail request missed file: ${file_path}`);
+        res.sendStatus(404);
+    }
 });
 
 // Downloads management

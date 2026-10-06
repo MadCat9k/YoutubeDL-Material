@@ -34,6 +34,8 @@ export class UnifiedFileCardComponent implements OnInit {
 
   // optional vars
   thumbnailBlobURL = null;
+  thumbnailFallbackStage = 0;
+  readonly thumbnailPlaceholderURL = 'assets/images/logo_128px.png';
 
   streamURL = null;
   hide_image = false;
@@ -75,11 +77,26 @@ export class UnifiedFileCardComponent implements OnInit {
       this.file_length = fancyTimeFormat(this.file_obj.duration);
     }
 
-    if (this.file_obj && this.file_obj.thumbnailPath) {
-      this.thumbnailBlobURL = `${this.baseStreamPath}thumbnail/${encodeURIComponent(this.file_obj.thumbnailPath)}?jwt=${this.jwtString}`;
+    if (this.file_obj) {
+      this.thumbnailBlobURL = this.file_obj.thumbnailPath
+        ? `${this.baseStreamPath}thumbnail/${encodeURIComponent(this.file_obj.thumbnailPath)}?jwt=${this.jwtString}`
+        : this.file_obj.thumbnailURL;
     }
 
     if (this.file_obj) this.streamURL = this.generateStreamURL();
+  }
+
+  onThumbnailError(): void {
+    if (this.thumbnailFallbackStage === 0 && this.file_obj?.thumbnailPath && this.file_obj.thumbnailURL) {
+      this.thumbnailFallbackStage = 1;
+      this.thumbnailBlobURL = this.file_obj.thumbnailURL;
+      return;
+    }
+
+    if (this.thumbnailFallbackStage < 2) {
+      this.thumbnailFallbackStage = 2;
+      this.thumbnailBlobURL = this.thumbnailPlaceholderURL;
+    }
   }
 
   emitDeleteFile(blacklistMode = false) {

@@ -1,25 +1,28 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { UnifiedFileCardComponent } from './unified-file-card.component';
 
 describe('UnifiedFileCardComponent', () => {
-  let component: UnifiedFileCardComponent;
-  let fixture: ComponentFixture<UnifiedFileCardComponent>;
+  it('falls back from a missing local thumbnail to the remote URL and then the placeholder', () => {
+    const component = new UnifiedFileCardComponent({} as any);
+    component.baseStreamPath = 'http://localhost:17442/api/';
+    component.jwtString = 'token';
+    component.file_obj = {
+      uid: 'file-1',
+      thumbnailPath: 'subscriptions/sample.webp',
+      thumbnailURL: 'https://example.com/remote.jpg',
+      duration: 10,
+      isAudio: false
+    };
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [ UnifiedFileCardComponent ]
-    })
-    .compileComponents();
-  }));
+    component.ngOnInit();
+    expect(component.thumbnailBlobURL).toContain('api/thumbnail/subscriptions%2Fsample.webp');
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(UnifiedFileCardComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    component.onThumbnailError();
+    expect(component.thumbnailBlobURL).toBe('https://example.com/remote.jpg');
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+    component.onThumbnailError();
+    expect(component.thumbnailBlobURL).toBe(component.thumbnailPlaceholderURL);
+
+    component.onThumbnailError();
+    expect(component.thumbnailBlobURL).toBe(component.thumbnailPlaceholderURL);
   });
 });

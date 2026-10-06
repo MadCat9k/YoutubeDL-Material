@@ -93,6 +93,38 @@ Acceptance criteria:
 - Missing local thumbnails fall back without an infinite request/error loop.
 - The repair path handles all supported thumbnail extensions.
 
+#### Implementation status (2026-10-06)
+
+- File-list loading now verifies stored local thumbnail paths and re-resolves a
+  missing path from the media filename. Repairs are returned immediately and
+  persisted to the database for subsequent requests.
+- The resolver and repair path cover `.jpg`, `.webp`, and `.png`, including
+  filenames containing spaces and Unicode characters.
+- Missing thumbnail endpoint files produce a focused warning containing the
+  local path but no request query or authentication data.
+- File cards try the stored local thumbnail first, the remote thumbnail once on
+  error, and finally a bundled deterministic placeholder. Further placeholder
+  errors do not change the source, preventing an error loop.
+
+Verification:
+
+- Backend thumbnail tests: 4 passing (three extension/path cases and one stale
+  database repair case).
+- Focused Angular card fallback test: 1 passing in headless Chrome.
+- Production frontend build: completed successfully with the existing
+  `file-saver` CommonJS warning.
+
+Remaining risks:
+
+- The repair is lazy and runs as affected file-list pages are loaded; records on
+  pages that are never opened remain unchanged until a later repair task scans
+  them.
+- Synology validation is still required with an actual historical stale record,
+  a container restart, and a browser cache clear.
+- The thumbnail endpoint still accepts the legacy encoded local path. Restricting
+  it to configured media roots is a separate security-hardening task because it
+  could affect existing stored paths and reverse-proxy deployments.
+
 ### 3. Switching subscriptions does not reload files
 
 The parent subscription component observes route parameter changes. Its child

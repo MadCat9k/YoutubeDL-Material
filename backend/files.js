@@ -344,7 +344,30 @@ exports.getAllFiles = async (sort, range, text_search, file_type_filter, favorit
     else if (file_type_filter === 'video_only') filter_obj['isAudio'] = false;
     
     const files = JSON.parse(JSON.stringify(await db_api.getRecords('files', filter_obj, false, sort, range, text_search)));
+    await repairThumbnailPaths(files);
     const file_count = await db_api.getRecords('files', filter_obj, true);
 
     return {files, file_count};
 }
+
+async function repairThumbnailPaths(files) {
+    const thumbnail_updates = {};
+
+    for (const file of files) {
+        const stored_thumbnail_exists = file.thumbnailPath && await fs.pathExists(file.thumbnailPath);
+        if (stored_thumbnail_exists) continue;
+
+        const resolved_thumbnail_path = utils.getDownloadedThumbnail(file.path);
+        if (resolved_thumbnail_path === file.thumbnailPath) continue;
+
+        file.thumbnailPath = resolved_thumbnail_path;
+        thumbnail_updates[file.uid] = {thumbnailPath: resolved_thumbnail_path};
+        logger.info(`Repaired thumbnail path for file ${file.uid}: ${resolved_thumbnail_path || 'no local thumbnail found'}`);
+    }
+
+    if (Object.keys(thumbnail_updates).length > 0) {
+        await db_api.bulkUpdateRecordsByKey('files', 'uid', thumbnail_updates);
+    }
+}
+
+exports.repairThumbnailPaths = repairThumbnailPaths;
