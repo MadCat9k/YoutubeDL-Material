@@ -1,0 +1,44 @@
+services:
+  youtubedownloader:
+    container_name: YouTube-Downloader
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: youtube-dl-material-fork:local
+    user: "0:0"
+    init: true
+
+    mem_limit: 6g
+    cpu_shares: 768
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent --show-error http://localhost:17442/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+    security_opt:
+      - no-new-privileges:true
+
+    restart: on-failure:5
+
+    environment:
+      UID: "1026"
+      GID: "101"
+      ytdl_default_downloader: yt-dlp
+      ytdl_use_local_db: "true"
+      ytdl_port: "17442"
+      write_ytdl_config: "true"
+      # A generic target lets yt-dlp select a supported Chrome profile.
+      YTDLP_IMPERSONATE: chrome
+
+    ports:
+      - "8084:17442"
+
+    volumes:
+      - /volume1/docker/youtubedl/appdata:/app/appdata:rw
+      - /volume1/docker/youtubedl/users:/app/users:rw
+      - /volume1/downloads/youtubedl/subscriptions:/app/subscriptions:rw
+      - /volume1/downloads/youtubedl/video:/app/video:rw
+      - /volume1/downloads/youtubedl/audio:/app/audio:rw

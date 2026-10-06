@@ -75,7 +75,7 @@ FROM base
 RUN npm install -g pm2 && \
     apt update && \
     apt install -y --no-install-recommends gosu python3-minimal python-is-python3 python3-pip atomicparsley build-essential && \
-    pip install pycryptodomex && \
+    pip install --no-cache-dir pycryptodomex "curl-cffi>=0.10,<0.17" && \
     apt remove -y --purge build-essential && \
     apt autoremove -y --purge && \
     apt clean && \

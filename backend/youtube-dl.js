@@ -8,8 +8,11 @@ const logger = require('./logger');
 const utils = require('./utils');
 const CONSTS = require('./consts');
 const config_api = require('./config.js');
+const { addRuntimeArgs } = require('./runtime-args');
 
 const is_windows = process.platform === 'win32';
+
+exports.addRuntimeArgs = addRuntimeArgs;
 
 exports.youtubedl_forks = {
     'youtube-dl': {
@@ -27,14 +30,16 @@ exports.youtubedl_forks = {
 }
 
 exports.runYoutubeDL = async (url, args, customDownloadHandler = null) => {
+    const youtubedl_fork = config_api.getConfigItem('ytdl_default_downloader');
+    const runtime_args = addRuntimeArgs(args, youtubedl_fork);
     const output_file_path = getYoutubeDLPath();
     if (!fs.existsSync(output_file_path)) await exports.checkForYoutubeDLUpdate();
     let callback = null;
     let child_process = null;
     if (customDownloadHandler) {
-        callback = runYoutubeDLCustom(url, args, customDownloadHandler);
+        callback = runYoutubeDLCustom(url, runtime_args, customDownloadHandler);
     } else {
-        ({callback, child_process} = await runYoutubeDLProcess(url, args));
+        ({callback, child_process} = await runYoutubeDLProcess(url, runtime_args, youtubedl_fork));
     }
 
     return {child_process, callback};
