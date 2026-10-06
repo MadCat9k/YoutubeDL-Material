@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 # THANK YOU TALULAH (https://github.com/nottalulah) for your help in figuring this out
 # and also optimizing some code with this commit.
 # xoxo :D
@@ -24,13 +26,15 @@ echo "(INFO) Architecture detected: $ARCH"
 echo "(1/5) READY - Acquire temp dependencies in ffmpeg obtain layer"
 apt-get update && apt-get -y install curl xz-utils
 echo "(2/5) DOWNLOAD - Acquire latest ffmpeg and ffprobe from John van Sickle's master-sourced builds in ffmpeg obtain layer"
-curl -o ffmpeg.txz \
-    --connect-timeout 5 \
-    --max-time 120 \
+curl --fail --location --output ffmpeg.txz \
+    --connect-timeout 10 \
+    --max-time 300 \
     --retry 5 \
-    --retry-delay 0 \
-    --retry-max-time 40 \
+    --retry-all-errors \
+    --retry-delay 2 \
+    --retry-max-time 600 \
     "https://johnvansickle.com/ffmpeg/old-releases/ffmpeg-5.1.1-${ARCH}-static.tar.xz"
+xz --test ffmpeg.txz
 mkdir /tmp/ffmpeg
 tar xf ffmpeg.txz -C /tmp/ffmpeg
 echo "(3/5) CLEANUP - Remove temp dependencies from ffmpeg obtain layer"

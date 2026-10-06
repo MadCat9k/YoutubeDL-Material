@@ -2,9 +2,11 @@
 FROM ubuntu:22.04 AS utils
 ENV DEBIAN_FRONTEND=noninteractive
 # Use script due local build compability
-COPY docker-utils/*.sh .
-RUN chmod +x *.sh
+COPY docker-utils/ffmpeg-fetch.sh .
+RUN chmod +x ffmpeg-fetch.sh
 RUN sh ./ffmpeg-fetch.sh
+COPY docker-utils/fetch-twitchdownloader.sh .
+RUN chmod +x fetch-twitchdownloader.sh
 RUN sh ./fetch-twitchdownloader.sh
 
 
@@ -39,7 +41,7 @@ RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 
 # Build frontend
 ARG BUILDPLATFORM
-FROM --platform=${BUILDPLATFORM} node:16 as frontend
+FROM --platform=${BUILDPLATFORM} node:16 AS frontend
 RUN npm install -g @angular/cli
 WORKDIR /build
 COPY [ "package.json", "package-lock.json", "angular.json", "tsconfig.json", "/build/" ]
@@ -52,7 +54,7 @@ RUN rm -rf node_modules
 
 
 # Install backend deps
-FROM base as backend
+FROM base AS backend
 WORKDIR /app
 COPY [ "backend/","/app/" ]
 RUN npm config set strict-ssl false && \
@@ -72,7 +74,7 @@ RUN npm config set strict-ssl false && \
 
 # Final image
 FROM base
-RUN npm install -g pm2 && \
+RUN npm install -g pm2@5.4.3 && \
     apt update && \
     apt install -y --no-install-recommends gosu python3-minimal python-is-python3 python3-pip atomicparsley build-essential && \
     pip install --no-cache-dir pycryptodomex "curl-cffi>=0.10,<0.17" && \

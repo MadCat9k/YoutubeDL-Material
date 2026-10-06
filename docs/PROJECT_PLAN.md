@@ -241,6 +241,43 @@ Remaining risks:
   mode and multiple actions; the explicit auxiliary-click handler preserves the
   current interaction model with a smaller change.
 
+### 5. Multi-architecture image validation
+
+Implementation status (build verification completed locally):
+
+- The external FFmpeg and TwitchDownloader fetch scripts now fail immediately
+  on command errors, reject HTTP failures, retry transient transfer failures,
+  and validate downloaded archives before extracting them.
+- TwitchDownloader release discovery now fails clearly when the GitHub response
+  contains no matching release, and its smoke test validates the emitted version
+  text. The CLI returns status 1 even when its `version` command succeeds, so the
+  test intentionally validates output rather than that nonstandard status.
+- The Docker utility stage copies each fetch script separately so changing the
+  TwitchDownloader logic does not invalidate a completed FFmpeg layer.
+- PM2 is pinned to `5.4.3`, whose declared Node requirement includes the image's
+  Node 16 runtime. An unpinned install had begun resolving PM2 7, which requires
+  Node 18.
+
+Verification:
+
+- `sh -n` passed for both utility scripts.
+- A cache-only Buildx build completed successfully for both `linux/amd64` and
+  `linux/arm64`. It compiled the frontend and backend layers and validated both
+  architecture-specific FFmpeg and TwitchDownloader artifacts.
+- The build produced no pushed, tagged, running, or deployed image.
+
+Remaining risks:
+
+- The dependency installation reports the upstream project's existing npm audit
+  findings and legacy Node/npm engine warnings. Dependency modernization remains
+  separate work.
+- A cache-only build proves both image graphs can be assembled but does not test
+  container startup, health checks, bind-mount ownership, or Synology's CPU and
+  reverse-proxy environment.
+- Before deployment, confirm the Synology architecture and registry destination,
+  load or publish the matching image, and run it on a test port with copied data
+  directories. Do not share writable production mounts with the old container.
+
 ## Delivery sequence
 
 1. Baseline and startup hardening (included in this initial scaffold).
