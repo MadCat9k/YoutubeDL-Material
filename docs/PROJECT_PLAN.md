@@ -324,6 +324,37 @@ in the focused changed paths. They remain a reason to rely on the verified
 container build and to run the isolated Synology acceptance pass before
 production migration.
 
+## Subscription creation repair (2026-10-08)
+
+- Subscription creation now falls back from missing `uploader` metadata to
+  other stable yt-dlp channel identity fields. If no valid single-directory
+  name can be determined, the API requests a custom name instead of passing
+  `null` to `path.join`.
+- Downloader warnings on stderr no longer turn successfully parsed subscription
+  metadata into a failure. This is required while the pinned image runtime
+  still produces yt-dlp's Python 3.10 deprecation warning.
+- Creation is rollback-safe: downloader, name-validation, and metadata-write
+  failures remove the newly inserted database record. A retry also removes an
+  earlier nameless partial record for the same URL before proceeding.
+- Custom and extracted names reject path separators, traversal segments, and
+  null bytes before filesystem use. Duplicate and downloader errors no longer
+  log or return the full subscription URL.
+- Startup metadata rewriting skips legacy nameless records without crashing;
+  the next retry for that URL performs the bounded cleanup.
+- Docker build input now excludes ignored `backend/appdata` runtime files while
+  retaining the tracked default configuration, preventing local databases,
+  logs, downloader binaries, and URLs from being baked into an image.
+
+Verification:
+
+- focused subscription-creation tests: 9 passing locally and in the rebuilt
+  container;
+- existing subscription suite: 9 passing;
+- rebuilt local validation image contains only `default.json` under its baked
+  `/app/appdata` directory;
+- redeployed validation container: healthy with zero restarts, HTTP 200 on port
+  `18084`, and yt-dlp Chrome impersonation targets available.
+
 ## Delivery sequence
 
 1. Baseline and startup hardening (included in this initial scaffold).

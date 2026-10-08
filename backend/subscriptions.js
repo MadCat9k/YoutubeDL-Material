@@ -18,36 +18,63 @@ exports.subscribe = async (sub, user_uid = null, skip_get_info = false) => {
         success: false,
         error: ''
     };
-    return new Promise(async resolve => {
+    let inserted = false;
+
+    try {
         // sub should just have url and name. here we will get isPlaylist and path
         sub.isPlaylist = sub.isPlaylist || sub.url.includes('playlist');
         sub.videos = [];
 
-        let url_exists = !!(await db_api.getRecord('subscriptions', {url: sub.url, user_uid: user_uid}));
+        if (sub.name !== null && sub.name !== undefined) {
+            sub.name = normalizeSubscriptionName(sub.name);
+            if (!sub.name) {
+                result_obj.error = 'Subscription name must be a single non-empty folder name.';
+                return result_obj;
+            }
+        }
 
-        if (!sub.name && url_exists) {
-            logger.error(`Sub with the same URL "${sub.url}" already exists -- please provide a custom name for this new subscription.`);
-            result_obj.error = 'Subcription with URL ' + sub.url + ' already exists! Custom name is required.';
-            resolve(result_obj);
-            return;
+        const existing_sub = await db_api.getRecord('subscriptions', {url: sub.url, user_uid: user_uid});
+        if (!sub.name && existing_sub) {
+            if (!normalizeSubscriptionName(existing_sub.name)) {
+                // Earlier failed attempts could leave a nameless record behind. It has
+                // no usable metadata path or downloads, so discard it before retrying.
+                await db_api.removeRecord('subscriptions', {id: existing_sub.id});
+            } else {
+                logger.error('A subscription with the same URL already exists; a custom name is required for another subscription.');
+                result_obj.error = 'A subscription with this URL already exists. Custom name is required.';
+                return result_obj;
+            }
         }
 
         sub['user_uid'] = user_uid ? user_uid : undefined;
         await db_api.insertRecordIntoTable('subscriptions', JSON.parse(JSON.stringify(sub)));
+        inserted = true;
 
-        let success = skip_get_info ? true : await getSubscriptionInfo(sub);
-        exports.writeSubscriptionMetadata(sub);
-
-        if (success) {
-            if (!sub.paused) exports.getVideosForSub(sub.id);
-        } else {
-            logger.error('Subscribe: Failed to get subscription info. Subscribe failed.')
+        const success = skip_get_info ? true : await getSubscriptionInfo(sub);
+        if (!success || !normalizeSubscriptionName(sub.name)) {
+            await db_api.removeRecord('subscriptions', {id: sub.id});
+            inserted = false;
+            logger.error('Subscribe: Failed to get a valid subscription name. Subscribe failed.');
+            result_obj.error = 'Could not determine a valid subscription name. Please provide a custom name.';
+            return result_obj;
         }
 
-        result_obj.success = success;
+        if (!exports.writeSubscriptionMetadata(sub)) {
+            throw new Error('Subscription metadata could not be written.');
+        }
+        if (!sub.paused) exports.getVideosForSub(sub.id);
+
+        result_obj.success = true;
         result_obj.sub = sub;
-        resolve(result_obj);
-    });
+        return result_obj;
+    } catch (error) {
+        if (inserted) {
+            await db_api.removeRecord('subscriptions', {id: sub.id});
+        }
+        logger.error('Subscribe: Failed while preparing the subscription.');
+        result_obj.error = 'Failed to prepare the subscription.';
+        return result_obj;
+    }
 
 }
 
@@ -64,9 +91,9 @@ async function getSubscriptionInfo(sub) {
     }
 
     let {callback} = await youtubedl_api.runYoutubeDL(sub.url, downloadConfig);
-    const {parsed_output, err} = await callback;
-    if (err) {
-        logger.error(err.stderr);
+    const {parsed_output} = await callback;
+    if (!parsed_output || parsed_output.length === 0) {
+        logger.error('Subscribe: Downloader could not read subscription metadata.');
         return false;
     }
     logger.verbose('Subscribe: got info for subscription ' + sub.id);
@@ -77,9 +104,20 @@ async function getSubscriptionInfo(sub) {
 
         if (!sub.name) {
             if (sub.isPlaylist) {
-                sub.name = output_json.playlist_title ? output_json.playlist_title : output_json.playlist;
+                sub.name = firstValidSubscriptionName([
+                    output_json.playlist_title,
+                    output_json.playlist,
+                    output_json.channel,
+                    output_json.uploader
+                ]);
             } else {
-                sub.name = output_json.uploader;
+                sub.name = firstValidSubscriptionName([
+                    output_json.uploader,
+                    output_json.channel,
+                    output_json.creator,
+                    output_json.uploader_id,
+                    output_json.channel_id
+                ]);
             }
             // if it's now valid, update
             if (sub.name) {
@@ -535,13 +573,26 @@ async function updateSubscriptionProperty(sub, assignment_obj) {
 }
 
 exports.writeSubscriptionMetadata = (sub) => {
+    const name = normalizeSubscriptionName(sub && sub.name);
+    if (!name) {
+        logger.warn('Skipping subscription metadata for a record without a valid name.');
+        return false;
+    }
+
     let basePath = sub.user_uid ? path.join(config_api.getConfigItem('ytdl_users_base_path'), sub.user_uid, 'subscriptions')
                                 : config_api.getConfigItem('ytdl_subscriptions_base_path');
+    if (typeof basePath !== 'string' || !basePath) {
+        logger.warn('Skipping subscription metadata because its configured base path is invalid.');
+        return false;
+    }
+
+    sub.name = name;
     const appendedBasePath = getAppendedBasePath(sub, basePath);
     const metadata_path = path.join(appendedBasePath, CONSTS.SUBSCRIPTION_BACKUP_PATH);
     
     fs.ensureDirSync(appendedBasePath);
     fs.writeJSONSync(metadata_path, sub);
+    return true;
 }
 
 async function setFreshUploads(sub) {
@@ -595,4 +646,21 @@ async function checkVideoIfBetterExists(file_obj, sub, user_uid) {
 
 function getAppendedBasePath(sub, base_path) {
     return path.join(base_path, (sub.isPlaylist ? 'playlists/' : 'channels/'), sub.name);
+}
+
+function firstValidSubscriptionName(values) {
+    for (const value of values) {
+        const name = normalizeSubscriptionName(value);
+        if (name) return name;
+    }
+    return null;
+}
+
+function normalizeSubscriptionName(value) {
+    if (typeof value !== 'string') return null;
+    const name = value.trim();
+    if (!name || name === '.' || name === '..' || name.includes('\0') || name.includes('/') || name.includes('\\')) {
+        return null;
+    }
+    return name;
 }
