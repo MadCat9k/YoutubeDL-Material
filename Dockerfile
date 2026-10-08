@@ -42,14 +42,12 @@ RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 # Build frontend
 ARG BUILDPLATFORM
 FROM --platform=${BUILDPLATFORM} node:16 AS frontend
-RUN npm install -g @angular/cli
 WORKDIR /build
 COPY [ "package.json", "package-lock.json", "angular.json", "tsconfig.json", "/build/" ]
 COPY [ "src/", "/build/src/" ]
 RUN npm install && \
     npm run build && \
     ls -al /build/backend/public
-RUN npm uninstall -g @angular/cli
 RUN rm -rf node_modules
 
 
@@ -77,7 +75,7 @@ FROM base
 RUN npm install -g pm2@5.4.3 && \
     apt update && \
     apt install -y --no-install-recommends gosu python3-minimal python-is-python3 python3-pip atomicparsley build-essential && \
-    pip install --no-cache-dir pycryptodomex "curl-cffi>=0.10,<0.17" && \
+    pip install --no-cache-dir "pycryptodomex==3.23.0" "curl-cffi==0.16.3" && \
     apt remove -y --purge build-essential && \
     apt autoremove -y --purge && \
     apt clean && \

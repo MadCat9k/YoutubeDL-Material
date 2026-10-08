@@ -25,4 +25,36 @@ describe('UnifiedFileCardComponent', () => {
     component.onThumbnailError();
     expect(component.thumbnailBlobURL).toBe(component.thumbnailPlaceholderURL);
   });
+
+  it('uses a local thumbnail without a remote URL and defaults to the placeholder', () => {
+    const component = new UnifiedFileCardComponent({} as any);
+    component.baseStreamPath = 'http://localhost:17442/api/';
+    component.file_obj = {
+      uid: 'file-local',
+      thumbnailPath: 'video/sample.webp',
+      duration: 10,
+      isAudio: false
+    };
+
+    component.ngOnInit();
+    expect(component.thumbnailBlobURL).toContain('api/thumbnail/video%2Fsample.webp');
+
+    component.file_obj = {uid: 'file-missing', duration: 10, isAudio: false};
+    component.ngOnChanges({file_obj: {} as any});
+    expect(component.thumbnailBlobURL).toBe(component.thumbnailPlaceholderURL);
+  });
+
+  it('emits navigation for middle-click but ignores right-click', () => {
+    const component = new UnifiedFileCardComponent({} as any);
+    component.file_obj = {uid: 'file-1'};
+    const emitted = [];
+    component.goToFile.subscribe(value => emitted.push(value));
+
+    component.navigateOnAuxClick({button: 2});
+    expect(emitted.length).toBe(0);
+
+    const middleClick = {button: 1};
+    component.navigateOnAuxClick(middleClick);
+    expect(emitted).toEqual([{file: component.file_obj, event: middleClick}]);
+  });
 });

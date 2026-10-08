@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, ViewChild } from '@angular/core';
+import { Component, OnChanges, OnInit, Input, Output, EventEmitter, SimpleChanges, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { VideoInfoDialogComponent } from 'app/dialogs/video-info-dialog/video-info-dialog.component';
 import { MatMenuTrigger } from '@angular/material/menu';
@@ -23,7 +23,7 @@ registerLocaleData(localeNB);
   templateUrl: './unified-file-card.component.html',
   styleUrls: ['./unified-file-card.component.scss']
 })
-export class UnifiedFileCardComponent implements OnInit {
+export class UnifiedFileCardComponent implements OnChanges, OnInit {
 
   // required info
   file_title = '';
@@ -77,13 +77,27 @@ export class UnifiedFileCardComponent implements OnInit {
       this.file_length = fancyTimeFormat(this.file_obj.duration);
     }
 
-    if (this.file_obj) {
-      this.thumbnailBlobURL = this.file_obj.thumbnailPath
-        ? `${this.baseStreamPath}thumbnail/${encodeURIComponent(this.file_obj.thumbnailPath)}?jwt=${this.jwtString}`
-        : this.file_obj.thumbnailURL;
-    }
+    this.initializeThumbnail();
 
     if (this.file_obj) this.streamURL = this.generateStreamURL();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.file_obj || changes.baseStreamPath || changes.jwtString) {
+      this.initializeThumbnail();
+    }
+  }
+
+  private initializeThumbnail(): void {
+    this.thumbnailFallbackStage = 0;
+    if (!this.file_obj) {
+      this.thumbnailBlobURL = null;
+      return;
+    }
+
+    this.thumbnailBlobURL = this.file_obj.thumbnailPath
+      ? `${this.baseStreamPath}thumbnail/${encodeURIComponent(this.file_obj.thumbnailPath)}?jwt=${this.jwtString}`
+      : this.file_obj.thumbnailURL || this.thumbnailPlaceholderURL;
   }
 
   onThumbnailError(): void {
@@ -116,6 +130,12 @@ export class UnifiedFileCardComponent implements OnInit {
 
   navigateToFile(event) {
     this.goToFile.emit({file: this.file_obj, event: event});
+  }
+
+  navigateOnAuxClick(event): void {
+    if (event.button === 1) {
+      this.navigateToFile(event);
+    }
   }
 
   navigateToSubscription() {

@@ -30,6 +30,7 @@ const twitch_api = require('./twitch');
 const youtubedl_api = require('./youtube-dl');
 const archive_api = require('./archive');
 const files_api = require('./files');
+const media_paths = require('./media-paths');
 const notifications_api = require('./notifications');
 
 var app = express();
@@ -1618,12 +1619,11 @@ app.get('/api/stream', optionalJwt, async (req, res) => {
 });
 
 app.get('/api/thumbnail/:path', optionalJwt, async (req, res) => {
-    let file_path = decodeURIComponent(req.params.path);
-    if (fs.existsSync(file_path)) path.isAbsolute(file_path) ? res.sendFile(file_path) : res.sendFile(path.join(__dirname, file_path));
-    else {
-        logger.warn(`Local thumbnail request missed file: ${file_path}`);
-        res.sendStatus(404);
-    }
+    const file_path = media_paths.resolveExistingMediaFile(req.params.path);
+    if (file_path) return res.sendFile(file_path);
+
+    logger.warn('Local thumbnail request missed or rejected a file.');
+    res.sendStatus(404);
 });
 
 // Downloads management

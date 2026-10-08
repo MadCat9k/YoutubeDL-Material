@@ -7,6 +7,7 @@ const db_api = require('./db');
 const archive_api = require('./archive');
 const utils = require('./utils')
 const logger = require('./logger');
+const media_paths = require('./media-paths');
 
 exports.registerFileDB = async (file_path, type, user_uid = null, category = null, sub_id = null, cropFileSettings = null, file_object = null) => {
     if (!file_object) file_object = generateFileObject(file_path, type);
@@ -350,19 +351,23 @@ exports.getAllFiles = async (sort, range, text_search, file_type_filter, favorit
     return {files, file_count};
 }
 
-async function repairThumbnailPaths(files) {
+async function repairThumbnailPaths(files, media_roots = media_paths.getConfiguredMediaRoots()) {
     const thumbnail_updates = {};
 
     for (const file of files) {
-        const stored_thumbnail_exists = file.thumbnailPath && await fs.pathExists(file.thumbnailPath);
+        const stored_thumbnail_exists = file.thumbnailPath && media_paths.resolveExistingMediaFile(file.thumbnailPath, media_roots);
         if (stored_thumbnail_exists) continue;
 
-        const resolved_thumbnail_path = utils.getDownloadedThumbnail(file.path);
+        const media_file_exists = media_paths.resolveExistingMediaFile(file.path, media_roots);
+        const discovered_thumbnail_path = media_file_exists ? utils.getDownloadedThumbnail(file.path) : null;
+        const resolved_thumbnail_path = discovered_thumbnail_path && media_paths.resolveExistingMediaFile(discovered_thumbnail_path, media_roots)
+            ? discovered_thumbnail_path
+            : null;
         if (resolved_thumbnail_path === file.thumbnailPath) continue;
 
         file.thumbnailPath = resolved_thumbnail_path;
         thumbnail_updates[file.uid] = {thumbnailPath: resolved_thumbnail_path};
-        logger.info(`Repaired thumbnail path for file ${file.uid}: ${resolved_thumbnail_path || 'no local thumbnail found'}`);
+        logger.info(`Repaired thumbnail path for file ${file.uid}: ${resolved_thumbnail_path ? 'local thumbnail found' : 'no local thumbnail found'}`);
     }
 
     if (Object.keys(thumbnail_updates).length > 0) {

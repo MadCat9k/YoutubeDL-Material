@@ -5,6 +5,7 @@ const path = require('path');
 
 const db_api = require('../db');
 const files_api = require('../files');
+const logger = require('../logger');
 const utils = require('../utils');
 
 describe('Thumbnail repair', function() {
@@ -41,16 +42,22 @@ describe('Thumbnail repair', function() {
             thumbnailPath: path.join(test_dir, 'missing.jpg')
         }];
         const original_bulk_update = db_api.bulkUpdateRecordsByKey;
+        const original_log_info = logger.info;
         let received_update = null;
+        let received_log = null;
         db_api.bulkUpdateRecordsByKey = async (table, key, update) => {
             received_update = {table, key, update};
             return true;
         };
+        logger.info = message => {
+            received_log = message;
+        };
 
         try {
-            await files_api.repairThumbnailPaths(files);
+            await files_api.repairThumbnailPaths(files, [test_dir]);
         } finally {
             db_api.bulkUpdateRecordsByKey = original_bulk_update;
+            logger.info = original_log_info;
         }
 
         assert.strictEqual(files[0].thumbnailPath, thumbnail_path);
@@ -61,5 +68,7 @@ describe('Thumbnail repair', function() {
                 'thumbnail-repair-file': {thumbnailPath: thumbnail_path}
             }
         });
+        assert.strictEqual(received_log.includes(test_dir), false);
+        assert.strictEqual(received_log.includes('Generic channel sample'), false);
     });
 });

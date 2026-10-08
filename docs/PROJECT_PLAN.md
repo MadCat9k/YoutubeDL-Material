@@ -23,10 +23,9 @@ fork from source makes every code change explicit and reproducible.
 - The frontend install reports 107 dependency advisories and the backend reports
   48. These are inherited from upstream and need a separate, tested dependency
   modernization effort; running `npm audit fix --force` is not safe here.
-- The Dockerfile installs the latest Angular CLI and PM2 globally. PM2 7 reports
-  a Node 18 requirement while this application uses Node 16, although its runtime
-  smoke test currently succeeds. Pinning build tools is a near-term reproducibility
-  task.
+- Earlier Docker builds installed the latest Angular CLI and PM2 globally. The
+  fork now uses the lockfile's Angular CLI and pins PM2 to a Node-16-compatible
+  release; the remaining dependency modernization is tracked separately.
 - Node 16 is end-of-life. Upgrading Node and the application dependencies should
   follow the functional fixes rather than be combined with them.
 
@@ -93,24 +92,30 @@ Acceptance criteria:
 - Missing local thumbnails fall back without an infinite request/error loop.
 - The repair path handles all supported thumbnail extensions.
 
-#### Implementation status (2026-10-06)
+#### Implementation status (2026-10-07)
 
 - File-list loading now verifies stored local thumbnail paths and re-resolves a
   missing path from the media filename. Repairs are returned immediately and
   persisted to the database for subsequent requests.
 - The resolver and repair path cover `.jpg`, `.webp`, and `.png`, including
   filenames containing spaces and Unicode characters.
-- Missing thumbnail endpoint files produce a focused warning containing the
-  local path but no request query or authentication data.
+- The thumbnail endpoint canonicalizes requested files and serves only regular
+  files beneath the configured audio, video, subscription, or user media roots.
+  Traversal, arbitrary absolute paths, and symlink escapes are rejected without
+  logging the requested path.
 - File cards try the stored local thumbnail first, the remote thumbnail once on
-  error, and finally a bundled deterministic placeholder. Further placeholder
-  errors do not change the source, preventing an error loop.
+  error, and finally a bundled deterministic placeholder. Cards with a local
+  thumbnail but no remote URL render correctly, and missing thumbnail metadata
+  selects the placeholder immediately. Further placeholder errors do not change
+  the source, preventing an error loop.
 
 Verification:
 
-- Backend thumbnail tests: 4 passing (three extension/path cases and one stale
-  database repair case).
-- Focused Angular card fallback test: 1 passing in headless Chrome.
+- Focused backend thumbnail/path tests: 6 passing, including extension/path
+  discovery, stale database repair, root containment, traversal rejection, and
+  symlink-escape rejection.
+- The changed-area Angular suite passed 11 tests in headless Chrome, including
+  card fallback/rendering and auxiliary-click filtering.
 - Production frontend build: completed successfully with the existing
   `file-saver` CommonJS warning.
 
@@ -121,9 +126,9 @@ Remaining risks:
   them.
 - Synology validation is still required with an actual historical stale record,
   a container restart, and a browser cache clear.
-- The thumbnail endpoint still accepts the legacy encoded local path. Restricting
-  it to configured media roots is a separate security-hardening task because it
-  could affect existing stored paths and reverse-proxy deployments.
+- A custom installation that intentionally stored thumbnails outside all four
+  configured media roots will now receive a placeholder until those files or
+  paths are migrated beneath a configured root.
 
 ### 3. Switching subscriptions does not reload files
 
@@ -248,15 +253,20 @@ Implementation status (build verification completed locally):
 - The external FFmpeg and TwitchDownloader fetch scripts now fail immediately
   on command errors, reject HTTP failures, retry transient transfer failures,
   and validate downloaded archives before extracting them.
-- TwitchDownloader release discovery now fails clearly when the GitHub response
-  contains no matching release, and its smoke test validates the emitted version
-  text. The CLI returns status 1 even when its `version` command succeeds, so the
-  test intentionally validates output rather than that nonstandard status.
+- TwitchDownloader is pinned to a reviewed release and checksum for each
+  supported architecture, and its smoke test validates the emitted version text.
+  The CLI returns status 1 even when its `version` command succeeds, so the test
+  intentionally validates output rather than that nonstandard status.
 - The Docker utility stage copies each fetch script separately so changing the
   TwitchDownloader logic does not invalidate a completed FFmpeg layer.
 - PM2 is pinned to `5.4.3`, whose declared Node requirement includes the image's
   Node 16 runtime. An unpinned install had begun resolving PM2 7, which requires
   Node 18.
+- The image now pins `curl-cffi` and `pycryptodomex`. TwitchDownloader is pinned
+  to release `1.56.5`, with an architecture-specific SHA-256 check before
+  extraction rather than resolving the latest release during every build.
+- The frontend build uses the Angular CLI installed from the project lockfile;
+  it no longer installs an unbounded global CLI.
 
 Verification:
 
@@ -277,6 +287,42 @@ Remaining risks:
 - Before deployment, confirm the Synology architecture and registry destination,
   load or publish the matching image, and run it on a test port with copied data
   directories. Do not share writable production mounts with the old container.
+- `docker-compose.synology.test.yml` provides the isolated port `18084` and
+  dedicated `youtubedl-test` mount roots; populate those roots with verified
+  copies before starting it.
+
+## Review follow-up (2026-10-07)
+
+The full fork delta was re-reviewed under the repository's current agent and
+privacy rules. In addition to the thumbnail containment and card fixes above:
+
+- the local Ollama runner records and rechecks Git `HEAD` as well as the complete
+  working-tree snapshot before writing a draft, so a concurrent commit or
+  checkout aborts the run;
+- right-click no longer triggers player navigation, while middle-click retains
+  the intended new-tab behavior;
+- the isolated Synology test Compose definition uses port `18084`, a distinct
+  container/image name, and dedicated copied-data roots; and
+- Docker build inputs added by the fork are pinned, with TwitchDownloader
+  downloads verified against architecture-specific SHA-256 digests.
+
+Validation completed locally:
+
+- focused backend tests: 9 passing;
+- changed-area Angular tests: 11 passing in headless Chrome;
+- production frontend build: passed with the inherited `file-saver` CommonJS
+  warning;
+- cache-only Docker build: passed for `linux/amd64` and `linux/arm64` without
+  loading, tagging, pushing, or deploying an image;
+- production and isolated-test Compose configuration checks: passed; and
+- local Ollama runner dry-run: passed without sending a model request.
+
+The full backend suite reported 64 passing, 22 pending, and 10 failing. The ten
+failures are inherited environment/integration checks that require GitHub DNS,
+a yt-dlp-supported local Python version, FFmpeg, or TwitchDownloader; none are
+in the focused changed paths. They remain a reason to rely on the verified
+container build and to run the isolated Synology acceptance pass before
+production migration.
 
 ## Delivery sequence
 

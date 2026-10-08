@@ -14,6 +14,8 @@ The runner:
 
 - accepts an exact repository-relative file allowlist;
 - refuses allowlists that overlap pre-existing tracked or untracked changes;
+- aborts if Git HEAD or any working-tree status entry changes while the model is
+  running, preventing stale output from overwriting a concurrent commit;
 - blocks Git metadata, audit output, dependencies, generated frontend output,
   and every runtime data/media directory;
 - sends only `AGENTS.md`, explicit context, and allowlisted file contents;

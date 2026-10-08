@@ -202,7 +202,17 @@ function readStatus() {
   return status;
 }
 
-function assertBaselineUnchanged(baseline) {
+function readHead() {
+  const result = run('git', ['rev-parse', 'HEAD']);
+  if (result.status !== 0) fail(result.stderr.trim() || 'git rev-parse failed');
+  return result.stdout.trim();
+}
+
+function assertBaselineUnchanged(baseline, baselineHead) {
+  const currentHead = readHead();
+  if (currentHead !== baselineHead) {
+    fail(`HEAD changed while Ollama was running: ${baselineHead} -> ${currentHead}`, 2);
+  }
   const current = new Map(
     readStatus().map(({ status, path }) => [path, `${status}:${hashPath(path)}`]),
   );
@@ -412,7 +422,11 @@ const schema = {
 
 const { taskPath, model, dryRun } = parseArguments(process.argv.slice(2));
 const task = readTask(taskPath);
+const baselineHead = readHead();
 const baselineStatus = readStatus();
+if (readHead() !== baselineHead) {
+  fail('HEAD changed while the local-coder baseline was being prepared');
+}
 const baseline = new Map(
   baselineStatus.map(({ status, path }) => [path, `${status}:${hashPath(path)}`]),
 );
@@ -464,6 +478,7 @@ function abortRun(message, exitCode = 1, envelope = null) {
     contextWindow,
     outputLimit,
     promptSha256: createHash('sha256').update(prompt).digest('hex'),
+    baselineHead,
     responseSha256: response?.content
       ? createHash('sha256').update(response.content).digest('hex')
       : null,
@@ -538,7 +553,7 @@ for (const file of result.files) {
   file.path = path;
 }
 
-assertBaselineUnchanged(baseline);
+assertBaselineUnchanged(baseline, baselineHead);
 const files = result.files.map((file) => ({
   path: file.path,
   before: snapshot(file.path),
@@ -570,6 +585,7 @@ const report = {
   contextWindow,
   outputLimit,
   promptSha256: createHash('sha256').update(prompt).digest('hex'),
+  baselineHead,
   usage: {
     promptTokens: envelope.prompt_eval_count ?? null,
     outputTokens: envelope.eval_count ?? null,

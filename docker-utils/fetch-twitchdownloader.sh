@@ -8,15 +8,20 @@ set -eu
 
 case $(uname -m) in
   x86_64)
-    ARCH=Linux-x64;;
+    ARCH=Linux-x64
+    SHA256=f2bcee00d0e6da759d97c23767345634cb9cdb10cdff96cfa96f97983d51bf55;;
   aarch64)
-    ARCH=LinuxArm64;;
+    ARCH=LinuxArm64
+    SHA256=2fde836f07c3ebfcf61cace23742a2c43543fc30fda96071eb96ab8e10c24f7f;;
   armhf)
-    ARCH=LinuxArm;;
+    ARCH=LinuxArm
+    SHA256=ca66f85248f45f6f2870d6ca27bbd841e911d3f80a88fc3e76b33575169121cc;;
   armv7)
-    ARCH=LinuxArm;;
+    ARCH=LinuxArm
+    SHA256=ca66f85248f45f6f2870d6ca27bbd841e911d3f80a88fc3e76b33575169121cc;;
   armv7l)
-    ARCH=LinuxArm;;
+    ARCH=LinuxArm
+    SHA256=ca66f85248f45f6f2870d6ca27bbd841e911d3f80a88fc3e76b33575169121cc;;
   *)
     echo "Unsupported architecture: $(uname -m)"
     exit 1
@@ -24,18 +29,8 @@ esac
 
 echo "(INFO) Architecture detected: $ARCH"
 echo "(1/5) READY - Install unzip"
-apt-get update && apt-get -y install unzip curl jq libicu70
-VERSION=$(curl --fail --silent --show-error --location \
-    --connect-timeout 10 \
-    --max-time 120 \
-    --retry 5 \
-    --retry-all-errors \
-    --retry-delay 2 \
-    "https://api.github.com/repos/lay295/TwitchDownloader/releases" | jq -r --arg arch "$ARCH" '[.[] | select(.assets | length > 0) | select(.assets[].name | contains("CLI") and contains($arch))] | max_by(.published_at) | .tag_name')
-if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
-    echo "No TwitchDownloader release found for architecture: $ARCH" >&2
-    exit 1
-fi
+apt-get update && apt-get -y install unzip curl libicu70
+VERSION=1.56.5
 echo "(2/5) DOWNLOAD - Acquire twitchdownloader"
 curl --fail --location --output twitchdownloader.zip \
     --connect-timeout 10 \
@@ -45,6 +40,7 @@ curl --fail --location --output twitchdownloader.zip \
     --retry-delay 2 \
     --retry-max-time 600 \
     "https://github.com/lay295/TwitchDownloader/releases/download/$VERSION/TwitchDownloaderCLI-$VERSION-$ARCH.zip"
+printf '%s  %s\n' "$SHA256" twitchdownloader.zip | sha256sum --check --strict -
 unzip -tq twitchdownloader.zip
 unzip twitchdownloader.zip
 chmod +x TwitchDownloaderCLI
