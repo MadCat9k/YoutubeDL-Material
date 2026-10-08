@@ -1,6 +1,8 @@
 .git
 db
 appdata
+backend/appdata/*
+!backend/appdata/default.json
 audio
 video
 subscriptions
