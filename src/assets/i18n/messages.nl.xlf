@@ -5111,6 +5111,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target state="translated">Kan abonnement niet vernieuwen. Er wordt automatisch opnieuw geprobeerd.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">Kan downloadvoortgang niet vernieuwen. Er wordt automatisch opnieuw geprobeerd.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

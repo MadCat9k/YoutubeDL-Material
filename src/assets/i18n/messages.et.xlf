@@ -4408,6 +4408,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target state="translated">Tellimust ei õnnestunud värskendada. Proovitakse automaatselt uuesti.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">Allalaadimise edenemist ei õnnestunud värskendada. Proovitakse automaatselt uuesti.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

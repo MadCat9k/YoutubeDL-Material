@@ -3373,6 +3373,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target>Не може да се освежи претплатата. Ќе се обиде повторно автоматски.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">Не може да се освежи напредокот на преземањето. Ќе се обиде повторно автоматски.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

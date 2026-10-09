@@ -5107,6 +5107,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target>Impossible d&apos;actualiser l&apos;abonnement. Nouvelle tentative automatique.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">Impossible d&apos;actualiser la progression du téléchargement. Nouvelle tentative automatique.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

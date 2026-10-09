@@ -4284,6 +4284,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target state="translated">Não foi possível atualizar a inscrição. Tentando novamente automaticamente.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">Não foi possível atualizar o progresso do download. Tentando novamente automaticamente.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

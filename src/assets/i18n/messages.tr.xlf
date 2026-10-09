@@ -4557,6 +4557,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target state="translated">Abonelik yenilenemedi. Otomatik olarak yeniden deneniyor.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">İndirme ilerlemesi yenilenemedi. Otomatik olarak yeniden deneniyor.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

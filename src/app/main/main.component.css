@@ -83,6 +83,16 @@ mat-form-field.mat-mdc-form-field {
     margin-right: 20px;
 }
 
+.current-download-connection-state {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 20px 12px;
+    padding: 10px 12px;
+    border: 1px solid rgba(127, 127, 127, 0.45);
+    border-radius: 8px;
+}
+
 .results-div {
     position: relative;
     top: -15px;

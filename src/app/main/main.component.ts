@@ -1,6 +1,6 @@
-import { Component, OnInit, ElementRef, ViewChild, ViewChildren, QueryList } from '@angular/core';
+import { Component, OnDestroy, OnInit, ElementRef, ViewChild, ViewChildren, QueryList } from '@angular/core';
 import {PostsService} from '../posts.services';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import {UntypedFormControl, Validators} from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -17,7 +17,7 @@ import { DatabaseFile, Download, FileType, Playlist } from 'api-types';
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.css']
 })
-export class MainComponent implements OnInit {
+export class MainComponent implements OnInit, OnDestroy {
   youtubeAuthDisabledOverride = false;
 
   iOS = false;
@@ -170,6 +170,15 @@ export class MainComponent implements OnInit {
   simulatedOutput = '';
 
   interval_id = null;
+  initialization_subscription: Subscription = null;
+  config_reloaded_subscription: Subscription = null;
+  args_changed_subscription: Subscription = null;
+  current_download_request: Subscription = null;
+  polling_stopped = false;
+  current_download_request_in_flight = false;
+  currentDownloadConnectionError = false;
+  consecutivePollFailures = 0;
+  readonly currentDownloadCheckInterval = 1000;
 
   constructor(public postsService: PostsService, private youtubeSearch: YoutubeSearchService, public snackBar: MatSnackBar,
     private router: Router, public dialog: MatDialog, private platform: Platform, private route: ActivatedRoute) {
@@ -234,12 +243,7 @@ export class MainComponent implements OnInit {
     }
 
     // get downloads routine
-    if (this.interval_id) { clearInterval(this.interval_id) }
-    this.interval_id = setInterval(() => {
-      if (this.current_download) {
-        this.getCurrentDownload();
-      }
-    }, 1000);
+    this.startCurrentDownloadPolling();
 
     return true;
   }
@@ -249,14 +253,16 @@ export class MainComponent implements OnInit {
     if (this.postsService.initialized) {
       this.configLoad();
     } else {
-      this.postsService.service_initialized.subscribe(init => {
+      this.initialization_subscription = this.postsService.service_initialized.subscribe(init => {
         if (init) {
+          this.initialization_subscription?.unsubscribe();
+          this.initialization_subscription = null;
           this.configLoad();
         }
       });
     }
 
-    this.postsService.config_reloaded.subscribe(changed => {
+    this.config_reloaded_subscription = this.postsService.config_reloaded.subscribe(changed => {
       if (changed) {
         this.loadConfig();
       }
@@ -283,7 +289,7 @@ export class MainComponent implements OnInit {
       this.autoStartDownload = true;
     }
 
-    this.argsChangedSubject
+    this.args_changed_subscription = this.argsChangedSubject
       .debounceTime(500)
       .subscribe((should_simulate) => {
         if (should_simulate) this.getSimulatedOutput();
@@ -298,7 +304,14 @@ export class MainComponent implements OnInit {
   }
 
   ngOnDestroy(): void {
-    if (this.interval_id) { clearInterval(this.interval_id) }
+    this.polling_stopped = true;
+    this.initialization_subscription?.unsubscribe();
+    this.config_reloaded_subscription?.unsubscribe();
+    this.args_changed_subscription?.unsubscribe();
+    this.current_download_request?.unsubscribe();
+    this.current_download_request = null;
+    this.current_download_request_in_flight = false;
+    if (this.interval_id) { clearTimeout(this.interval_id) }
   }
 
   // download helpers
@@ -405,6 +418,8 @@ export class MainComponent implements OnInit {
     }
     this.downloadingfile = false;
     this.current_download = null;
+    this.currentDownloadConnectionError = false;
+    this.consecutivePollFailures = 0;
   }
 
   getSelectedAudioFormat(): string {
@@ -769,12 +784,31 @@ export class MainComponent implements OnInit {
     });
   }
 
-  getCurrentDownload(): void {
+  startCurrentDownloadPolling(): void {
+    this.polling_stopped = false;
+    if (this.interval_id) clearTimeout(this.interval_id);
+    this.pollCurrentDownload();
+  }
+
+  pollCurrentDownload(): void {
+    if (this.polling_stopped) return;
     if (!this.current_download) {
+      this.scheduleCurrentDownloadPoll();
       return;
     }
-    this.postsService.getCurrentDownload(this.current_download['uid']).subscribe(res => {
+    this.getCurrentDownload(true);
+  }
+
+  getCurrentDownload(scheduleNextPoll = false): void {
+    if (!this.current_download || this.current_download_request_in_flight) return;
+
+    const requestedUid = this.current_download['uid'];
+    this.current_download_request_in_flight = true;
+    const request = this.postsService.getCurrentDownload(requestedUid).subscribe(res => {
+      if (!this.current_download || this.current_download['uid'] !== requestedUid) return;
       if (res['download']) {
+        this.currentDownloadConnectionError = false;
+        this.consecutivePollFailures = 0;
         this.current_download = res['download'];
         this.percentDownloaded = this.current_download.percent_complete;
 
@@ -790,9 +824,39 @@ export class MainComponent implements OnInit {
           this.postsService.openSnackBar($localize`Download failed!`, 'OK.');
         }
       } else {
-        // console.log('failed to get new download');
+        this.markCurrentDownloadRefreshFailed();
       }
+    }, () => {
+      if (this.current_download?.['uid'] === requestedUid) {
+        this.markCurrentDownloadRefreshFailed();
+      }
+      this.finishCurrentDownloadRequest(scheduleNextPoll);
+    }, () => {
+      this.finishCurrentDownloadRequest(scheduleNextPoll);
     });
+    this.current_download_request = request.closed ? null : request;
+  }
+
+  markCurrentDownloadRefreshFailed(): void {
+    this.currentDownloadConnectionError = true;
+    this.consecutivePollFailures += 1;
+  }
+
+  finishCurrentDownloadRequest(scheduleNextPoll: boolean): void {
+    this.current_download_request = null;
+    this.current_download_request_in_flight = false;
+    if (scheduleNextPoll) this.scheduleCurrentDownloadPoll();
+  }
+
+  scheduleCurrentDownloadPoll(): void {
+    if (this.polling_stopped) return;
+    this.interval_id = setTimeout(() => this.pollCurrentDownload(), this.getNextPollDelay());
+  }
+
+  getNextPollDelay(): number {
+    if (!this.currentDownloadConnectionError) return this.currentDownloadCheckInterval;
+    const backoffMultiplier = Math.pow(2, Math.min(this.consecutivePollFailures, 5));
+    return Math.min(this.currentDownloadCheckInterval * backoffMultiplier, 30000);
   }
 
   reloadRecentVideos(is_playlist = false): void {

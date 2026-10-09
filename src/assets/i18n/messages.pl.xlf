@@ -4752,6 +4752,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target state="translated">Nie można odświeżyć subskrypcji. Automatyczna ponowna próba.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">Nie można odświeżyć postępu pobierania. Automatyczna ponowna próba.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

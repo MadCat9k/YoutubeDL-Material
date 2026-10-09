@@ -248,8 +248,12 @@ running container was not replaced as part of this implementation step.
   content visible with a connection-status message.
 - Subscription floating actions are not created until subscription data exists,
   preventing null-state template errors during loading and route transitions.
-- The Downloads, Tasks, and Subscription connection statuses are present in
-  every tracked locale source.
+- Home-page progress refreshes for the active download are serialized, ignore
+  responses for a replaced download, back off after failures, recover to the
+  normal interval after success, and release initialization, configuration,
+  argument-change, timer, and request resources on destruction.
+- The Downloads, Tasks, Subscription, and active-download connection statuses
+  are present in every tracked locale source.
 
 Verification:
 
@@ -262,12 +266,15 @@ Verification:
 - focused Subscription component suite: 2 passing in Chrome Headless, covering
   route replacement, request cancellation, serialized polling, backoff, and
   recovery;
+- focused Main component suite: 5 passing in Chrome Headless, covering overlap
+  prevention, stale-response protection, bounded backoff, recovery, and
+  active-request teardown;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning.
 
-The same polling pattern should be applied to any other continuously refreshed
-views in a later Phase 3 slice. Live failure-state verification remains pending
-a rebuilt validation container.
+Other continuously refreshed views should be audited for the same lifecycle
+risks in a later Phase 3 slice. Live failure-state verification remains pending a
+rebuilt validation container.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases

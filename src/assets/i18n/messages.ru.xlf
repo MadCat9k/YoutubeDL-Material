@@ -5151,6 +5151,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target state="translated">Не удалось обновить подписку. Повторная попытка будет выполнена автоматически.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">Не удалось обновить ход загрузки. Повторная попытка будет выполнена автоматически.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

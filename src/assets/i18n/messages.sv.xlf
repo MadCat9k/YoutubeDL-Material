@@ -3248,6 +3248,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target state="translated">Det gick inte att uppdatera prenumerationen. Försöker igen automatiskt.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">Det gick inte att uppdatera nedladdningsförloppet. Försöker igen automatiskt.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

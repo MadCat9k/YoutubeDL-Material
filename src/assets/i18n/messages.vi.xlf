@@ -4284,6 +4284,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target>Không thể làm mới gói đăng ký. Đang tự động thử lại.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">Không thể làm mới tiến trình tải xuống. Đang tự động thử lại.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

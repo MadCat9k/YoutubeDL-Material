@@ -4288,6 +4288,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target>Az előfizetés frissítése nem sikerült. Automatikus újrapróbálkozás.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">A letöltés állapotának frissítése nem sikerült. Automatikus újrapróbálkozás.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

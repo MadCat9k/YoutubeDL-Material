@@ -4768,6 +4768,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target state="translated">சந்தாவைப் புதுப்பிக்க முடியவில்லை. தானாக மீண்டும் முயற்சிக்கப்படுகிறது.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">பதிவிறக்க முன்னேற்றத்தைப் புதுப்பிக்க முடியவில்லை. தானாக மீண்டும் முயற்சிக்கப்படுகிறது.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

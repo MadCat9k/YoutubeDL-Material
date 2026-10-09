@@ -4053,6 +4053,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target>No se pudo actualizar la suscripción. Se volverá a intentar automáticamente.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">No se pudo actualizar el progreso de la descarga. Se volverá a intentar automáticamente.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

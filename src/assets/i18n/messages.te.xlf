@@ -3047,6 +3047,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target>సబ్‌స్క్రిప్షన్‌ను రిఫ్రెష్ చేయడం సాధ్యం కాలేదు. స్వయంచాలకంగా మళ్లీ ప్రయత్నిస్తోంది.</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">డౌన్‌లోడ్ పురోగతిని రిఫ్రెష్ చేయడం సాధ్యం కాలేదు. స్వయంచాలకంగా మళ్లీ ప్రయత్నిస్తోంది.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

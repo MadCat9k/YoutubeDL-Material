@@ -5152,6 +5152,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target state="translated">无法刷新订阅。正在自动重试。</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">无法刷新下载进度。正在自动重试。</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

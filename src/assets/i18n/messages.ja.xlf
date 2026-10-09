@@ -4749,6 +4749,10 @@
         <source>Unable to refresh subscription. Retrying automatically.</source>
         <target state="translated">登録を更新できません。自動的に再試行します。</target>
       </trans-unit>
+      <trans-unit id="download-progress-refresh-failed" datatype="html">
+        <source>Unable to refresh download progress. Retrying automatically.</source>
+        <target state="translated">ダウンロードの進行状況を更新できません。自動的に再試行します。</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
