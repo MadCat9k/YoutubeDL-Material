@@ -7,15 +7,15 @@
                         <div style="display: flex; align-items: center;">
                             <button #hamburgerMenu style="outline: none" *ngIf="router.url.split(';')[0] !== '/player'" mat-icon-button aria-label="Toggle side navigation" (click)="toggleSidenav()"><mat-icon>menu</mat-icon></button>
                             <button (click)="goBack()" *ngIf="router.url.split(';')[0] === '/player'" mat-icon-button><mat-icon>arrow_back</mat-icon></button>
-                            <div style="margin-left: 8px; display: inline-block;"><button mat-icon-button routerLink='/home'><img style="width: 32px;" src="assets/images/logo_128px.png"></button></div>
+                            <div style="margin-left: 8px; display: inline-block;"><button mat-icon-button routerLink='/home' aria-label="Home" i18n-aria-label="Home navigation button"><img style="width: 32px;" src="assets/images/logo_128px.png" alt=""></button></div>
                         </div>
                     </div>
                     <div class="col-6" style="text-align: right; align-items: flex-end; display: inline-block">
-                        <button *ngIf="postsService.config?.Extra.enable_notifications" [matMenuTriggerFor]="notificationsMenu" (menuOpened)="notificationMenuOpened()" mat-icon-button><mat-icon [matBadge]="notification_count" matBadgeColor="warn" matBadgeSize="small" *ngIf="notification_count > 0">notifications</mat-icon><mat-icon *ngIf="notification_count === 0">notifications_none</mat-icon></button>
+                        <button *ngIf="postsService.config?.Extra.enable_notifications" [matMenuTriggerFor]="notificationsMenu" (menuOpened)="notificationMenuOpened()" mat-icon-button aria-label="Notifications" i18n-aria-label="Notifications menu button"><mat-icon [matBadge]="notification_count" matBadgeColor="warn" matBadgeSize="small" *ngIf="notification_count > 0">notifications</mat-icon><mat-icon *ngIf="notification_count === 0">notifications_none</mat-icon></button>
                         <mat-menu [classList]="'notifications-menu'" (close)="notificationMenuClosed()" #notificationsMenu="matMenu">
                             <app-notifications #notifications (notificationCount)="notificationCountUpdate($event)" (click)="$event.stopPropagation()"></app-notifications>
                         </mat-menu>
-                        <button [matMenuTriggerFor]="menuSettings" mat-icon-button><mat-icon>more_vert</mat-icon></button>
+                        <button [matMenuTriggerFor]="menuSettings" mat-icon-button aria-label="Settings" i18n-aria-label="Settings menu button"><mat-icon>more_vert</mat-icon></button>
                         <mat-menu #menuSettings="matMenu">
                             <button class="top-menu-button" (click)="openProfileDialog()" mat-menu-item>
                                 <mat-icon>person</mat-icon>

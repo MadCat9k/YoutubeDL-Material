@@ -489,8 +489,8 @@
         <note priority="1" from="description">No downloads label</note>
       </trans-unit>
       <trans-unit id="2827589726081052618" datatype="html" xml:space="preserve">
-        <source>Creating download</source>
-        <target state="translated">डाउनलोड बनाया जा रहा है</target>
+        <source>Queued</source>
+        <target state="translated">कतार में</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/components/downloads/downloads.component.ts</context>
           <context context-type="linenumber">35</context>

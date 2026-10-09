@@ -2965,8 +2965,8 @@
         <note priority="1" from="description">Clear</note>
       </trans-unit>
       <trans-unit id="2827589726081052618" datatype="html">
-        <source>Creating download</source>
-        <target state="translated">新建下载</target>
+        <source>Queued</source>
+        <target state="translated">已排队</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/components/downloads/downloads.component.ts</context>
           <context context-type="linenumber">58</context>

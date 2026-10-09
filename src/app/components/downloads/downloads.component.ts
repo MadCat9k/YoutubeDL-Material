@@ -32,7 +32,7 @@ export class DownloadsComponent implements OnInit, OnDestroy {
   running_download_exists = false;
 
   STEP_INDEX_TO_LABEL = {
-      0: $localize`Creating download`,
+      0: $localize`:@@2827589726081052618:Queued`,
       1: $localize`Getting info`,
       2: $localize`Downloading file`,
       3: $localize`Complete`
@@ -296,7 +296,6 @@ export class DownloadsComponent implements OnInit, OnDestroy {
   }
 
   showError(download: Download): void {
-    console.log(download)
     const copyToClipboardEmitter = new EventEmitter<boolean>();
     this.dialog.open(ConfirmDialogComponent, {
       data: {

@@ -15,10 +15,10 @@
             </div>
         </a>
         <div style="pointer-events: auto; color: unset" matListItemMeta>
-            <button matTooltip="Edit" i18n-matTooltip="Edit" mat-icon-button (click)="editSubscription(sub)">
+            <button matTooltip="Edit" i18n-matTooltip="Edit" aria-label="Edit" i18n-aria-label="Edit subscription" mat-icon-button (click)="editSubscription(sub)">
                 <mat-icon>edit</mat-icon>
             </button>
-            <button matTooltip="Info" i18n-matTooltip="Info" mat-icon-button (click)="showSubInfo(sub)">
+            <button matTooltip="Info" i18n-matTooltip="Info" aria-label="Info" i18n-aria-label="Subscription information" mat-icon-button (click)="showSubInfo(sub)">
                 <mat-icon>info</mat-icon>
             </button>
         </div>
@@ -39,10 +39,10 @@
             </div>
         </a>
         <div style="pointer-events: auto; color: unset" matListItemMeta>
-            <button matTooltip="Edit" i18n-matTooltip="Edit" mat-icon-button (click)="editSubscription(sub)">
+            <button matTooltip="Edit" i18n-matTooltip="Edit" aria-label="Edit" i18n-aria-label="Edit subscription" mat-icon-button (click)="editSubscription(sub)">
                 <mat-icon>edit</mat-icon>
             </button>
-            <button matTooltip="Info" i18n-matTooltip="Info" mat-icon-button (click)="showSubInfo(sub)">
+            <button matTooltip="Info" i18n-matTooltip="Info" aria-label="Info" i18n-aria-label="Subscription information" mat-icon-button (click)="showSubInfo(sub)">
                 <mat-icon>info</mat-icon>
             </button>
         </div>
@@ -57,4 +57,4 @@
     <mat-progress-bar mode="indeterminate"></mat-progress-bar>
 </div>
 
-<button class="add-subscription-button" (click)="openSubscribeDialog()" matTooltip="Add subscription" i18n-matTooltip="Add subscription" mat-fab><mat-icon>add</mat-icon></button>
+<button class="add-subscription-button" (click)="openSubscribeDialog()" matTooltip="Add subscription" i18n-matTooltip="Add subscription" aria-label="Add subscription" i18n-aria-label="Add subscription" mat-fab><mat-icon>add</mat-icon></button>

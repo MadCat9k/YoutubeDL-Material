@@ -186,6 +186,33 @@ Acceptance criteria:
 6. **Information architecture:** Settings navigation/search, drawer organization,
    notifications, and shared responsive components.
 
+## Implementation progress
+
+### Phase 1 started (2026-10-09)
+
+- Downloads waiting for a worker are labelled `Queued`, with the existing
+  localization key updated in every locale that previously translated the old
+  state.
+- The Home, notifications, and settings controls in the global shell, plus
+  download, subscription, and task actions, now expose accessible names instead
+  of relying on icons or hover tooltips.
+- Full download records are no longer written to the browser console when an
+  error dialog is opened.
+- Focused Downloads tests cover the queued-state label in addition to the
+  existing merge and narrow-layout behavior.
+
+Verification:
+
+- all tracked XLF files passed XML validation;
+- focused Downloads component suite: 4 passing in Chrome Headless;
+- production frontend build: passed with the inherited `file-saver` CommonJS
+  warning;
+- localization extraction confirmed that the queued state retains its stable
+  message identifier and new accessible labels reuse existing translations.
+
+Remaining Phase 1 work includes visible keyboard-focus review, live-region
+announcements, broader accessibility testing, and actionable error messages.
+
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases
 should also be manually checked at representative phone, tablet, and desktop

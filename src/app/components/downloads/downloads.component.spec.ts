@@ -21,6 +21,10 @@ describe('DownloadsComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('labels downloads waiting for a worker as queued', () => {
+    expect(component.STEP_INDEX_TO_LABEL[0]).toBe('Queued');
+  });
+
   it('preserves valid falsy download values while merging updates', () => {
     const existing = [{
       uid: 'synthetic-download',

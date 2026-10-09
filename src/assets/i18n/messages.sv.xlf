@@ -296,8 +296,8 @@
         <note priority="1" from="description">No downloads label</note>
       </trans-unit>
       <trans-unit id="2827589726081052618" datatype="html">
-        <source>Creating download</source>
-        <target state="translated">Skapar nedladdning</target>
+        <source>Queued</source>
+        <target state="translated">I kö</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/components/downloads/downloads.component.ts</context>
           <context context-type="linenumber">58</context>
