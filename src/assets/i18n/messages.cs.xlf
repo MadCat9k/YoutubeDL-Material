@@ -2568,6 +2568,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">Stav aktualizace se nepodařilo obnovit. Opakování proběhne automaticky.</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Watch Together se nepodařilo obnovit. Opakování proběhne automaticky.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -256,8 +256,12 @@ running container was not replaced as part of this implementation step.
   interval, overlaps status requests, or leaves polling active after it closes.
   It keeps polling only while an update is active, retries connection failures
   with bounded backoff, and retains the last known update status.
-- The Downloads, Tasks, Subscription, active-download, and updater connection
-  statuses are present in every tracked locale source.
+- Watch Together now serializes both stream discovery checks and host updates,
+  cancels discovery work when hosting starts, resets work when the active file
+  changes, and releases requests, timers, and temporary playback-rate changes
+  when stopped or destroyed.
+- The Downloads, Tasks, Subscription, active-download, updater, and Watch
+  Together connection statuses are present in every tracked locale source.
 
 Verification:
 
@@ -276,6 +280,9 @@ Verification:
 - focused Update Progress Dialog component suite: 6 passing in Chrome Headless,
   covering overlap prevention, active/finished polling decisions, bounded
   backoff, recovery, and active-request teardown;
+- focused Concurrent Stream component suite: 8 passing in Chrome Headless,
+  covering serialized discovery and host updates, mode transitions, bounded
+  backoff, recovery, input replacement, and active-request teardown;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning.
 

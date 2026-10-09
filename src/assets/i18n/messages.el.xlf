@@ -3397,6 +3397,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">Δεν ήταν δυνατή η ανανέωση της κατάστασης ενημέρωσης. Θα γίνει αυτόματη επανάληψη.</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Δεν ήταν δυνατή η ανανέωση του Watch Together. Θα γίνει αυτόματη επανάληψη.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

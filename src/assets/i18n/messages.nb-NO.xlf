@@ -2929,6 +2929,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">Kunne ikke oppdatere oppdateringsstatusen. Prøver automatisk på nytt.</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Kunne ikke oppdatere Watch Together. Prøver automatisk på nytt.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

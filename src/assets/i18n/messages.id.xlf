@@ -5110,6 +5110,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">Tidak dapat memuat ulang status pembaruan. Mencoba lagi secara otomatis.</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Tidak dapat memuat ulang Watch Together. Mencoba lagi secara otomatis.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

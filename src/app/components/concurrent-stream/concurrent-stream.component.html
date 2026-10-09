@@ -4,3 +4,7 @@
     <button (click)="startClient()" *ngIf="watch_together_clicked && !started && server_already_exists === true" mat-flat-button>Join stream</button>
     <button style="margin-left: 10px;" (click)="stop()" *ngIf="watch_together_clicked" mat-flat-button>Stop</button>
 </div>
+<div class="stream-connection-state" *ngIf="stream_connection_error" role="status" aria-live="polite">
+    <mat-icon color="warn">cloud_off</mat-icon>
+    <span i18n="Watch Together refresh failure@@watch-together-refresh-failed">Unable to refresh Watch Together. Retrying automatically.</span>
+</div>

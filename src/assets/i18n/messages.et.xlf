@@ -4416,6 +4416,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">Uuenduse olekut ei õnnestunud värskendada. Proovitakse automaatselt uuesti.</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Watch Togetherit ei õnnestunud värskendada. Proovitakse automaatselt uuesti.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

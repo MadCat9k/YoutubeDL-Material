@@ -5160,6 +5160,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">无法刷新更新状态。正在自动重试。</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">无法刷新 Watch Together。正在自动重试。</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

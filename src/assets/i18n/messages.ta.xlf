@@ -4776,6 +4776,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">புதுப்பிப்பு நிலையைப் புதுப்பிக்க முடியவில்லை. தானாக மீண்டும் முயற்சிக்கப்படுகிறது.</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Watch Together-ஐப் புதுப்பிக்க முடியவில்லை. தானாக மீண்டும் முயற்சிக்கப்படுகிறது.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

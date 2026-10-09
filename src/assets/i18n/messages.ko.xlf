@@ -3219,6 +3219,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">업데이트 상태를 새로 고칠 수 없습니다. 자동으로 다시 시도합니다.</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Watch Together를 새로 고칠 수 없습니다. 자동으로 다시 시도합니다.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

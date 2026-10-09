@@ -2649,6 +2649,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">Päivityksen tilaa ei voitu päivittää. Yritetään automaattisesti uudelleen.</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Watch Togetheria ei voitu päivittää. Yritetään automaattisesti uudelleen.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

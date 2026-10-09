@@ -4776,6 +4776,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">अपडेट की स्थिति रीफ़्रेश नहीं की जा सकी। अपने आप फिर से प्रयास किया जा रहा है।</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Watch Together को रीफ़्रेश नहीं किया जा सका। अपने आप फिर से प्रयास किया जा रहा है।</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

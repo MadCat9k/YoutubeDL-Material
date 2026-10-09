@@ -4757,6 +4757,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">更新状態を取得できません。自動的に再試行します。</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Watch Togetherを更新できません。自動的に再試行します。</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

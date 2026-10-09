@@ -3169,6 +3169,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">Não foi possível atualizar o estado da atualização. Nova tentativa automática.</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Não foi possível atualizar o Watch Together. Nova tentativa automática.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

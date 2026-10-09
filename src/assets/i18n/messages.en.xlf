@@ -4287,6 +4287,9 @@
       <trans-unit id="update-status-refresh-failed" datatype="html">
         <source>Unable to refresh update status. Retrying automatically.</source>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

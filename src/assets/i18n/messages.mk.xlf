@@ -3381,6 +3381,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">Не може да се освежи статусот на ажурирањето. Ќе се обиде повторно автоматски.</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Не може да се освежи Watch Together. Ќе се обиде повторно автоматски.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

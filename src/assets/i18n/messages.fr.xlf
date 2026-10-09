@@ -5115,6 +5115,10 @@
         <source>Unable to refresh update status. Retrying automatically.</source>
         <target state="translated">Impossible d&apos;actualiser l&apos;état de la mise à jour. Nouvelle tentative automatique.</target>
       </trans-unit>
+      <trans-unit id="watch-together-refresh-failed" datatype="html">
+        <source>Unable to refresh Watch Together. Retrying automatically.</source>
+        <target state="translated">Impossible d&apos;actualiser Watch Together. Nouvelle tentative automatique.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
