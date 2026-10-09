@@ -3365,6 +3365,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target>Не може да се освежат преземањата. Ќе се обиде повторно автоматски.</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target>Не може да се освежат задачите. Ќе се обиде повторно автоматски.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

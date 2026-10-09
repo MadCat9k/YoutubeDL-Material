@@ -4045,6 +4045,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target>No se pudieron actualizar las descargas. Se volverá a intentar automáticamente.</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target>No se pudieron actualizar las tareas. Se volverá a intentar automáticamente.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

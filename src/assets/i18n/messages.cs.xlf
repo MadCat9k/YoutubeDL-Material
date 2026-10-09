@@ -2552,6 +2552,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target>Stahování se nepodařilo obnovit. Opakování proběhne automaticky.</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target>Úlohy se nepodařilo obnovit. Opakování proběhne automaticky.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

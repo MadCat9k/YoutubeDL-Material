@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, EventEmitter, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -10,15 +10,22 @@ import { PostsService } from 'app/posts.services';
 import { Task, TaskType } from 'api-types';
 import { TaskSettingsComponent } from '../task-settings/task-settings.component';
 import { Clipboard } from '@angular/cdk/clipboard';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-tasks',
   templateUrl: './tasks.component.html',
   styleUrls: ['./tasks.component.scss']
 })
-export class TasksComponent implements OnInit {
+export class TasksComponent implements OnInit, OnDestroy {
 
   interval_id = null;
+  initialization_subscription: Subscription = null;
+  tasks_request_subscription: Subscription = null;
+  polling_stopped = false;
+  tasks_request_in_flight = false;
+  tasks_connection_error = false;
+  consecutive_poll_failures = 0;
   tasks_check_interval = 1500;
   tasks: Task[] = null;
   tasks_retrieved = false;
@@ -48,8 +55,10 @@ export class TasksComponent implements OnInit {
     if (this.postsService.initialized) {
       this.getTasksRecurring();
     } else {
-      this.postsService.service_initialized.subscribe(init => {
+      this.initialization_subscription = this.postsService.service_initialized.subscribe(init => {
         if (init) {
+          this.initialization_subscription?.unsubscribe();
+          this.initialization_subscription = null;
           this.getTasksRecurring();
         }
       });
@@ -57,7 +66,12 @@ export class TasksComponent implements OnInit {
   }
 
   ngOnDestroy(): void {
-    if (this.interval_id) { clearInterval(this.interval_id) }
+    this.polling_stopped = true;
+    this.initialization_subscription?.unsubscribe();
+    this.tasks_request_subscription?.unsubscribe();
+    this.tasks_request_subscription = null;
+    this.tasks_request_in_flight = false;
+    if (this.interval_id) { clearTimeout(this.interval_id) }
   }
 
   @HostListener('window:resize')
@@ -70,33 +84,72 @@ export class TasksComponent implements OnInit {
   }
 
   getTasksRecurring(): void {
-    this.getTasks();
-    this.interval_id = setInterval(() => {
-      this.getTasks();
-    }, this.tasks_check_interval);
+    this.polling_stopped = false;
+    this.pollTasks();
   }
 
-  getTasks(): void {
-    this.postsService.getTasks().subscribe(res => {
-      for (const task of res['tasks']) {
+  pollTasks(): void {
+    this.getTasks(true);
+  }
+
+  getTasks(scheduleNextPoll = false): void {
+    if (this.tasks_request_in_flight) return;
+
+    this.tasks_request_in_flight = true;
+    const requestSubscription = this.postsService.getTasks().subscribe(res => {
+      if (!Array.isArray(res['tasks'])) {
+        this.markTasksRefreshFailed();
+        this.tasks_retrieved = true;
+        return;
+      }
+
+      const nextTasks = res['tasks'];
+      for (const task of nextTasks) {
         if (task.title.includes('youtube-dl')) {
           task.title = task.title.replace('youtube-dl', this.postsService.config.Advanced.default_downloader);
         }
       }
-      if (this.tasks) {
-        if (JSON.stringify(this.tasks) === JSON.stringify(res['tasks'])) return;
-        for (const task of res['tasks']) {
-          const task_index = this.tasks.map(t => t.key).indexOf(task['key']);
-          this.tasks[task_index] = task;
+
+      this.tasks_connection_error = false;
+      this.consecutive_poll_failures = 0;
+      if (JSON.stringify(this.tasks) !== JSON.stringify(nextTasks)) {
+        this.tasks = nextTasks;
+        if (this.dataSource) {
+          this.dataSource.data = this.tasks;
+        } else {
+          this.dataSource = new MatTableDataSource<Task>(this.tasks);
+          this.dataSource.paginator = this.paginator;
+          this.dataSource.sort = this.sort;
         }
-        this.dataSource = new MatTableDataSource<Task>(this.tasks);
-      } else {
-        this.tasks = res['tasks'];
-        this.dataSource = new MatTableDataSource<Task>(this.tasks);
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
       }
+      this.tasks_retrieved = true;
+    }, () => {
+      this.markTasksRefreshFailed();
+      this.tasks_retrieved = true;
+      this.finishTasksRequest(scheduleNextPoll);
+    }, () => {
+      this.finishTasksRequest(scheduleNextPoll);
     });
+    this.tasks_request_subscription = requestSubscription.closed ? null : requestSubscription;
+  }
+
+  markTasksRefreshFailed(): void {
+    this.tasks_connection_error = true;
+    this.consecutive_poll_failures += 1;
+  }
+
+  finishTasksRequest(scheduleNextPoll: boolean): void {
+    this.tasks_request_subscription = null;
+    this.tasks_request_in_flight = false;
+    if (scheduleNextPoll && !this.polling_stopped) {
+      this.interval_id = setTimeout(() => this.pollTasks(), this.getNextPollDelay());
+    }
+  }
+
+  getNextPollDelay(): number {
+    if (!this.tasks_connection_error) return this.tasks_check_interval;
+    const backoffMultiplier = Math.pow(2, Math.min(this.consecutive_poll_failures, 5));
+    return Math.min(this.tasks_check_interval * backoffMultiplier, 30000);
   }
 
   runTask(task_key: TaskType): void {
@@ -155,7 +208,6 @@ export class TasksComponent implements OnInit {
       if (schedule || schedule === null) {
         this.postsService.updateTaskSchedule(task['key'], schedule).subscribe(res => {
           this.getTasks();
-          console.log(res);
         });
       }
     });

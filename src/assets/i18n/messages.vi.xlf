@@ -4276,6 +4276,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target>Không thể làm mới danh sách tải xuống. Đang tự động thử lại.</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target>Không thể làm mới danh sách tác vụ. Đang tự động thử lại.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

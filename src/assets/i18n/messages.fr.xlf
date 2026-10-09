@@ -5099,6 +5099,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target>Impossible d&apos;actualiser les téléchargements. Nouvelle tentative automatique.</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target>Impossible d&apos;actualiser les tâches. Nouvelle tentative automatique.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

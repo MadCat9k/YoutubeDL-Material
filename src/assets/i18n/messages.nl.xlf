@@ -5103,6 +5103,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target state="translated">Kan downloads niet vernieuwen. Er wordt automatisch opnieuw geprobeerd.</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target state="translated">Kan taken niet vernieuwen. Er wordt automatisch opnieuw geprobeerd.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

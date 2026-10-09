@@ -5080,6 +5080,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target state="translated">Impossibile aggiornare i download. Nuovo tentativo automatico.</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target state="translated">Impossibile aggiornare le attività. Nuovo tentativo automatico.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -3153,6 +3153,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target state="translated">Não foi possível atualizar as transferências. Nova tentativa automática.</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target state="translated">Não foi possível atualizar as tarefas. Nova tentativa automática.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

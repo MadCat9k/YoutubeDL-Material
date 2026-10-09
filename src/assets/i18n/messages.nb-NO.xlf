@@ -2913,6 +2913,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target>Kunne ikke oppdatere nedlastinger. Prøver automatisk på nytt.</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target>Kunne ikke oppdatere oppgaver. Prøver automatisk på nytt.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

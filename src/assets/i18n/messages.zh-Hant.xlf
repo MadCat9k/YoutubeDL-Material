@@ -4498,6 +4498,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target state="translated">無法重新整理下載項目。正在自動重試。</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target state="translated">無法重新整理工作。正在自動重試。</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

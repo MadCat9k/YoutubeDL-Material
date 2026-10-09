@@ -3039,6 +3039,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target>డౌన్‌లోడ్‌లను రిఫ్రెష్ చేయడం సాధ్యం కాలేదు. స్వయంచాలకంగా మళ్లీ ప్రయత్నిస్తోంది.</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target>టాస్క్‌లను రిఫ్రెష్ చేయడం సాధ్యం కాలేదు. స్వయంచాలకంగా మళ్లీ ప్రయత్నిస్తోంది.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

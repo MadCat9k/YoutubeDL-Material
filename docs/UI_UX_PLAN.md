@@ -241,19 +241,25 @@ running container was not replaced as part of this implementation step.
   interval.
 - Initialization and in-flight request subscriptions are released when the
   component is destroyed.
-- The new connection status is present in every tracked locale source.
+- Tasks use the same serialized polling, failure banner, bounded backoff,
+  recovery, and teardown behavior while preserving table sorting and paging.
+- The Downloads and Tasks connection statuses are present in every tracked
+  locale source.
 
 Verification:
 
 - all 31 tracked XLF files passed XML validation;
 - focused Downloads component suite: 7 passing in Chrome Headless, covering
   overlap prevention, backoff, recovery, and request teardown;
+- focused Tasks component suite: 7 passing in Chrome Headless, covering layout
+  selection, overlap prevention, view-state preservation, backoff, recovery, and
+  request teardown;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning.
 
-The same polling pattern should be applied to Tasks and any other continuously
-refreshed views in a later Phase 3 slice. Live failure-state verification remains
-pending a rebuilt validation container.
+The same polling pattern should be applied to any other continuously refreshed
+views in a later Phase 3 slice. Live failure-state verification remains pending
+a rebuilt validation container.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases

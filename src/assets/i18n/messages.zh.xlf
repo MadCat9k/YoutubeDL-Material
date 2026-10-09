@@ -5144,6 +5144,10 @@
         <source>Unable to refresh downloads. Retrying automatically.</source>
         <target state="translated">无法刷新下载项。正在自动重试。</target>
       </trans-unit>
+      <trans-unit id="tasks-refresh-failed" datatype="html">
+        <source>Unable to refresh tasks. Retrying automatically.</source>
+        <target state="translated">无法刷新任务。正在自动重试。</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

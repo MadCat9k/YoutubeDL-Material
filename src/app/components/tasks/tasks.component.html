@@ -1,3 +1,8 @@
+<div class="tasks-connection-state" *ngIf="tasks_connection_error" role="status" aria-live="polite">
+  <mat-icon color="warn">cloud_off</mat-icon>
+  <span i18n="Tasks refresh failure status@@tasks-refresh-failed">Unable to refresh tasks. Retrying automatically.</span>
+</div>
+
 <div [hidden]="!(tasks && tasks.length > 0)">
     <div class="tasks-table mat-elevation-z8" [hidden]="compactView">
         <mat-table style="overflow: hidden" matSort [dataSource]="dataSource">
@@ -181,6 +186,6 @@
     </div>
 </div>
 
-<div *ngIf="(!tasks || tasks.length === 0) && tasks_retrieved">
+<div *ngIf="(!tasks || tasks.length === 0) && tasks_retrieved && !tasks_connection_error">
   <h4 style="text-align: center; margin-top: 10px;" i18n="No tasks label">No tasks available!</h4>
 </div>
