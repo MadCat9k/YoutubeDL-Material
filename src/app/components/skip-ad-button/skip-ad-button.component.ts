@@ -1,13 +1,14 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { PostsService } from 'app/posts.services';
 import CryptoJS from 'crypto-js';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-skip-ad-button',
   templateUrl: './skip-ad-button.component.html',
   styleUrls: ['./skip-ad-button.component.scss']
 })
-export class SkipAdButtonComponent implements OnInit {
+export class SkipAdButtonComponent implements OnInit, OnChanges, OnDestroy {
 
   @Input() current_video = null;
   @Input() playback_timestamp = null;
@@ -15,6 +16,7 @@ export class SkipAdButtonComponent implements OnInit {
   @Output() setPlaybackTimestamp = new EventEmitter<any>();
 
   sponsor_block_cache = {};
+  sponsor_block_requests: {[url: string]: Subscription} = {};
   show_skip_ad_button = false;
 
   skip_ad_button_check_interval = null;
@@ -25,39 +27,53 @@ export class SkipAdButtonComponent implements OnInit {
     this.skip_ad_button_check_interval = setInterval(() => this.skipAdButtonCheck(), 500);
   }
 
-  ngOnDestroy(): void {
-    clearInterval(this.skip_ad_button_check_interval);
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.current_video) {
+      this.show_skip_ad_button = false;
+      if (!changes.current_video.firstChange) this.cancelSponsorBlockRequests();
+    }
   }
 
-  checkSponsorBlock(video_to_check) {
-    if (!video_to_check) return;
+  ngOnDestroy(): void {
+    clearInterval(this.skip_ad_button_check_interval);
+    this.cancelSponsorBlockRequests();
+  }
+
+  checkSponsorBlock(video_to_check): void {
+    if (!video_to_check?.url) return;
+
+    const videoUrl = video_to_check.url;
 
     // check cache, null means it has been checked and confirmed not to exist (limits API calls)
-    if (this.sponsor_block_cache[video_to_check.url] || this.sponsor_block_cache[video_to_check.url] === null) return;
+    if (this.sponsor_block_cache[videoUrl] || this.sponsor_block_cache[videoUrl] === null
+      || this.sponsor_block_requests[videoUrl]) return;
 
     // sponsor block needs first 4 chars from video ID hash
-    const video_id = this.getVideoIDFromURL(video_to_check.url);
+    const video_id = this.getVideoIDFromURL(videoUrl);
     const id_hash = this.getVideoIDHashFromURL(video_id);
-    if (!id_hash || id_hash.length < 4) return;
+    if (!id_hash || id_hash.length < 4) {
+      this.sponsor_block_cache[videoUrl] = null;
+      return;
+    }
     const truncated_id_hash = id_hash.substring(0, 4);
 
     // we couldn't get the data from the cache, let's get it from sponsor block directly
 
-    this.postsService.getSponsorBlockDataForVideo(truncated_id_hash).subscribe(res => {
-      if (res && res['length'] && res['length'] === 0) {
-        return;
-      }
-
-      const found_data = res['find'](data => data['videoID'] === video_id);
+    const request = this.postsService.getSponsorBlockDataForVideo(truncated_id_hash).subscribe(res => {
+      const found_data = Array.isArray(res) ? res.find(data => data['videoID'] === video_id) : null;
       if (found_data) {
-        this.sponsor_block_cache[video_to_check.url] = found_data;
+        this.sponsor_block_cache[videoUrl] = found_data;
       } else {
-        this.sponsor_block_cache[video_to_check.url] = null;
+        this.sponsor_block_cache[videoUrl] = null;
       }
-    }, err => {
+    }, () => {
       // likely doesn't exist
-      this.sponsor_block_cache[video_to_check.url] = null;
+      this.sponsor_block_cache[videoUrl] = null;
+      this.finishSponsorBlockRequest(videoUrl);
+    }, () => {
+      this.finishSponsorBlockRequest(videoUrl);
     });
+    if (!request.closed) this.sponsor_block_requests[videoUrl] = request;
   }
 
   getVideoIDHashFromURL(video_id) {
@@ -71,7 +87,12 @@ export class SkipAdButtonComponent implements OnInit {
     return (match && match[7].length==11) ? match[7] : null;
   }
 
-  skipAdButtonCheck() {
+  skipAdButtonCheck(): void {
+    if (!this.current_video?.url) {
+      this.show_skip_ad_button = false;
+      return;
+    }
+
     const sponsor_block_data = this.sponsor_block_cache[this.current_video.url];
     if (!sponsor_block_data && sponsor_block_data !== null) {
       // we haven't yet tried to get the sponsor block data for the video
@@ -89,6 +110,7 @@ export class SkipAdButtonComponent implements OnInit {
   }
 
   getTimeToSkipTo() {
+    if (!this.current_video?.url) return null;
     const sponsor_block_data = this.sponsor_block_cache[this.current_video.url];
 
     if (!sponsor_block_data) return;
@@ -110,6 +132,15 @@ export class SkipAdButtonComponent implements OnInit {
     this.setPlaybackTimestamp.emit(time_to_skip_to);
 
     this.show_skip_ad_button = false;
+  }
+
+  finishSponsorBlockRequest(videoUrl: string): void {
+    delete this.sponsor_block_requests[videoUrl];
+  }
+
+  cancelSponsorBlockRequests(): void {
+    Object.values(this.sponsor_block_requests).forEach(request => request.unsubscribe());
+    this.sponsor_block_requests = {};
   }
 
 }

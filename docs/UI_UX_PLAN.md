@@ -260,6 +260,10 @@ running container was not replaced as part of this implementation step.
   cancels discovery work when hosting starts, resets work when the active file
   changes, and releases requests, timers, and temporary playback-rate changes
   when stopped or destroyed.
+- Skip Ad now tracks SponsorBlock lookups per video so its periodic check cannot
+  start duplicate requests, safely handles the interval before a video is
+  available, and cancels in-flight lookups when the video changes or the control
+  is destroyed.
 - The Downloads, Tasks, Subscription, active-download, updater, and Watch
   Together connection statuses are present in every tracked locale source.
 
@@ -283,6 +287,9 @@ Verification:
 - focused Concurrent Stream component suite: 8 passing in Chrome Headless,
   covering serialized discovery and host updates, mode transitions, bounded
   backoff, recovery, input replacement, and active-request teardown;
+- focused Skip Ad Button component suite: 6 passing in Chrome Headless, covering
+  pre-input safety, duplicate-request prevention, per-video caching, input
+  replacement, and active-request teardown;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning.
 
