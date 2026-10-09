@@ -1,13 +1,15 @@
 import { Component, OnInit, HostListener, OnDestroy, AfterViewInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { VgApiService } from '@videogular/ngx-videogular/core';
 import { PostsService } from 'app/posts.services';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ShareMediaDialogComponent } from '../dialogs/share-media-dialog/share-media-dialog.component';
 import { DatabaseFile, FileType, Playlist } from '../../api-types';
 import { TwitchChatComponent } from 'app/components/twitch-chat/twitch-chat.component';
 import { VideoInfoDialogComponent } from 'app/dialogs/video-info-dialog/video-info-dialog.component';
+import { Subscription } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 
 export interface IMedia {
   title: string;
@@ -65,29 +67,24 @@ export class PlayerComponent implements OnInit, AfterViewInit, OnDestroy {
 
   save_volume_timer = null;
   original_volume = null;
+  route_subscription: Subscription = null;
+  initialization_subscription: Subscription = null;
+  data_request: Subscription = null;
+  view_count_request: Subscription = null;
+  download_request: Subscription = null;
+  loaded_metadata_subscription: Subscription = null;
+  ended_subscription: Subscription = null;
+  request_generation = 0;
+  destroyed = false;
 
   @ViewChild('twitchchat') twitchChat: TwitchChatComponent;
 
   ngOnInit(): void {
-    this.playlist_id = this.route.snapshot.paramMap.get('playlist_id');
-    this.uid = this.route.snapshot.paramMap.get('uid');
-    this.sub_id = this.route.snapshot.paramMap.get('sub_id');
-    this.url = this.route.snapshot.paramMap.get('url');
-    this.name = this.route.snapshot.paramMap.get('name');
-    this.uuid = this.route.snapshot.paramMap.get('uuid');
-    this.timestamp = this.route.snapshot.paramMap.get('timestamp');
-    this.auto = this.route.snapshot.paramMap.get('auto');
-
-    // loading config
-    if (this.postsService.initialized) {
-      this.processConfig();
-    } else {
-      this.postsService.service_initialized.subscribe(init => { // loads settings
-        if (init) {
-          this.processConfig();
-        }
-      });
-    }
+    this.route_subscription = this.route.paramMap.subscribe(paramMap => {
+      this.applyRouteParams(paramMap);
+      if (this.postsService.initialized) this.processConfig();
+      else this.waitForInitialization();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -96,14 +93,40 @@ export class PlayerComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // prevents volume save feature from running in the background
-    clearInterval(this.save_volume_timer);
+    this.destroyed = true;
+    this.route_subscription?.unsubscribe();
+    this.initialization_subscription?.unsubscribe();
+    this.resetRouteState();
   }
 
   constructor(public postsService: PostsService, private route: ActivatedRoute, private dialog: MatDialog, private router: Router,
               private cdr: ChangeDetectorRef) {
 
   }
+
+  applyRouteParams(paramMap: ParamMap): void {
+    this.resetRouteState();
+    this.playlist_id = paramMap.get('playlist_id');
+    this.uid = paramMap.get('uid');
+    this.sub_id = paramMap.get('sub_id');
+    this.url = paramMap.get('url');
+    this.name = paramMap.get('name');
+    this.uuid = paramMap.get('uuid');
+    this.timestamp = paramMap.get('timestamp');
+    this.auto = paramMap.get('auto');
+  }
+
+  waitForInitialization(): void {
+    if (this.initialization_subscription) return;
+    const initializationSubscription = this.postsService.service_initialized.pipe(
+      filter(init => init),
+      take(1)
+    ).subscribe(() => {
+      if (!this.destroyed) this.processConfig();
+    });
+    this.initialization_subscription = initializationSubscription.closed ? null : initializationSubscription;
+  }
+
   processConfig(): void {
     this.baseStreamPath = this.postsService.path;
     this.audioFolderPath = this.postsService.config['Downloader']['path-audio'];
@@ -136,38 +159,64 @@ export class PlayerComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getFile(): void {
-    this.postsService.getFile(this.uid, this.uuid).subscribe(res => {
+    const requestGeneration = this.request_generation;
+    const requestedUid = this.uid;
+    this.data_request?.unsubscribe();
+    const request = this.postsService.getFile(requestedUid, this.uuid).subscribe(res => {
+      if (requestGeneration !== this.request_generation || requestedUid !== this.uid) return;
       this.db_file = res['file'];
       if (!this.db_file) {
         this.postsService.openSnackBar($localize`Failed to get file information from the server.`, 'Dismiss');
         return;
       }
-      this.postsService.incrementViewCount(this.db_file['uid'], null, this.uuid).subscribe(() => undefined, err => {
+      this.view_count_request?.unsubscribe();
+      const viewCountRequest = this.postsService.incrementViewCount(this.db_file['uid'], null, this.uuid).subscribe(() => undefined, () => {
         console.error('Failed to increment view count');
-        console.error(err);
+        if (requestGeneration === this.request_generation) this.view_count_request = null;
+      }, () => {
+        if (requestGeneration === this.request_generation) this.view_count_request = null;
       });
+      this.view_count_request = viewCountRequest.closed ? null : viewCountRequest;
       // regular video/audio file (not playlist)
       this.uids = [this.db_file['uid']];
       this.type = this.db_file['isAudio'] ? 'audio' as FileType : 'video' as FileType;
       this.parseFileNames();
+    }, () => {
+      this.finishDataRequest(requestGeneration);
+    }, () => {
+      this.finishDataRequest(requestGeneration);
     });
+    this.data_request = request.closed ? null : request;
   }
 
   getSubscription(): void {
-    this.postsService.getSubscription(this.sub_id).subscribe(res => {
+    const requestGeneration = this.request_generation;
+    const requestedSubscriptionId = this.sub_id;
+    this.data_request?.unsubscribe();
+    const request = this.postsService.getSubscription(requestedSubscriptionId).subscribe(res => {
+      if (requestGeneration !== this.request_generation || requestedSubscriptionId !== this.sub_id) return;
       const subscription = res['subscription'];
       this.subscription = subscription;
-      this.type === this.subscription.type;
+      this.type = this.subscription.type;
       this.uids = this.subscription.videos.map(video => video['uid']);
       this.parseFileNames();
     }, () => {
+      if (requestGeneration !== this.request_generation || requestedSubscriptionId !== this.sub_id) return;
       // TODO: Make translatable
-      this.postsService.openSnackBar(`Failed to find subscription ${this.sub_id}`, 'Dismiss');
+      this.postsService.openSnackBar(`Failed to find subscription ${requestedSubscriptionId}`, 'Dismiss');
+      this.finishDataRequest(requestGeneration);
+    }, () => {
+      this.finishDataRequest(requestGeneration);
     });
+    this.data_request = request.closed ? null : request;
   }
 
   getPlaylistFiles(): void {
-    this.postsService.getPlaylist(this.playlist_id, this.uuid, true).subscribe(res => {
+    const requestGeneration = this.request_generation;
+    const requestedPlaylistId = this.playlist_id;
+    this.data_request?.unsubscribe();
+    const request = this.postsService.getPlaylist(requestedPlaylistId, this.uuid, true).subscribe(res => {
+      if (requestGeneration !== this.request_generation || requestedPlaylistId !== this.playlist_id) return;
       if (res['playlist']) {
         this.db_playlist = res['playlist'];
         this.file_objs = res['file_objs'];
@@ -179,8 +228,13 @@ export class PlayerComponent implements OnInit, AfterViewInit, OnDestroy {
         this.postsService.openSnackBar($localize`Failed to load playlist!`);
       }
     }, () => {
+      if (requestGeneration !== this.request_generation || requestedPlaylistId !== this.playlist_id) return;
       this.postsService.openSnackBar($localize`Failed to load playlist!`);
+      this.finishDataRequest(requestGeneration);
+    }, () => {
+      this.finishDataRequest(requestGeneration);
     });
+    this.data_request = request.closed ? null : request;
   }
 
   parseFileNames(): void {    
@@ -233,6 +287,7 @@ export class PlayerComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onPlayerReady(api: VgApiService): void {
+      this.stopMediaTracking();
       this.api = api;
       this.api_ready = true;
       this.cdr.detectChanges();
@@ -244,8 +299,8 @@ export class PlayerComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.save_volume_timer = setInterval(() => this.saveVolume(this.api), 2000)
 
-      this.api.getDefaultMedia().subscriptions.loadedMetadata.subscribe(this.playVideo.bind(this));
-      this.api.getDefaultMedia().subscriptions.ended.subscribe(this.nextVideo.bind(this));
+      this.loaded_metadata_subscription = this.api.getDefaultMedia().subscriptions.loadedMetadata.subscribe(this.playVideo.bind(this));
+      this.ended_subscription = this.api.getDefaultMedia().subscriptions.ended.subscribe(this.nextVideo.bind(this));
 
       if (this.timestamp) {
         this.api.seekTime(+this.timestamp);
@@ -297,30 +352,42 @@ export class PlayerComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   downloadContent(): void {
+    if (this.downloading) return;
     const zipName = this.db_playlist.name;
+    const requestGeneration = this.request_generation;
     this.downloading = true;
-    this.postsService.downloadPlaylistFromServer(this.playlist_id, this.uuid).subscribe(res => {
+    const request = this.postsService.downloadPlaylistFromServer(this.playlist_id, this.uuid).subscribe(res => {
+      if (requestGeneration !== this.request_generation) return;
       this.downloading = false;
       const blob: Blob = res;
       saveAs(blob, zipName + '.zip');
-    }, err => {
-      console.error(err);
-      this.downloading = false;
+    }, () => {
+      if (requestGeneration === this.request_generation) this.downloading = false;
+      this.finishDownloadRequest(requestGeneration);
+    }, () => {
+      this.finishDownloadRequest(requestGeneration);
     });
+    this.download_request = request.closed ? null : request;
   }
 
   downloadFile(): void {
+    if (this.downloading) return;
     const filename = this.playlist[0].title;
     const ext = (this.playlist[0].type === 'audio/mp3') ? '.mp3' : '.mp4';
+    const requestGeneration = this.request_generation;
     this.downloading = true;
-    this.postsService.downloadFileFromServer(this.uid, this.uuid).subscribe(res => {
+    const request = this.postsService.downloadFileFromServer(this.uid, this.uuid).subscribe(res => {
+      if (requestGeneration !== this.request_generation) return;
       this.downloading = false;
       const blob: Blob = res;
       saveAs(blob, filename + ext);
-    }, err => {
-      console.error(err);
-      this.downloading = false;
+    }, () => {
+      if (requestGeneration === this.request_generation) this.downloading = false;
+      this.finishDownloadRequest(requestGeneration);
+    }, () => {
+      this.finishDownloadRequest(requestGeneration);
     });
+    this.download_request = request.closed ? null : request;
   }
 
   playlistPostCreationHandler(playlistID: string): void {
@@ -400,6 +467,49 @@ export class PlayerComponent implements OnInit, AfterViewInit, OnDestroy {
 
   setPlaybackRate(speed: number): void {
     this.api.playbackRate = speed;
+  }
+
+  finishDataRequest(requestGeneration: number): void {
+    if (requestGeneration === this.request_generation) this.data_request = null;
+  }
+
+  finishDownloadRequest(requestGeneration: number): void {
+    if (requestGeneration === this.request_generation) this.download_request = null;
+  }
+
+  stopMediaTracking(): void {
+    if (this.save_volume_timer) clearInterval(this.save_volume_timer);
+    this.save_volume_timer = null;
+    this.loaded_metadata_subscription?.unsubscribe();
+    this.ended_subscription?.unsubscribe();
+    this.loaded_metadata_subscription = null;
+    this.ended_subscription = null;
+  }
+
+  resetRouteState(): void {
+    this.request_generation += 1;
+    this.data_request?.unsubscribe();
+    this.view_count_request?.unsubscribe();
+    this.download_request?.unsubscribe();
+    this.data_request = null;
+    this.view_count_request = null;
+    this.download_request = null;
+    this.stopMediaTracking();
+    this.playlist = [];
+    this.original_playlist = null;
+    this.currentIndex = 0;
+    this.currentItem = null;
+    this.api = null;
+    this.api_ready = false;
+    this.show_player = false;
+    this.uids = [];
+    this.type = null;
+    this.file_objs = [];
+    this.subscription = null;
+    this.subPlaylist = null;
+    this.db_playlist = null;
+    this.db_file = null;
+    this.downloading = false;
   }
 
   shuffleArray(array: unknown[]): void {

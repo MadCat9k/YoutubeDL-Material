@@ -228,8 +228,9 @@ Verification:
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning.
 
-Live visual verification remains pending a rebuilt validation container; the
-running container was not replaced as part of this implementation step.
+The rebuilt validation container was checked at 455 and 1280 CSS-pixel widths.
+Tasks use cards without horizontal overflow at 455 pixels and return to the
+desktop table at 1280 pixels.
 
 ### Phase 3 started (2026-10-09)
 
@@ -268,6 +269,9 @@ running container was not replaced as part of this implementation step.
   stale work when the active file or subscription changes, replaces rather than
   accumulates playback timers, and rejects unsupported VOD URLs before starting
   a download request.
+- Player now reacts to reused-route parameter changes, cancels stale file,
+  playlist, subscription, view-count, and download requests, and replaces media
+  event subscriptions and volume timers when the player is readied again.
 - The Downloads, Tasks, Subscription, active-download, updater, and Watch
   Together connection statuses are present in every tracked locale source.
 
@@ -297,12 +301,21 @@ Verification:
 - focused Twitch Chat component suite: 8 passing in Chrome Headless, covering
   pre-input safety, duplicate-request prevention, timer replacement, VOD URL
   validation, input replacement, and active-request teardown;
+- focused Player component suite: 7 passing in Chrome Headless, covering reused
+  route parameters, delayed and already-complete initialization, route and
+  initialization teardown, media-event replacement, and active-request teardown;
 - production frontend build: passed with the inherited `file-saver` CommonJS
-  warning.
+  warning;
+- rebuilt validation container: healthy with zero restarts and HTTP 200 on port
+  `18084`;
+- deployed browser smoke check: Home, Downloads, Tasks, and Subscriptions had no
+  horizontal overflow at 455 or 1280 CSS pixels and produced no browser-console
+  errors; Downloads retained a full-width paginator and 439-pixel bulk actions
+  at 455 pixels.
 
-Other continuously refreshed views should be audited for the same lifecycle
-risks in a later Phase 3 slice. Live failure-state verification remains pending a
-rebuilt validation container.
+The periodic network-refresh audit is complete for the current Phase 3 scope.
+Normal-state live verification is complete; forced backend-failure presentation
+remains covered by focused tests rather than a destructive live outage exercise.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases
