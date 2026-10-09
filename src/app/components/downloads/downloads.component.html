@@ -1,6 +1,6 @@
 <div [hidden]="!(downloads && downloads.length > 0)">
-    <div style="overflow: hidden;" [ngClass]="uids ? 'rounded mat-elevation-z2' : 'mat-elevation-z8'">
-        <mat-table style="overflow: hidden" [ngClass]="uids ? 'rounded-top' : null" matSort [dataSource]="dataSource">
+    <div class="downloads-table-container" [ngClass]="uids ? 'rounded mat-elevation-z2' : 'mat-elevation-z8'">
+        <mat-table class="downloads-table" [ngClass]="uids ? 'rounded-top' : null" matSort [dataSource]="dataSource">
       
           <!-- Date Column -->
           <ng-container matColumnDef="timestamp_start">
@@ -13,7 +13,7 @@
             <mat-header-cell *matHeaderCellDef mat-sort-header style="flex: 2"> <ng-container i18n="Title">Title</ng-container> </mat-header-cell>
             <mat-cell *matCellDef="let element" style="flex: 2">
                 <span class="one-line" [matTooltip]="element.title ? element.title : null">
-                    {{element.title}}
+                    {{element.title || 'N/A'}}
                 </span>
             </mat-cell>
           </ng-container>
@@ -39,7 +39,7 @@
                 {{STEP_INDEX_TO_LABEL[element.step_index]}}
               </ng-container>
               <ng-container *ngIf="!element.error && element.step_index === 2">
-                <ng-container *ngIf="element.percent_complete">
+                <ng-container *ngIf="element.percent_complete !== null && element.percent_complete !== undefined">
                   {{+(element.percent_complete) > 100 ? '100' : element.percent_complete}}%
                 </ng-container>
                 <ng-container *ngIf="!element.percent_complete">
@@ -80,7 +80,7 @@
             <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
         </mat-table>
       
-        <mat-paginator [ngClass]="uids ? 'rounded-bottom' : null" [pageSizeOptions]="[5, 10, 20]"
+        <mat-paginator class="downloads-paginator" [ngClass]="uids ? 'rounded-bottom' : null" [pageSizeOptions]="[5, 10, 20]"
                        showFirstLastButtons 
                        aria-label="Select page of downloads">
         </mat-paginator>

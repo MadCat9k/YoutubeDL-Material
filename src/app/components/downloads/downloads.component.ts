@@ -288,7 +288,7 @@ export class DownloadsComponent implements OnInit, OnDestroy {
       });
   
       Object.keys(download_old).forEach(key => {
-        if (!download_new[key]) delete download_old[key];
+        if (!(key in download_new)) delete download_old[key];
       });
     });
 
