@@ -4404,6 +4404,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target state="translated">Ülesandeid ei õnnestunud värskendada. Proovitakse automaatselt uuesti.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target state="translated">Tellimust ei õnnestunud värskendada. Proovitakse automaatselt uuesti.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -3043,6 +3043,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target>టాస్క్‌లను రిఫ్రెష్ చేయడం సాధ్యం కాలేదు. స్వయంచాలకంగా మళ్లీ ప్రయత్నిస్తోంది.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target>సబ్‌స్క్రిప్షన్‌ను రిఫ్రెష్ చేయడం సాధ్యం కాలేదు. స్వయంచాలకంగా మళ్లీ ప్రయత్నిస్తోంది.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

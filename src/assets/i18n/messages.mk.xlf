@@ -3369,6 +3369,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target>Не може да се освежат задачите. Ќе се обиде повторно автоматски.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target>Не може да се освежи претплатата. Ќе се обиде повторно автоматски.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

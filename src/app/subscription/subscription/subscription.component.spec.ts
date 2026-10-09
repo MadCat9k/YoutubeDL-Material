@@ -81,4 +81,31 @@ describe('SubscriptionComponent', () => {
     tick(2000);
     expect(postsService.getSubscription).toHaveBeenCalledTimes(3);
   }));
+
+  it('backs off after a refresh failure and recovers after success', fakeAsync(() => {
+    const failedRequest = new Subject<any>();
+    const recoveredRequest = new Subject<any>();
+    postsService.getSubscription.and.returnValues(failedRequest, recoveredRequest);
+
+    routeParams.next({id: 'subscriptionA'});
+    failedRequest.error(new Error('synthetic failure'));
+
+    expect(component.subscriptionConnectionError).toBe(true);
+    expect(component.getNextPollDelay()).toBe(2000);
+
+    tick(1999);
+    expect(postsService.getSubscription).toHaveBeenCalledTimes(1);
+    tick(1);
+    expect(postsService.getSubscription).toHaveBeenCalledTimes(2);
+
+    recoveredRequest.next({
+      subscription: {id: 'subscriptionA', videos: [], downloading: false}
+    });
+    recoveredRequest.complete();
+
+    expect(component.subscriptionConnectionError).toBe(false);
+    expect(component.getNextPollDelay()).toBe(1000);
+
+    fixture.destroy();
+  }));
 });

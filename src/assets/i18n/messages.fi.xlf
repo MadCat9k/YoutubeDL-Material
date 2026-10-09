@@ -2637,6 +2637,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target>Tehtäviä ei voitu päivittää. Yritetään automaattisesti uudelleen.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target>Tilausta ei voitu päivittää. Yritetään automaattisesti uudelleen.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

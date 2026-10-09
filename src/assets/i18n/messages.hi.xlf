@@ -4764,6 +4764,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target state="translated">कार्य रीफ़्रेश नहीं किए जा सके। अपने आप फिर से प्रयास किया जा रहा है।</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html" xml:space="preserve">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target state="translated">सदस्यता रीफ़्रेश नहीं की जा सकी। अपने आप फिर से प्रयास किया जा रहा है।</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

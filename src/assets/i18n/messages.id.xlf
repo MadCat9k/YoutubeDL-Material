@@ -5098,6 +5098,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target state="translated">Tidak dapat memuat ulang tugas. Mencoba lagi secara otomatis.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target state="translated">Tidak dapat memuat ulang langganan. Mencoba lagi secara otomatis.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -4280,6 +4280,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target>Không thể làm mới danh sách tác vụ. Đang tự động thử lại.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target>Không thể làm mới gói đăng ký. Đang tự động thử lại.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

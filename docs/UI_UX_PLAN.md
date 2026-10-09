@@ -243,8 +243,13 @@ running container was not replaced as part of this implementation step.
   component is destroyed.
 - Tasks use the same serialized polling, failure banner, bounded backoff,
   recovery, and teardown behavior while preserving table sorting and paging.
-- The Downloads and Tasks connection statuses are present in every tracked
-  locale source.
+- Subscription details now schedule each refresh after the prior request ends,
+  preserve route-change cancellation, back off after failures, and keep stale
+  content visible with a connection-status message.
+- Subscription floating actions are not created until subscription data exists,
+  preventing null-state template errors during loading and route transitions.
+- The Downloads, Tasks, and Subscription connection statuses are present in
+  every tracked locale source.
 
 Verification:
 
@@ -254,6 +259,9 @@ Verification:
 - focused Tasks component suite: 7 passing in Chrome Headless, covering layout
   selection, overlap prevention, view-state preservation, backoff, recovery, and
   request teardown;
+- focused Subscription component suite: 2 passing in Chrome Headless, covering
+  route replacement, request cancellation, serialized polling, backoff, and
+  recovery;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning.
 

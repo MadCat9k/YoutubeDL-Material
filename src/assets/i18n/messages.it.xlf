@@ -5084,6 +5084,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target state="translated">Impossibile aggiornare le attività. Nuovo tentativo automatico.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target state="translated">Impossibile aggiornare l&apos;iscrizione. Nuovo tentativo automatico.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

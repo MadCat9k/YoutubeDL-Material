@@ -4280,6 +4280,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target>Ekki tókst að uppfæra verkefni. Reynt verður aftur sjálfkrafa.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target>Ekki tókst að uppfæra áskrift. Reynt verður aftur sjálfkrafa.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

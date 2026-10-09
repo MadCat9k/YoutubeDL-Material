@@ -4307,6 +4307,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target>No s&apos;han pogut actualitzar les tasques. Es tornarà a provar automàticament.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target>No s&apos;ha pogut actualitzar la subscripció. Es tornarà a provar automàticament.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -22,6 +22,10 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   sub_interval = null;
   check_clicked = false;
   cancel_clicked = false;
+  pollingStopped = true;
+  subscriptionConnectionError = false;
+  consecutivePollFailures = 0;
+  readonly subscriptionCheckInterval = 1000;
   private destroy$ = new Subject<void>();
   private subscriptionRequest: RxSubscription = null;
   private requestGeneration = 0;
@@ -38,6 +42,8 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
         this.requestGeneration++;
         this.id = id;
         this.subscription = null;
+        this.subscriptionConnectionError = false;
+        this.consecutivePollFailures = 0;
       }),
       switchMap(() => this.postsService.service_initialized.pipe(
         filter(init => init),
@@ -46,8 +52,8 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(() => {
       this.getConfig();
-      this.getSubscription();
-      this.sub_interval = window.setInterval(() => this.getSubscription(true), 1000);
+      this.pollingStopped = false;
+      this.getSubscription(false, true);
     });
   }
 
@@ -62,7 +68,7 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     this.router.navigate(['/subscriptions']);
   }
 
-  getSubscription(low_cost = false) {
+  getSubscription(low_cost = false, scheduleNextPoll = false) {
     if (low_cost && this.subscriptionRequest && !this.subscriptionRequest.closed) {
       return;
     }
@@ -73,6 +79,12 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
       if (requestGeneration !== this.requestGeneration || requestedId !== this.id) {
         return;
       }
+      if (!res?.['subscription'] || !Array.isArray(res['subscription']['videos'])) {
+        this.markSubscriptionRefreshFailed();
+        return;
+      }
+      this.subscriptionConnectionError = false;
+      this.consecutivePollFailures = 0;
       if (low_cost && res['subscription'].videos.length === this.subscription?.videos.length) {
         if (res['subscription']['downloading'] !== this.subscription['downloading']) {
           this.subscription['downloading'] = res['subscription']['downloading'];
@@ -83,18 +95,40 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
         this.postsService.files_changed.next(true);
       }
       this.subscription = res['subscription'];
+    }, () => {
+      if (requestGeneration === this.requestGeneration && requestedId === this.id) {
+        this.markSubscriptionRefreshFailed();
+      }
     });
-    this.subscriptionRequest = request;
+    this.subscriptionRequest = request.closed ? null : request;
     request.add(() => {
       if (this.subscriptionRequest === request) {
         this.subscriptionRequest = null;
       }
+      if (scheduleNextPoll && !this.pollingStopped && requestGeneration === this.requestGeneration && requestedId === this.id) {
+        this.sub_interval = window.setTimeout(
+          () => this.getSubscription(true, true),
+          this.getNextPollDelay()
+        );
+      }
     });
   }
 
+  markSubscriptionRefreshFailed(): void {
+    this.subscriptionConnectionError = true;
+    this.consecutivePollFailures += 1;
+  }
+
+  getNextPollDelay(): number {
+    if (!this.subscriptionConnectionError) return this.subscriptionCheckInterval;
+    const backoffMultiplier = Math.pow(2, Math.min(this.consecutivePollFailures, 5));
+    return Math.min(this.subscriptionCheckInterval * backoffMultiplier, 30000);
+  }
+
   private stopSubscriptionPolling(): void {
+    this.pollingStopped = true;
     if (this.sub_interval !== null) {
-      window.clearInterval(this.sub_interval);
+      window.clearTimeout(this.sub_interval);
       this.sub_interval = null;
     }
   }

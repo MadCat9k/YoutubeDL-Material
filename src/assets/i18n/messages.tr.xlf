@@ -4553,6 +4553,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target state="translated">Görevler yenilenemedi. Otomatik olarak yeniden deneniyor.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target state="translated">Abonelik yenilenemedi. Otomatik olarak yeniden deneniyor.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

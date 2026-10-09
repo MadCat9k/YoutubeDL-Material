@@ -2917,6 +2917,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target>Kunne ikke oppdatere oppgaver. Prøver automatisk på nytt.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target>Kunne ikke oppdatere abonnementet. Prøver automatisk på nytt.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

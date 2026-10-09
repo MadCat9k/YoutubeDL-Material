@@ -4284,6 +4284,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target>A feladatok frissítése nem sikerült. Automatikus újrapróbálkozás.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target>Az előfizetés frissítése nem sikerült. Automatikus újrapróbálkozás.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

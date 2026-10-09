@@ -4502,6 +4502,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target state="translated">無法重新整理工作。正在自動重試。</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target state="translated">無法重新整理訂閱。正在自動重試。</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

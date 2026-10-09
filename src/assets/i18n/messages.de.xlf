@@ -5149,6 +5149,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target state="translated">Aufgaben konnten nicht aktualisiert werden. Neuer Versuch erfolgt automatisch.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target state="translated">Abonnement konnte nicht aktualisiert werden. Neuer Versuch erfolgt automatisch.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -4764,6 +4764,10 @@
         <source>Unable to refresh tasks. Retrying automatically.</source>
         <target state="translated">பணிகளைப் புதுப்பிக்க முடியவில்லை. தானாக மீண்டும் முயற்சிக்கப்படுகிறது.</target>
       </trans-unit>
+      <trans-unit id="subscription-refresh-failed" datatype="html" xml:space="preserve">
+        <source>Unable to refresh subscription. Retrying automatically.</source>
+        <target state="translated">சந்தாவைப் புதுப்பிக்க முடியவில்லை. தானாக மீண்டும் முயற்சிக்கப்படுகிறது.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
