@@ -3035,6 +3035,10 @@
         </context-group>
         <note priority="1" from="description">Video duration label</note>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target>డౌన్‌లోడ్‌లను రిఫ్రెష్ చేయడం సాధ్యం కాలేదు. స్వయంచాలకంగా మళ్లీ ప్రయత్నిస్తోంది.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

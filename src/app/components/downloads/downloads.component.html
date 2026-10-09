@@ -1,3 +1,8 @@
+<div class="downloads-connection-state" *ngIf="downloads_connection_error" role="status" aria-live="polite">
+  <mat-icon color="warn">cloud_off</mat-icon>
+  <span i18n="Downloads refresh failure status@@downloads-refresh-failed">Unable to refresh downloads. Retrying automatically.</span>
+</div>
+
 <div [hidden]="!(downloads && downloads.length > 0)">
     <div class="downloads-table-container" [ngClass]="uids ? 'rounded mat-elevation-z2' : 'mat-elevation-z8'">
         <mat-table class="downloads-table" [ngClass]="uids ? 'rounded-top' : null" matSort [dataSource]="dataSource">
@@ -92,6 +97,6 @@
       </div>
 </div>
 
-<div *ngIf="(!downloads || downloads.length === 0) && downloads_retrieved && !uids">
+<div *ngIf="(!downloads || downloads.length === 0) && downloads_retrieved && !downloads_connection_error && !uids">
   <h4 style="text-align: center; margin-top: 10px;" i18n="No downloads label">No downloads available!</h4>
 </div>

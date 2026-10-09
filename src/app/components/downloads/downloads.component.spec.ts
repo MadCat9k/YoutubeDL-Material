@@ -1,16 +1,19 @@
 import { Clipboard } from '@angular/cdk/clipboard';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
+import { Subject, of, throwError } from 'rxjs';
 
 import { PostsService } from 'app/posts.services';
 import { DownloadsComponent } from './downloads.component';
 
 describe('DownloadsComponent', () => {
   let component: DownloadsComponent;
+  let postsService: jasmine.SpyObj<PostsService>;
 
   beforeEach(() => {
+    postsService = jasmine.createSpyObj<PostsService>('PostsService', ['getCurrentDownloads']);
     component = new DownloadsComponent(
-      {} as PostsService,
+      postsService,
       {} as Router,
       {} as MatDialog,
       {} as Clipboard
@@ -61,5 +64,49 @@ describe('DownloadsComponent', () => {
     expect(component.displayedColumns).toEqual(['title', 'percent_complete', 'actions']);
     expect(component.actionsFlex).toBe(1);
     expect(component.minimizeButtons).toBe(true);
+  });
+
+  it('does not start another downloads request while one is in flight', () => {
+    const response = new Subject<any>();
+    postsService.getCurrentDownloads.and.returnValue(response.asObservable());
+
+    component.getCurrentDownloads();
+    component.getCurrentDownloads();
+
+    expect(postsService.getCurrentDownloads).toHaveBeenCalledTimes(1);
+
+    response.next({downloads: []});
+    response.complete();
+    component.getCurrentDownloads();
+
+    expect(postsService.getCurrentDownloads).toHaveBeenCalledTimes(2);
+  });
+
+  it('marks refresh failures and clears the warning after recovery', () => {
+    postsService.getCurrentDownloads.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.getCurrentDownloads();
+
+    expect(component.downloads_connection_error).toBe(true);
+    expect(component.consecutive_poll_failures).toBe(1);
+    expect(component.getNextPollDelay()).toBe(2000);
+
+    postsService.getCurrentDownloads.and.returnValue(of({downloads: []}));
+    component.getCurrentDownloads();
+
+    expect(component.downloads_connection_error).toBe(false);
+    expect(component.consecutive_poll_failures).toBe(0);
+    expect(component.getNextPollDelay()).toBe(1000);
+  });
+
+  it('cancels an in-flight downloads request when destroyed', () => {
+    const response = new Subject<any>();
+    postsService.getCurrentDownloads.and.returnValue(response.asObservable());
+    component.getCurrentDownloads();
+
+    component.ngOnDestroy();
+
+    expect(response.observers.length).toBe(0);
+    expect(component.downloads_request_in_flight).toBe(false);
   });
 });

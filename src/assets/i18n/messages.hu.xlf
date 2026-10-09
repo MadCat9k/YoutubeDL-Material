@@ -4276,6 +4276,10 @@
         </context-group>
         <note priority="1" from="description">Select a version</note>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target>A letöltések frissítése nem sikerült. Automatikus újrapróbálkozás.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -2629,6 +2629,10 @@
         </context-group>
         <note priority="1" from="description">Video duration label</note>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target>Latauksia ei voitu päivittää. Yritetään automaattisesti uudelleen.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

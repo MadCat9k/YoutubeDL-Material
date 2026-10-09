@@ -3236,6 +3236,10 @@
           <context context-type="linenumber">75</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target state="translated">Det gick inte att uppdatera nedladdningar. Försöker igen automatiskt.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

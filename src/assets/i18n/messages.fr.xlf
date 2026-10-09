@@ -5095,6 +5095,10 @@
           <context context-type="linenumber">18</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target>Impossible d&apos;actualiser les téléchargements. Nouvelle tentative automatique.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

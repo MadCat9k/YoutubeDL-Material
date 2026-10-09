@@ -3199,6 +3199,10 @@
           <context context-type="linenumber">100</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target>다운로드를 새로 고칠 수 없습니다. 자동으로 다시 시도합니다.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

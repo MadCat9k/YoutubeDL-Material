@@ -5141,6 +5141,10 @@
         </context-group>
         <note priority="1" from="description">Use ntfy API setting</note>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target state="translated">Downloads konnten nicht aktualisiert werden. Neuer Versuch erfolgt automatisch.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

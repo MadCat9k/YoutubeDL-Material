@@ -4299,6 +4299,10 @@
         </context-group>
         <note priority="1" from="description">Filter</note>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target>No s&apos;han pogut actualitzar les baixades. Es tornarà a provar automàticament.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

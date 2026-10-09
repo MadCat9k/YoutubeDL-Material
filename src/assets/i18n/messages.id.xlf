@@ -5090,6 +5090,10 @@
         </context-group>
         <note priority="1" from="description">Over</note>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target state="translated">Tidak dapat memuat ulang unduhan. Mencoba lagi secara otomatis.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

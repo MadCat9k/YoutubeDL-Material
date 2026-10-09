@@ -2548,6 +2548,10 @@
           <context context-type="linenumber">160</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target>Stahování se nepodařilo obnovit. Opakování proběhne automaticky.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

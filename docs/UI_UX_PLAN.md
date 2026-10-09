@@ -231,6 +231,30 @@ Verification:
 Live visual verification remains pending a rebuilt validation container; the
 running container was not replaced as part of this implementation step.
 
+### Phase 3 started (2026-10-09)
+
+- Downloads polling now schedules the next refresh only after the current
+  request finishes, preventing overlapping one-second requests.
+- Failed refreshes retain the last known queue, show a polite connection-status
+  message, and retry automatically with bounded exponential backoff.
+- A successful refresh clears the warning and restores the normal polling
+  interval.
+- Initialization and in-flight request subscriptions are released when the
+  component is destroyed.
+- The new connection status is present in every tracked locale source.
+
+Verification:
+
+- all 31 tracked XLF files passed XML validation;
+- focused Downloads component suite: 7 passing in Chrome Headless, covering
+  overlap prevention, backoff, recovery, and request teardown;
+- production frontend build: passed with the inherited `file-saver` CommonJS
+  warning.
+
+The same polling pattern should be applied to Tasks and any other continuously
+refreshed views in a later Phase 3 slice. Live failure-state verification remains
+pending a rebuilt validation container.
+
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases
 should also be manually checked at representative phone, tablet, and desktop

@@ -4756,6 +4756,10 @@
         </context-group>
         <note priority="1" from="description">Select a version</note>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html" xml:space="preserve">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target state="translated">பதிவிறக்கங்களைப் புதுப்பிக்க முடியவில்லை. தானாக மீண்டும் முயற்சிக்கப்படுகிறது.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

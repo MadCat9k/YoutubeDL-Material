@@ -9,6 +9,7 @@ import { ConfirmDialogComponent } from 'app/dialogs/confirm-dialog/confirm-dialo
 import { MatSort } from '@angular/material/sort';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { Download } from 'api-types';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-downloads',
@@ -23,6 +24,12 @@ export class DownloadsComponent implements OnInit, OnDestroy {
   downloads = [];
   finished_downloads = [];
   interval_id = null;
+  initialization_subscription: Subscription = null;
+  downloads_request_subscription: Subscription = null;
+  polling_stopped = false;
+  downloads_request_in_flight = false;
+  downloads_connection_error = false;
+  consecutive_poll_failures = 0;
 
   keys = Object.keys;
 
@@ -119,8 +126,10 @@ export class DownloadsComponent implements OnInit, OnDestroy {
     if (this.postsService.initialized) {
       this.getCurrentDownloadsRecurring();
     } else {
-      this.postsService.service_initialized.subscribe(init => {
+      this.initialization_subscription = this.postsService.service_initialized.subscribe(init => {
         if (init) {
+          this.initialization_subscription?.unsubscribe();
+          this.initialization_subscription = null;
           this.getCurrentDownloadsRecurring();
         }
       });
@@ -132,34 +141,72 @@ export class DownloadsComponent implements OnInit, OnDestroy {
       this.router.navigate(['/home']);
       return;
     }
-    this.getCurrentDownloads();
-    this.interval_id = setInterval(() => {
-      this.getCurrentDownloads();
-    }, this.downloads_check_interval);
+    this.polling_stopped = false;
+    this.pollCurrentDownloads();
   }
 
   ngOnDestroy(): void {
-    if (this.interval_id) { clearInterval(this.interval_id) }
+    this.polling_stopped = true;
+    this.initialization_subscription?.unsubscribe();
+    this.downloads_request_subscription?.unsubscribe();
+    this.downloads_request_subscription = null;
+    this.downloads_request_in_flight = false;
+    if (this.interval_id) { clearTimeout(this.interval_id) }
   }
 
-  getCurrentDownloads(): void {
-    this.postsService.getCurrentDownloads(this.uids).subscribe(res => {
+  pollCurrentDownloads(): void {
+    this.getCurrentDownloads(true);
+  }
+
+  getCurrentDownloads(scheduleNextPoll = false): void {
+    if (this.downloads_request_in_flight) return;
+
+    this.downloads_request_in_flight = true;
+    const requestSubscription = this.postsService.getCurrentDownloads(this.uids).subscribe(res => {
       if (res['downloads'] !== null 
-        && res['downloads'] !== undefined
-        && JSON.stringify(this.downloads) !== JSON.stringify(res['downloads'])) {
-          this.downloads = this.combineDownloads(this.downloads, res['downloads']);
-          // this.downloads = res['downloads'];
-          this.downloads.sort(this.sort_downloads);
-          this.dataSource = new MatTableDataSource<Download>(this.downloads);
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
-          this.paused_download_exists = this.downloads.find(download => download['paused'] && !download['error']);
-          this.running_download_exists = this.downloads.find(download => !download['paused'] && !download['finished']);
+        && res['downloads'] !== undefined) {
+          this.downloads_connection_error = false;
+          this.consecutive_poll_failures = 0;
+          if (JSON.stringify(this.downloads) !== JSON.stringify(res['downloads'])) {
+            this.downloads = this.combineDownloads(this.downloads, res['downloads']);
+            this.downloads.sort(this.sort_downloads);
+            this.dataSource = new MatTableDataSource<Download>(this.downloads);
+            this.dataSource.paginator = this.paginator;
+            this.dataSource.sort = this.sort;
+            this.paused_download_exists = this.downloads.find(download => download['paused'] && !download['error']);
+            this.running_download_exists = this.downloads.find(download => !download['paused'] && !download['finished']);
+          }
       } else {
-        // failed to get downloads
+        this.markDownloadsRefreshFailed();
       }
       this.downloads_retrieved = true;
+    }, () => {
+      this.markDownloadsRefreshFailed();
+      this.downloads_retrieved = true;
+      this.finishDownloadsRequest(scheduleNextPoll);
+    }, () => {
+      this.finishDownloadsRequest(scheduleNextPoll);
     });
+    this.downloads_request_subscription = requestSubscription.closed ? null : requestSubscription;
+  }
+
+  markDownloadsRefreshFailed(): void {
+    this.downloads_connection_error = true;
+    this.consecutive_poll_failures += 1;
+  }
+
+  finishDownloadsRequest(scheduleNextPoll: boolean): void {
+    this.downloads_request_subscription = null;
+    this.downloads_request_in_flight = false;
+    if (scheduleNextPoll && !this.polling_stopped) {
+      this.interval_id = setTimeout(() => this.pollCurrentDownloads(), this.getNextPollDelay());
+    }
+  }
+
+  getNextPollDelay(): number {
+    if (!this.downloads_connection_error) return this.downloads_check_interval;
+    const backoffMultiplier = Math.pow(2, Math.min(this.consecutive_poll_failures, 5));
+    return Math.min(this.downloads_check_interval * backoffMultiplier, 30000);
   }
 
   clearDownloadsByType(): void {

@@ -4756,6 +4756,10 @@
         </context-group>
         <note priority="1" from="description">Select a version</note>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html" xml:space="preserve">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target state="translated">डाउनलोड रीफ़्रेश नहीं किए जा सके। अपने आप फिर से प्रयास किया जा रहा है।</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

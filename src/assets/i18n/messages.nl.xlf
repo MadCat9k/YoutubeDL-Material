@@ -5099,6 +5099,10 @@
         </context-group>
         <note priority="1" from="description">Enable RSS Feed setting</note>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target state="translated">Kan downloads niet vernieuwen. Er wordt automatisch opnieuw geprobeerd.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

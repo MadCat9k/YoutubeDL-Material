@@ -5076,6 +5076,10 @@
         </context-group>
         <note priority="1" from="description">RSS feed documentation</note>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target state="translated">Impossibile aggiornare i download. Nuovo tentativo automatico.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

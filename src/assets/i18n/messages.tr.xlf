@@ -4545,6 +4545,10 @@
           <context context-type="linenumber">356</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target state="translated">İndirmeler yenilenemedi. Otomatik olarak yeniden deneniyor.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

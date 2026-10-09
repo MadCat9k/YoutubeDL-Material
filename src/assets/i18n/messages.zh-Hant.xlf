@@ -4494,6 +4494,10 @@
         </context-group>
         <note priority="1" from="description">Select a version</note>
       </trans-unit>
+      <trans-unit id="downloads-refresh-failed" datatype="html">
+        <source>Unable to refresh downloads. Retrying automatically.</source>
+        <target state="translated">無法重新整理下載項目。正在自動重試。</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
