@@ -264,6 +264,10 @@ running container was not replaced as part of this implementation step.
   start duplicate requests, safely handles the interval before a video is
   available, and cancels in-flight lookups when the video changes or the control
   is destroyed.
+- Twitch Chat now prevents duplicate stored-chat and download requests, cancels
+  stale work when the active file or subscription changes, replaces rather than
+  accumulates playback timers, and rejects unsupported VOD URLs before starting
+  a download request.
 - The Downloads, Tasks, Subscription, active-download, updater, and Watch
   Together connection statuses are present in every tracked locale source.
 
@@ -290,6 +294,9 @@ Verification:
 - focused Skip Ad Button component suite: 6 passing in Chrome Headless, covering
   pre-input safety, duplicate-request prevention, per-video caching, input
   replacement, and active-request teardown;
+- focused Twitch Chat component suite: 8 passing in Chrome Headless, covering
+  pre-input safety, duplicate-request prevention, timer replacement, VOD URL
+  validation, input replacement, and active-request teardown;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning.
 
