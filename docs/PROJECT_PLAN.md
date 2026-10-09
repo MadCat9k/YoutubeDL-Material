@@ -355,6 +355,26 @@ Verification:
 - redeployed validation container: healthy with zero restarts, HTTP 200 on port
   `18084`, and yt-dlp Chrome impersonation targets available.
 
+## Narrow downloads layout (2026-10-08)
+
+- The compact downloads table now assigns explicit mobile widths to title,
+  progress, and actions instead of relying on equal flex growth.
+- The paginator uses a centered two-row grid on narrow viewports, and bulk
+  download actions stack as full-width controls.
+- Queued records without a fetched title display `N/A`. Download merging now
+  removes only absent properties, preserving valid falsy values such as
+  `step_index: 0`, `percent_complete: 0`, and `paused: false`.
+
+Verification:
+
+- focused downloads component suite: 3 passing in Chrome Headless;
+- production frontend build: passed with the inherited `file-saver` CommonJS
+  warning;
+- rebuilt validation container: healthy and HTTP 200;
+- visible browser check at a 455 CSS-pixel viewport: table and body widths both
+  455 pixels, no horizontal overflow, progress labels visible, paginator
+  centered, and all three bulk actions 439 pixels wide.
+
 ## Delivery sequence
 
 1. Baseline and startup hardening (included in this initial scaffold).
