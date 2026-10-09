@@ -5156,6 +5156,10 @@
         <source>Unable to refresh download progress. Retrying automatically.</source>
         <target state="translated">无法刷新下载进度。正在自动重试。</target>
       </trans-unit>
+      <trans-unit id="update-status-refresh-failed" datatype="html">
+        <source>Unable to refresh update status. Retrying automatically.</source>
+        <target state="translated">无法刷新更新状态。正在自动重试。</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

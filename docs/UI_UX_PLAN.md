@@ -252,8 +252,12 @@ running container was not replaced as part of this implementation step.
   responses for a replaced download, back off after failures, recover to the
   normal interval after success, and release initialization, configuration,
   argument-change, timer, and request resources on destruction.
-- The Downloads, Tasks, Subscription, and active-download connection statuses
-  are present in every tracked locale source.
+- The updater progress dialog no longer reads an empty status from a fixed
+  interval, overlaps status requests, or leaves polling active after it closes.
+  It keeps polling only while an update is active, retries connection failures
+  with bounded backoff, and retains the last known update status.
+- The Downloads, Tasks, Subscription, active-download, and updater connection
+  statuses are present in every tracked locale source.
 
 Verification:
 
@@ -269,6 +273,9 @@ Verification:
 - focused Main component suite: 5 passing in Chrome Headless, covering overlap
   prevention, stale-response protection, bounded backoff, recovery, and
   active-request teardown;
+- focused Update Progress Dialog component suite: 6 passing in Chrome Headless,
+  covering overlap prevention, active/finished polling decisions, bounded
+  backoff, recovery, and active-request teardown;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning.
 

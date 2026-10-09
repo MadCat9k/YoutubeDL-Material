@@ -4510,6 +4510,10 @@
         <source>Unable to refresh download progress. Retrying automatically.</source>
         <target state="translated">無法重新整理下載進度。正在自動重試。</target>
       </trans-unit>
+      <trans-unit id="update-status-refresh-failed" datatype="html">
+        <source>Unable to refresh update status. Retrying automatically.</source>
+        <target state="translated">無法重新整理更新狀態。正在自動重試。</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

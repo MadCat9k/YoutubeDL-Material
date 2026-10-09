@@ -1,6 +1,10 @@
 <h4 i18n="Update progress dialog title" mat-dialog-title>Updater</h4>
 
 <mat-dialog-content>
+    <div class="update-connection-state" *ngIf="connectionError" role="status" aria-live="polite">
+        <mat-icon color="warn">cloud_off</mat-icon>
+        <span i18n="Update status refresh failure@@update-status-refresh-failed">Unable to refresh update status. Retrying automatically.</span>
+    </div>
     <div *ngIf="updateStatus">
         <div style="margin-bottom: 8px;">
             <h6 *ngIf="updateStatus['updating']">Update in progress</h6>

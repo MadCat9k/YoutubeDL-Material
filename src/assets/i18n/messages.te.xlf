@@ -3051,6 +3051,10 @@
         <source>Unable to refresh download progress. Retrying automatically.</source>
         <target state="translated">డౌన్‌లోడ్ పురోగతిని రిఫ్రెష్ చేయడం సాధ్యం కాలేదు. స్వయంచాలకంగా మళ్లీ ప్రయత్నిస్తోంది.</target>
       </trans-unit>
+      <trans-unit id="update-status-refresh-failed" datatype="html">
+        <source>Unable to refresh update status. Retrying automatically.</source>
+        <target state="translated">నవీకరణ స్థితిని రిఫ్రెష్ చేయడం సాధ్యం కాలేదు. స్వయంచాలకంగా మళ్లీ ప్రయత్నిస్తోంది.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

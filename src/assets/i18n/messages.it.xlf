@@ -5092,6 +5092,10 @@
         <source>Unable to refresh download progress. Retrying automatically.</source>
         <target state="translated">Impossibile aggiornare l&apos;avanzamento del download. Nuovo tentativo automatico.</target>
       </trans-unit>
+      <trans-unit id="update-status-refresh-failed" datatype="html">
+        <source>Unable to refresh update status. Retrying automatically.</source>
+        <target state="translated">Impossibile aggiornare lo stato dell&apos;aggiornamento. Nuovo tentativo automatico.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

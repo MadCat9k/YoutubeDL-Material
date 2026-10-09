@@ -4292,6 +4292,10 @@
         <source>Unable to refresh download progress. Retrying automatically.</source>
         <target state="translated">A letöltés állapotának frissítése nem sikerült. Automatikus újrapróbálkozás.</target>
       </trans-unit>
+      <trans-unit id="update-status-refresh-failed" datatype="html">
+        <source>Unable to refresh update status. Retrying automatically.</source>
+        <target state="translated">A frissítés állapotát nem sikerült frissíteni. Automatikus újrapróbálkozás.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

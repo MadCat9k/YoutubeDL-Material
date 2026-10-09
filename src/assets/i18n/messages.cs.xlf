@@ -2564,6 +2564,10 @@
         <source>Unable to refresh download progress. Retrying automatically.</source>
         <target state="translated">Průběh stahování se nepodařilo obnovit. Opakování proběhne automaticky.</target>
       </trans-unit>
+      <trans-unit id="update-status-refresh-failed" datatype="html">
+        <source>Unable to refresh update status. Retrying automatically.</source>
+        <target state="translated">Stav aktualizace se nepodařilo obnovit. Opakování proběhne automaticky.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

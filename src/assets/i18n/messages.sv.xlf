@@ -3252,6 +3252,10 @@
         <source>Unable to refresh download progress. Retrying automatically.</source>
         <target state="translated">Det gick inte att uppdatera nedladdningsförloppet. Försöker igen automatiskt.</target>
       </trans-unit>
+      <trans-unit id="update-status-refresh-failed" datatype="html">
+        <source>Unable to refresh update status. Retrying automatically.</source>
+        <target state="translated">Det gick inte att uppdatera uppdateringsstatusen. Försöker igen automatiskt.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
