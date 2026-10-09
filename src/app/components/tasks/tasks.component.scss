@@ -2,6 +2,74 @@ mat-header-cell, mat-cell {
     justify-content: center;
 }
 
+.tasks-table {
+    overflow: hidden;
+}
+
+.tasks-compact {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+}
+
+.task-card {
+    min-width: 0;
+}
+
+.task-card mat-card-header {
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.task-card mat-card-title {
+    overflow-wrap: anywhere;
+}
+
+.task-busy {
+    flex: 0 0 auto;
+    margin-left: 12px;
+}
+
+.task-details {
+    margin: 12px 0 0;
+}
+
+.task-details > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    gap: 12px;
+    padding: 6px 0;
+}
+
+.task-details dt {
+    font-weight: 500;
+}
+
+.task-details dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.recurring-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    vertical-align: middle;
+}
+
+.task-confirm-button {
+    width: 100%;
+    white-space: normal;
+}
+
+.task-page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 5px 0;
+}
+
 .one-line {
     white-space: nowrap;
     overflow: hidden;
@@ -33,4 +101,16 @@ mat-header-cell, mat-cell {
 
 :host ::ng-deep mat-row {
     height: fit-content !important;
+}
+
+@media (max-width: 649px) {
+    .task-page-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        margin: 12px;
+    }
+
+    .task-page-actions button {
+        width: 100%;
+    }
 }

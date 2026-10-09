@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, ViewChild } from '@angular/core';
+import { Component, EventEmitter, HostListener, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -22,6 +22,7 @@ export class TasksComponent implements OnInit {
   tasks_check_interval = 1500;
   tasks: Task[] = null;
   tasks_retrieved = false;
+  compactView = false;
 
   displayedColumns: string[] = ['title', 'last_ran', 'last_confirmed', 'status', 'actions'];
   dataSource = null;
@@ -43,6 +44,7 @@ export class TasksComponent implements OnInit {
   constructor(private postsService: PostsService, private dialog: MatDialog, private clipboard: Clipboard) { }
 
   ngOnInit(): void {
+    this.updateLayout(window.innerWidth);
     if (this.postsService.initialized) {
       this.getTasksRecurring();
     } else {
@@ -56,6 +58,15 @@ export class TasksComponent implements OnInit {
 
   ngOnDestroy(): void {
     if (this.interval_id) { clearInterval(this.interval_id) }
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.updateLayout(window.innerWidth);
+  }
+
+  updateLayout(viewportWidth: number): void {
+    this.compactView = viewportWidth < 650;
   }
 
   getTasksRecurring(): void {

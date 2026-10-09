@@ -213,6 +213,24 @@ Verification:
 Remaining Phase 1 work includes visible keyboard-focus review, live-region
 announcements, broader accessibility testing, and actionable error messages.
 
+### Phase 2 started (2026-10-09)
+
+- Tasks use a compact card presentation below 650 pixels while retaining the
+  sortable table at wider viewports.
+- Compact cards show the full task title, last-run and last-confirmed values,
+  schedule status, pending confirmation action, and one labelled action menu.
+- Restore and reset controls stack to the available width on narrow screens.
+
+Verification:
+
+- focused Tasks component suite: 3 passing in Chrome Headless, covering 320,
+  375, 455, 649, and 650 CSS-pixel layout decisions;
+- production frontend build: passed with the inherited `file-saver` CommonJS
+  warning.
+
+Live visual verification remains pending a rebuilt validation container; the
+running container was not replaced as part of this implementation step.
+
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases
 should also be manually checked at representative phone, tablet, and desktop

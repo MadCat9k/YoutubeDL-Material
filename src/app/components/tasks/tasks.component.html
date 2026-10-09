@@ -1,5 +1,5 @@
 <div [hidden]="!(tasks && tasks.length > 0)">
-    <div style="overflow: hidden;" [ngClass]="'mat-elevation-z8'">
+    <div class="tasks-table mat-elevation-z8" [hidden]="compactView">
         <mat-table style="overflow: hidden" matSort [dataSource]="dataSource">
           <!-- Title Column -->
           <ng-container matColumnDef="title">
@@ -93,10 +93,92 @@
                        showFirstLastButtons 
                        aria-label="Select page of tasks">
         </mat-paginator>
-      </div>
+    </div>
 
-      <button style="margin-top: 10px; margin-left: 5px;" mat-stroked-button (click)="openRestoreDBBackupDialog()" i18n="Restore DB from backup button">Restore DB from backup</button>
-      <button style="margin-top: 10px; margin-left: 5px;" mat-stroked-button (click)="resetTasks()" color="warn" i18n="Reset tasks button">Reset tasks</button>
+    <div class="tasks-compact" *ngIf="compactView">
+        <mat-card appearance="outlined" class="task-card" *ngFor="let element of tasks">
+            <mat-card-header>
+                <mat-card-title>{{element.title}}</mat-card-title>
+                <span class="task-busy" *ngIf="element.running || element.confirming">
+                    <mat-spinner matTooltip="Busy" i18n-matTooltip="Busy" [diameter]="22"></mat-spinner>
+                </span>
+            </mat-card-header>
+            <mat-card-content>
+                <dl class="task-details">
+                    <div>
+                        <dt i18n="Last ran">Last ran</dt>
+                        <dd>
+                            <ng-container *ngIf="element.last_ran">{{element.last_ran*1000 | date: 'short'}}</ng-container>
+                            <ng-container i18n="N/A" *ngIf="!element.last_ran">N/A</ng-container>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt i18n="Last confirmed">Last confirmed</dt>
+                        <dd>
+                            <ng-container *ngIf="element.last_confirmed">{{element.last_confirmed*1000 | date: 'short'}}</ng-container>
+                            <ng-container i18n="N/A" *ngIf="!element.last_confirmed">N/A</ng-container>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt i18n="Status">Status</dt>
+                        <dd>
+                            <ng-container *ngIf="element.running || element.confirming" i18n="Busy">Busy</ng-container>
+                            <ng-container *ngIf="!(element.running || element.confirming) && element.schedule">
+                                <ng-container i18n="Scheduled">Scheduled for</ng-container>
+                                {{element['next_invocation'] | date: 'short'}}
+                                <mat-icon class="recurring-icon" *ngIf="element.schedule.type === 'recurring'">repeat</mat-icon>
+                            </ng-container>
+                            <ng-container *ngIf="!(element.running || element.confirming) && !element.schedule" i18n="Not scheduled">Not scheduled</ng-container>
+                        </dd>
+                    </div>
+                </dl>
+
+                <button class="task-confirm-button" *ngIf="element.data?.uids?.length > 0 || (!element.data?.uids && element.data)" (click)="confirmTask(element.key)" [disabled]="element.running || element.confirming" mat-stroked-button>
+                    <ng-container *ngIf="element.key == 'missing_files_check'">
+                        <ng-container i18n="Clear missing files from DB">Clear missing files from DB:</ng-container>{{element.data.uids.length}}
+                    </ng-container>
+                    <ng-container *ngIf="element.key == 'duplicate_files_check'">
+                        <ng-container i18n="Clear duplicate files from DB">Clear duplicate files from DB:</ng-container>&nbsp;{{element.data.uids.length}}
+                    </ng-container>
+                    <ng-container *ngIf="element.key == 'youtubedl_update_check'">
+                        <ng-container i18n="Update binary to">Update binary to:</ng-container>&nbsp;{{element.data}}
+                    </ng-container>
+                    <ng-container *ngIf="element.key == 'delete_old_files'">
+                        <ng-container i18n="Delete old files">Delete old files:</ng-container>&nbsp;{{element.data.files_to_remove.length}}
+                    </ng-container>
+                </button>
+            </mat-card-content>
+            <mat-card-actions align="end">
+                <button [matMenuTriggerFor]="taskActions" mat-stroked-button aria-label="Actions" i18n-aria-label="Task actions">
+                    <ng-container i18n="Actions">Actions</ng-container>
+                    <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #taskActions="matMenu">
+                    <button (click)="runTask(element.key)" [disabled]="element.running || element.confirming" mat-menu-item>
+                        <mat-icon>play_arrow</mat-icon>
+                        <span i18n="Run">Run</span>
+                    </button>
+                    <button (click)="scheduleTask(element)" mat-menu-item>
+                        <mat-icon>schedule</mat-icon>
+                        <span i18n="Schedule">Schedule</span>
+                    </button>
+                    <button (click)="openTaskSettings(element)" mat-menu-item>
+                        <mat-icon>settings</mat-icon>
+                        <span i18n="Settings">Settings</span>
+                    </button>
+                    <button *ngIf="element.error" (click)="showError(element)" mat-menu-item>
+                        <mat-icon>warning</mat-icon>
+                        <span i18n="Show error">Show error</span>
+                    </button>
+                </mat-menu>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+
+    <div class="task-page-actions">
+        <button mat-stroked-button (click)="openRestoreDBBackupDialog()" i18n="Restore DB from backup button">Restore DB from backup</button>
+        <button mat-stroked-button (click)="resetTasks()" color="warn" i18n="Reset tasks button">Reset tasks</button>
+    </div>
 </div>
 
 <div *ngIf="(!tasks || tasks.length === 0) && tasks_retrieved">
