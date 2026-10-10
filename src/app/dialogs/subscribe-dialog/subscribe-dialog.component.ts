@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { PostsService } from 'app/posts.services';
+import { Subscription } from 'rxjs';
 import { ArgModifierDialogComponent } from '../arg-modifier-dialog/arg-modifier-dialog.component';
 
 @Component({
@@ -8,7 +9,7 @@ import { ArgModifierDialogComponent } from '../arg-modifier-dialog/arg-modifier-
   templateUrl: './subscribe-dialog.component.html',
   styleUrls: ['./subscribe-dialog.component.scss']
 })
-export class SubscribeDialogComponent implements OnInit {
+export class SubscribeDialogComponent implements OnInit, OnDestroy {
   // inputs
   timerange_amount;
   timerange_unit = 'days';
@@ -20,6 +21,8 @@ export class SubscribeDialogComponent implements OnInit {
 
   // state
   subscribing = false;
+  subscriptionError = '';
+  subscriptionRequest: Subscription = null;
 
   // audio only mode
   audioOnlyMode = false;
@@ -72,32 +75,54 @@ export class SubscribeDialogComponent implements OnInit {
   ngOnInit() {
   }
 
+  ngOnDestroy(): void {
+    this.subscriptionRequest?.unsubscribe();
+    this.subscriptionRequest = null;
+  }
+
   subscribeClicked() {
-    if (this.url && this.url !== '') {
+    if (this.subscribing) return;
+    if (this.url && this.url.trim() !== '') {
       // timerange must be specified if download_all is false
       if (!this.download_all && !this.timerange_amount) {
         this.postsService.openSnackBar($localize`You must specify an amount of time`);
         return;
       }
       this.subscribing = true;
+      this.subscriptionError = '';
 
       let timerange = null;
       if (!this.download_all) {
         timerange = 'now-' + this.timerange_amount.toString() + this.timerange_unit;
       }
-      this.postsService.createSubscription(this.url, this.name, timerange, this.maxQuality,
+      const request = this.postsService.createSubscription(this.url.trim(), this.name, timerange, this.maxQuality,
                                           this.audioOnlyMode, this.customArgs, this.customFileOutput).subscribe(res => {
         this.subscribing = false;
         if (res['new_sub']) {
           this.dialogRef.close(res['new_sub']);
         } else {
-          if (res['error']) {
-            this.postsService.openSnackBar($localize`ERROR: ` + res['error']);
-          }
-          this.dialogRef.close();
+          this.subscriptionError = this.getSubscriptionError(res['error']);
         }
+      }, error => {
+        this.subscribing = false;
+        this.subscriptionError = this.getSubscriptionError(error?.error?.error);
+        this.subscriptionRequest = null;
+      }, () => {
+        this.subscriptionRequest = null;
       });
+      this.subscriptionRequest = request.closed ? null : request;
     }
+  }
+
+  getSubscriptionError(error: string): string {
+    const knownErrors = [
+      'A subscription with this URL already exists. Custom name is required.',
+      'Subscription name must be a single non-empty folder name.',
+      'Could not determine a valid subscription name. Please provide a custom name.',
+      'Failed to prepare the subscription.'
+    ];
+    if (knownErrors.includes(error)) return error;
+    return $localize`:Subscription creation fallback error@@subscription-create-failed:Could not create the subscription. Check the URL or custom name, then try again.`;
   }
 
   // modify custom args

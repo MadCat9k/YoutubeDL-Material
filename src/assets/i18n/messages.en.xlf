@@ -4290,6 +4290,12 @@
       <trans-unit id="watch-together-refresh-failed" datatype="html">
         <source>Unable to refresh Watch Together. Retrying automatically.</source>
       </trans-unit>
+      <trans-unit id="subscription-create-progress" datatype="html">
+        <source>Creating subscription…</source>
+      </trans-unit>
+      <trans-unit id="subscription-create-failed" datatype="html">
+        <source>Could not create the subscription. Check the URL or custom name, then try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

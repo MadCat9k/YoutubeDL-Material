@@ -3385,6 +3385,14 @@
         <source>Unable to refresh Watch Together. Retrying automatically.</source>
         <target state="translated">Не може да се освежи Watch Together. Ќе се обиде повторно автоматски.</target>
       </trans-unit>
+      <trans-unit id="subscription-create-progress" datatype="html">
+        <source>Creating subscription…</source>
+        <target state="translated">Се создава претплата…</target>
+      </trans-unit>
+      <trans-unit id="subscription-create-failed" datatype="html">
+        <source>Could not create the subscription. Check the URL or custom name, then try again.</source>
+        <target state="translated">Претплатата не може да се создаде. Проверете ја URL-адресата или приспособеното име и обидете се повторно.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

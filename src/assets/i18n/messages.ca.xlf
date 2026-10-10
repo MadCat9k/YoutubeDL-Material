@@ -4323,6 +4323,14 @@
         <source>Unable to refresh Watch Together. Retrying automatically.</source>
         <target state="translated">No s'ha pogut actualitzar Watch Together. Es tornarà a provar automàticament.</target>
       </trans-unit>
+      <trans-unit id="subscription-create-progress" datatype="html">
+        <source>Creating subscription…</source>
+        <target state="translated">Creant la subscripció…</target>
+      </trans-unit>
+      <trans-unit id="subscription-create-failed" datatype="html">
+        <source>Could not create the subscription. Check the URL or custom name, then try again.</source>
+        <target state="translated">No s'ha pogut crear la subscripció. Comproveu l'URL o el nom personalitzat i torneu-ho a provar.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -3059,6 +3059,14 @@
         <source>Unable to refresh Watch Together. Retrying automatically.</source>
         <target state="translated">Watch Togetherను రిఫ్రెష్ చేయడం సాధ్యం కాలేదు. స్వయంచాలకంగా మళ్లీ ప్రయత్నిస్తోంది.</target>
       </trans-unit>
+      <trans-unit id="subscription-create-progress" datatype="html">
+        <source>Creating subscription…</source>
+        <target state="translated">సబ్‌స్క్రిప్షన్ సృష్టిస్తోంది…</target>
+      </trans-unit>
+      <trans-unit id="subscription-create-failed" datatype="html">
+        <source>Could not create the subscription. Check the URL or custom name, then try again.</source>
+        <target state="translated">సబ్‌స్క్రిప్షన్‌ను సృష్టించలేకపోయాము. URL లేదా అనుకూల పేరును తనిఖీ చేసి, మళ్లీ ప్రయత్నించండి.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

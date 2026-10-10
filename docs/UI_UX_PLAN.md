@@ -317,6 +317,24 @@ The periodic network-refresh audit is complete for the current Phase 3 scope.
 Normal-state live verification is complete; forced backend-failure presentation
 remains covered by focused tests rather than a destructive live outage exercise.
 
+### Phase 4 started (2026-10-10)
+
+- Subscription creation now exposes an in-dialog creating state, prevents
+  duplicate submissions, and cancels the active request if the dialog closes.
+- Recoverable backend and connection failures keep the completed form open and
+  show an inline error. Known safe creation errors retain their actionable
+  guidance; unknown server details are replaced with a sanitized fallback.
+
+Verification:
+
+- focused Subscribe Dialog component suite: 6 passing in Chrome Headless,
+  covering duplicate-submit prevention, form preservation, sanitized connection
+  failures, successful completion, and active-request teardown;
+- all 31 tracked XLF files passed XML validation and include the new stable
+  creation-progress and failure messages;
+- production frontend build: passed with the inherited `file-saver` CommonJS
+  warning.
+
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases
 should also be manually checked at representative phone, tablet, and desktop

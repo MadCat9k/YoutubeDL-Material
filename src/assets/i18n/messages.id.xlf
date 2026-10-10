@@ -5114,6 +5114,14 @@
         <source>Unable to refresh Watch Together. Retrying automatically.</source>
         <target state="translated">Tidak dapat memuat ulang Watch Together. Mencoba lagi secara otomatis.</target>
       </trans-unit>
+      <trans-unit id="subscription-create-progress" datatype="html">
+        <source>Creating subscription…</source>
+        <target state="translated">Membuat langganan…</target>
+      </trans-unit>
+      <trans-unit id="subscription-create-failed" datatype="html">
+        <source>Could not create the subscription. Check the URL or custom name, then try again.</source>
+        <target state="translated">Langganan tidak dapat dibuat. Periksa URL atau nama kustom, lalu coba lagi.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

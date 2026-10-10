@@ -3,11 +3,26 @@
     margin-left: 20px;
 }
 
-.mat-mdc-progress-spinner {
-    margin-left: 5%;
-}
-
 .args-edit-button {
     position: absolute;
     margin-left: 10px;
+}
+
+.subscription-feedback {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    margin: 16px 0 4px;
+    padding: 12px;
+}
+
+.subscription-progress {
+    color: inherit;
+}
+
+.subscription-error {
+    background: rgba(244, 67, 54, 0.1);
+    border-left: 4px solid #d32f2f;
+    border-radius: 4px;
+    color: inherit;
 }

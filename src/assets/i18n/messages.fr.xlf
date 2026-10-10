@@ -5119,6 +5119,14 @@
         <source>Unable to refresh Watch Together. Retrying automatically.</source>
         <target state="translated">Impossible d&apos;actualiser Watch Together. Nouvelle tentative automatique.</target>
       </trans-unit>
+      <trans-unit id="subscription-create-progress" datatype="html">
+        <source>Creating subscription…</source>
+        <target state="translated">Création de l’abonnement…</target>
+      </trans-unit>
+      <trans-unit id="subscription-create-failed" datatype="html">
+        <source>Could not create the subscription. Check the URL or custom name, then try again.</source>
+        <target state="translated">Impossible de créer l’abonnement. Vérifiez l’URL ou le nom personnalisé, puis réessayez.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

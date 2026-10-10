@@ -1,6 +1,6 @@
 <h4 mat-dialog-title i18n="Subscribe dialog title">Subscribe to playlist or channel</h4>
 
-<mat-dialog-content>
+<mat-dialog-content [attr.aria-busy]="subscribing">
     <div class="container-fluid">
         <div class="row">
             <div class="col-12 mb-3">
@@ -56,7 +56,7 @@
                 <mat-form-field color="accent">
                     <mat-label i18n="Custom args">Custom args</mat-label>
                     <input [(ngModel)]="customArgs" matInput>
-                    <button class="args-edit-button" (click)="openArgsModifierDialog()" mat-icon-button><mat-icon>edit</mat-icon></button>
+                    <button class="args-edit-button" (click)="openArgsModifierDialog()" mat-icon-button aria-label="Custom args" i18n-aria-label="Custom args"><mat-icon>edit</mat-icon></button>
                     <mat-hint>
                         <ng-container i18n="Custom args hint">These are added after the standard args.</ng-container>
                     </mat-hint>
@@ -75,13 +75,18 @@
             </div>
         </div>
     </div>
+    <div class="subscription-feedback subscription-progress" *ngIf="subscribing" role="status" aria-live="polite">
+        <mat-spinner aria-hidden="true" [diameter]="24"></mat-spinner>
+        <span i18n="Subscription creation progress@@subscription-create-progress">Creating subscription…</span>
+    </div>
+    <div class="subscription-feedback subscription-error" *ngIf="subscriptionError" role="alert">
+        <mat-icon aria-hidden="true">error_outline</mat-icon>
+        <span>{{subscriptionError}}</span>
+    </div>
 </mat-dialog-content>
 
 <mat-dialog-actions>
     <button mat-button mat-dialog-close><ng-container i18n="Subscribe cancel button">Cancel</ng-container></button>
     <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-    <button mat-button [disabled]="!url" type="submit" (click)="subscribeClicked()"><ng-container i18n="Subscribe button">Subscribe</ng-container></button>
-    <div class="mat-spinner" *ngIf="subscribing">
-      <mat-spinner [diameter]="25"></mat-spinner>
-    </div>
+    <button mat-button [disabled]="!url || !url.trim() || subscribing" type="submit" (click)="subscribeClicked()"><ng-container i18n="Subscribe button">Subscribe</ng-container></button>
 </mat-dialog-actions>

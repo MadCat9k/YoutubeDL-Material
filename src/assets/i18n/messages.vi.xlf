@@ -4296,6 +4296,14 @@
         <source>Unable to refresh Watch Together. Retrying automatically.</source>
         <target state="translated">Không thể làm mới Watch Together. Đang tự động thử lại.</target>
       </trans-unit>
+      <trans-unit id="subscription-create-progress" datatype="html">
+        <source>Creating subscription…</source>
+        <target state="translated">Đang tạo đăng ký…</target>
+      </trans-unit>
+      <trans-unit id="subscription-create-failed" datatype="html">
+        <source>Could not create the subscription. Check the URL or custom name, then try again.</source>
+        <target state="translated">Không thể tạo đăng ký. Hãy kiểm tra URL hoặc tên tùy chỉnh rồi thử lại.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
