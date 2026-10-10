@@ -324,6 +324,13 @@ remains covered by focused tests rather than a destructive live outage exercise.
 - Recoverable backend and connection failures keep the completed form open and
   show an inline error. Known safe creation errors retain their actionable
   guidance; unknown server details are replaced with a sanitized fallback.
+- Manual subscription checks now show starting, scanning, cancelling, cancelled,
+  failed, and completed states in a polite live region. Completed checks report
+  the number of newly visible items and completion time for the current view.
+- Check and cancel actions prevent duplicate requests, release active work on
+  route replacement or destruction, and no longer print raw request errors to
+  the browser console. Their API handlers now await the existing boolean result
+  before responding.
 
 Verification:
 
@@ -333,7 +340,18 @@ Verification:
 - all 31 tracked XLF files passed XML validation and include the new stable
   creation-progress and failure messages;
 - production frontend build: passed with the inherited `file-saver` CommonJS
-  warning.
+  warning;
+- focused Subscription component suite: 8 passing in Chrome Headless, including
+  manual-check progress, fast completion, failure, cancellation, duplicate-action
+  prevention, pre-data safety, route replacement, polling backoff, and teardown;
+- backend syntax check: passed;
+- backend suite: 73 passing and 22 pending; 10 inherited environment-dependent
+  tests failed because network access, ffmpeg, TwitchDownloaderCLI, and a
+  yt-dlp-compatible local Python are unavailable. The subscription creation,
+  subscription, media-path, thumbnail-repair, and runtime-argument tests passed;
+- all 31 tracked XLF files passed XML validation and contain the stable manual
+  check status messages. Non-English locales retain safe English fallbacks until
+  those new messages are translated.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases

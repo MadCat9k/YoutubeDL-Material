@@ -9,7 +9,19 @@
             {{subscription.name}}&nbsp;<ng-container *ngIf="subscription.paused" i18n="Paused suffix">(Paused)</ng-container>
             <button class="edit-button" (click)="editSubscription()" [disabled]="downloading" matTooltip="Edit" i18n-matTooltip="Edit" aria-label="Edit" i18n-aria-label="Edit subscription" mat-icon-button><mat-icon class="save-icon">edit</mat-icon></button>
         </h2>
-        <mat-progress-bar style="width: 80%; margin: 0 auto; margin-top: 15px;" *ngIf="subscription && subscription.downloading" mode="indeterminate"></mat-progress-bar>
+        <mat-progress-bar style="width: 80%; margin: 0 auto; margin-top: 15px;" *ngIf="subscription && subscription.downloading" mode="indeterminate" aria-label="Check subscription" i18n-aria-label="Subscription check action@@subscription-check-action"></mat-progress-bar>
+        <div class="subscription-check-state" *ngIf="checkStatus !== 'idle'" role="status" aria-live="polite" [ngSwitch]="checkStatus">
+            <ng-container *ngSwitchCase="'starting'" i18n="Subscription check starting@@subscription-check-starting">Starting subscription check…</ng-container>
+            <ng-container *ngSwitchCase="'scanning'" i18n="Subscription check scanning@@subscription-check-scanning">Checking subscription for new items…</ng-container>
+            <ng-container *ngSwitchCase="'cancelling'" i18n="Subscription check cancelling@@subscription-check-cancelling">Cancelling subscription check…</ng-container>
+            <ng-container *ngSwitchCase="'cancelled'" i18n="Subscription check cancelled@@subscription-check-cancelled">Subscription check cancelled.</ng-container>
+            <ng-container *ngSwitchCase="'failed'" i18n="Subscription check failed@@subscription-check-failed">Subscription check failed. Try again.</ng-container>
+            <ng-container *ngSwitchCase="'completed'">
+                <span i18n="Subscription check completed@@subscription-check-completed">Subscription check completed.</span>
+                <span><ng-container i18n="Subscription check new items label@@subscription-check-new-items">New items:</ng-container> {{checkAddedCount}}</span>
+                <span><ng-container i18n="Subscription check completion time label@@subscription-check-completed-at">Completed:</ng-container> {{checkCompletedAt | date:'short'}}</span>
+            </ng-container>
+        </div>
     </div>
     <mat-divider style="width: 80%; margin: 0 auto"></mat-divider>
     <br/>
@@ -23,7 +35,7 @@
             <button color="primary" (click)="cancelCheckSubscription()" [disabled]="cancel_clicked" matTooltip="Cancel subscription check" i18n-matTooltip="Cancel subscription check" aria-label="Cancel subscription check" i18n-aria-label="Cancel subscription check" mat-fab><mat-icon class="save-icon">cancel</mat-icon></button>
         </ng-container>
         <ng-container *ngIf="!subscription.downloading">
-            <button color="primary" (click)="checkSubscription()" [disabled]="check_clicked" matTooltip="Check subscription" i18n-matTooltip="Check subscription" aria-label="Check subscription" i18n-aria-label="Check subscription" mat-fab><mat-icon class="save-icon">youtube_searched_for</mat-icon></button>
+            <button color="primary" (click)="checkSubscription()" [disabled]="check_clicked" matTooltip="Check subscription" i18n-matTooltip="Subscription check action@@subscription-check-action" aria-label="Check subscription" i18n-aria-label="Subscription check action@@subscription-check-action" mat-fab><mat-icon class="save-icon">youtube_searched_for</mat-icon></button>
         </ng-container>
     </div>
     <button *ngIf="subscription" class="watch-button" color="primary" (click)="watchSubscription()" matTooltip="Play all" i18n-matTooltip="Play all" aria-label="Play all" i18n-aria-label="Play subscription" mat-fab><mat-icon class="save-icon">video_library</mat-icon></button>

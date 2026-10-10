@@ -4296,6 +4296,33 @@
       <trans-unit id="subscription-create-failed" datatype="html">
         <source>Could not create the subscription. Check the URL or custom name, then try again.</source>
       </trans-unit>
+      <trans-unit id="subscription-check-action" datatype="html">
+        <source>Check subscription</source>
+      </trans-unit>
+      <trans-unit id="subscription-check-starting" datatype="html">
+        <source>Starting subscription check…</source>
+      </trans-unit>
+      <trans-unit id="subscription-check-scanning" datatype="html">
+        <source>Checking subscription for new items…</source>
+      </trans-unit>
+      <trans-unit id="subscription-check-cancelling" datatype="html">
+        <source>Cancelling subscription check…</source>
+      </trans-unit>
+      <trans-unit id="subscription-check-cancelled" datatype="html">
+        <source>Subscription check cancelled.</source>
+      </trans-unit>
+      <trans-unit id="subscription-check-failed" datatype="html">
+        <source>Subscription check failed. Try again.</source>
+      </trans-unit>
+      <trans-unit id="subscription-check-completed" datatype="html">
+        <source>Subscription check completed.</source>
+      </trans-unit>
+      <trans-unit id="subscription-check-new-items" datatype="html">
+        <source>New items:</source>
+      </trans-unit>
+      <trans-unit id="subscription-check-completed-at" datatype="html">
+        <source>Completed:</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

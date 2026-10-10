@@ -11,6 +11,8 @@ describe('SubscriptionComponent', () => {
   let fixture: ComponentFixture<SubscriptionComponent>;
   let routeParams: Subject<any>;
   let subscriptionResponses: {[subId: string]: Subject<any>};
+  let checkResponse: Subject<any>;
+  let cancelCheckResponse: Subject<any>;
   let postsService: jasmine.SpyObj<PostsService> & {
     service_initialized: BehaviorSubject<boolean>;
     files_changed: BehaviorSubject<boolean>;
@@ -23,8 +25,14 @@ describe('SubscriptionComponent', () => {
       subscriptionA: new Subject(),
       subscriptionB: new Subject()
     };
+    checkResponse = new Subject();
+    cancelCheckResponse = new Subject();
     postsService = Object.assign(
-      jasmine.createSpyObj<PostsService>('PostsService', ['getSubscription']),
+      jasmine.createSpyObj<PostsService>('PostsService', [
+        'getSubscription',
+        'checkSubscription',
+        'cancelCheckSubscription'
+      ]),
       {
         service_initialized: new BehaviorSubject(true),
         files_changed: new BehaviorSubject(false),
@@ -32,6 +40,8 @@ describe('SubscriptionComponent', () => {
       }
     );
     postsService.getSubscription.and.callFake(subId => subscriptionResponses[subId]);
+    postsService.checkSubscription.and.returnValue(checkResponse);
+    postsService.cancelCheckSubscription.and.returnValue(cancelCheckResponse);
 
     await TestBed.configureTestingModule({
       declarations: [SubscriptionComponent],
@@ -108,4 +118,111 @@ describe('SubscriptionComponent', () => {
 
     fixture.destroy();
   }));
+
+  it('reports a manual check from start through completion', () => {
+    routeParams.next({id: 'subscriptionA'});
+    subscriptionResponses.subscriptionA.next({
+      subscription: {id: 'subscriptionA', videos: [], downloading: false}
+    });
+
+    component.checkSubscription();
+    component.checkSubscription();
+
+    expect(postsService.checkSubscription).toHaveBeenCalledOnceWith('subscriptionA');
+    expect(component.checkStatus).toBe('starting');
+
+    checkResponse.next({success: true});
+    checkResponse.complete();
+    expect(component.checkStatus).toBe('scanning');
+
+    subscriptionResponses.subscriptionA.next({
+      subscription: {id: 'subscriptionA', videos: [], downloading: true}
+    });
+    subscriptionResponses.subscriptionA.next({
+      subscription: {id: 'subscriptionA', videos: [{uid: 'synthetic-file'}], downloading: false}
+    });
+
+    expect(component.checkStatus).toBe('completed');
+    expect(component.checkAddedCount).toBe(1);
+    expect(component.checkCompletedAt).not.toBeNull();
+    fixture.destroy();
+  });
+
+  it('completes a fast manual check even when polling misses the active state', () => {
+    routeParams.next({id: 'subscriptionA'});
+    subscriptionResponses.subscriptionA.next({
+      subscription: {id: 'subscriptionA', videos: [], downloading: false}
+    });
+    component.checkSubscription();
+    checkResponse.next({success: true});
+    checkResponse.complete();
+
+    subscriptionResponses.subscriptionA.next({
+      subscription: {id: 'subscriptionA', videos: [], downloading: false}
+    });
+    expect(component.checkStatus).toBe('scanning');
+    subscriptionResponses.subscriptionA.next({
+      subscription: {id: 'subscriptionA', videos: [], downloading: false}
+    });
+
+    expect(component.checkStatus).toBe('completed');
+    expect(component.checkAddedCount).toBe(0);
+    fixture.destroy();
+  });
+
+  it('shows failure feedback without logging a raw request error', () => {
+    routeParams.next({id: 'subscriptionA'});
+    subscriptionResponses.subscriptionA.next({
+      subscription: {id: 'subscriptionA', videos: [], downloading: false}
+    });
+    component.checkSubscription();
+
+    checkResponse.error(new Error('synthetic private diagnostic'));
+
+    expect(component.checkStatus).toBe('failed');
+    expect(component.check_clicked).toBe(false);
+    fixture.destroy();
+  });
+
+  it('cancels action requests and resets feedback when the route changes', () => {
+    routeParams.next({id: 'subscriptionA'});
+    subscriptionResponses.subscriptionA.next({
+      subscription: {id: 'subscriptionA', videos: [], downloading: false}
+    });
+    component.checkSubscription();
+
+    routeParams.next({id: 'subscriptionB'});
+
+    expect(checkResponse.observers.length).toBe(0);
+    expect(component.checkStatus).toBe('idle');
+    expect(component.check_clicked).toBe(false);
+    fixture.destroy();
+  });
+
+  it('reports cancellation and prevents duplicate cancel requests', () => {
+    routeParams.next({id: 'subscriptionA'});
+    subscriptionResponses.subscriptionA.next({
+      subscription: {id: 'subscriptionA', videos: [], downloading: true}
+    });
+
+    component.cancelCheckSubscription();
+    component.cancelCheckSubscription();
+
+    expect(postsService.cancelCheckSubscription).toHaveBeenCalledOnceWith('subscriptionA');
+    expect(component.checkStatus).toBe('cancelling');
+    cancelCheckResponse.next({success: true});
+    cancelCheckResponse.complete();
+    expect(component.checkStatus).toBe('cancelled');
+    expect(component.cancel_clicked).toBe(false);
+    fixture.destroy();
+  });
+
+  it('ignores check actions before subscription data is available', () => {
+    component.checkSubscription();
+    component.cancelCheckSubscription();
+
+    expect(postsService.checkSubscription).not.toHaveBeenCalled();
+    expect(postsService.cancelCheckSubscription).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
 });

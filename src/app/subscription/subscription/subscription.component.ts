@@ -7,6 +7,8 @@ import { Subscription } from 'api-types';
 import { Subject, Subscription as RxSubscription } from 'rxjs';
 import { distinctUntilChanged, filter, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 
+type SubscriptionCheckStatus = 'idle' | 'starting' | 'scanning' | 'cancelling' | 'completed' | 'cancelled' | 'failed';
+
 @Component({
   selector: 'app-subscription',
   templateUrl: './subscription.component.html',
@@ -25,9 +27,17 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   pollingStopped = true;
   subscriptionConnectionError = false;
   consecutivePollFailures = 0;
+  checkStatus: SubscriptionCheckStatus = 'idle';
+  checkInitialVideoCount = 0;
+  checkAddedCount = 0;
+  checkCompletedAt: Date = null;
   readonly subscriptionCheckInterval = 1000;
   private destroy$ = new Subject<void>();
   private subscriptionRequest: RxSubscription = null;
+  private checkRequest: RxSubscription = null;
+  private cancelCheckRequest: RxSubscription = null;
+  private checkSawActiveScan = false;
+  private checkIdlePolls = 0;
   private requestGeneration = 0;
 
   constructor(private postsService: PostsService, private route: ActivatedRoute, private router: Router, private dialog: MatDialog) { }
@@ -39,11 +49,13 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
       tap(id => {
         this.stopSubscriptionPolling();
         this.cancelSubscriptionRequest();
+        this.cancelCheckRequests();
         this.requestGeneration++;
         this.id = id;
         this.subscription = null;
         this.subscriptionConnectionError = false;
         this.consecutivePollFailures = 0;
+        this.resetCheckStatus();
       }),
       switchMap(() => this.postsService.service_initialized.pipe(
         filter(init => init),
@@ -62,6 +74,7 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
     this.stopSubscriptionPolling();
     this.cancelSubscriptionRequest();
+    this.cancelCheckRequests();
   }
 
   goBack() {
@@ -85,6 +98,7 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
       }
       this.subscriptionConnectionError = false;
       this.consecutivePollFailures = 0;
+      this.updateCheckStatus(res['subscription']);
       if (low_cost && res['subscription'].videos.length === this.subscription?.videos.length) {
         if (res['subscription']['downloading'] !== this.subscription['downloading']) {
           this.subscription['downloading'] = res['subscription']['downloading'];
@@ -138,6 +152,15 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     this.subscriptionRequest = null;
   }
 
+  private cancelCheckRequests(): void {
+    this.checkRequest?.unsubscribe();
+    this.cancelCheckRequest?.unsubscribe();
+    this.checkRequest = null;
+    this.cancelCheckRequest = null;
+    this.check_clicked = false;
+    this.cancel_clicked = false;
+  }
+
   getConfig(): void {
     this.use_youtubedl_archive = this.postsService.config['Downloader']['use_youtubedl_archive'];
   }
@@ -167,33 +190,79 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   }
 
   checkSubscription(): void {
+    if (!this.subscription || this.check_clicked || this.cancel_clicked || this.checkRequest || this.subscription.downloading) return;
+    const requestedId = this.subscription.id;
     this.check_clicked = true;
-    this.postsService.checkSubscription(this.subscription.id).subscribe(res => {
+    this.checkStatus = 'starting';
+    this.checkInitialVideoCount = this.subscription.videos.length;
+    this.checkAddedCount = 0;
+    this.checkCompletedAt = null;
+    this.checkSawActiveScan = false;
+    this.checkIdlePolls = 0;
+    const request = this.postsService.checkSubscription(requestedId).subscribe(res => {
+      if (requestedId !== this.id) return;
       this.check_clicked = false;
-      if (!res['success']) {
-        this.postsService.openSnackBar('Failed to check subscription!');
+      if (!res?.['success']) {
+        this.checkStatus = 'failed';
         return;
       }
-    }, err => {
-      console.error(err);
+      this.checkStatus = 'scanning';
+    }, () => {
+      if (requestedId !== this.id) return;
       this.check_clicked = false;
-      this.postsService.openSnackBar('Failed to check subscription!');
+      this.checkStatus = 'failed';
+    });
+    this.checkRequest = request.closed ? null : request;
+    request.add(() => {
+      if (this.checkRequest === request) this.checkRequest = null;
     });
   }
 
   cancelCheckSubscription(): void {
+    if (!this.subscription || this.cancel_clicked || this.cancelCheckRequest) return;
+    const requestedId = this.subscription.id;
     this.cancel_clicked = true;
-    this.postsService.cancelCheckSubscription(this.subscription.id).subscribe(res => {
+    this.checkStatus = 'cancelling';
+    const request = this.postsService.cancelCheckSubscription(requestedId).subscribe(res => {
+      if (requestedId !== this.id) return;
       this.cancel_clicked = false;
-      if (!res['success']) {
-        this.postsService.openSnackBar('Failed to cancel check subscription!');
+      if (!res?.['success']) {
+        this.checkStatus = 'failed';
         return;
       }
-    }, err => {
-      console.error(err);
+      this.checkStatus = 'cancelled';
+    }, () => {
+      if (requestedId !== this.id) return;
       this.cancel_clicked = false;
-      this.postsService.openSnackBar('Failed to cancel check subscription!');
+      this.checkStatus = 'failed';
     });
+    this.cancelCheckRequest = request.closed ? null : request;
+    request.add(() => {
+      if (this.cancelCheckRequest === request) this.cancelCheckRequest = null;
+    });
+  }
+
+  private updateCheckStatus(nextSubscription: Subscription): void {
+    if (this.checkStatus !== 'scanning') return;
+    if (nextSubscription.downloading) {
+      this.checkSawActiveScan = true;
+      this.checkIdlePolls = 0;
+      return;
+    }
+    this.checkIdlePolls += 1;
+    if (!this.checkSawActiveScan && this.checkIdlePolls < 2) return;
+    this.checkAddedCount = Math.max(nextSubscription.videos.length - this.checkInitialVideoCount, 0);
+    this.checkCompletedAt = new Date();
+    this.checkStatus = 'completed';
+  }
+
+  private resetCheckStatus(): void {
+    this.checkStatus = 'idle';
+    this.checkInitialVideoCount = 0;
+    this.checkAddedCount = 0;
+    this.checkCompletedAt = null;
+    this.checkSawActiveScan = false;
+    this.checkIdlePolls = 0;
   }
 
 }

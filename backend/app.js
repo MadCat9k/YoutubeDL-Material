@@ -1216,7 +1216,7 @@ app.post('/api/checkSubscription', optionalJwt, async (req, res) => {
     let sub_id = req.body.sub_id;
     let user_uid = req.isAuthenticated() ? req.user.uid : null;
 
-    const success = subscriptions_api.getVideosForSub(sub_id, user_uid);
+    const success = await subscriptions_api.getVideosForSub(sub_id, user_uid);
     res.send({
         success: success
     });
@@ -1226,7 +1226,7 @@ app.post('/api/cancelCheckSubscription', optionalJwt, async (req, res) => {
     let sub_id = req.body.sub_id;
     let user_uid = req.isAuthenticated() ? req.user.uid : null;
 
-    const success = subscriptions_api.cancelCheckSubscription(sub_id, user_uid);
+    const success = await subscriptions_api.cancelCheckSubscription(sub_id, user_uid);
     res.send({
         success: success
     });

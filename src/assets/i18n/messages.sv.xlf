@@ -3268,6 +3268,42 @@
         <source>Could not create the subscription. Check the URL or custom name, then try again.</source>
         <target state="translated">Det gick inte att skapa prenumerationen. Kontrollera webbadressen eller det anpassade namnet och försök igen.</target>
       </trans-unit>
+      <trans-unit id="subscription-check-action" datatype="html">
+        <source>Check subscription</source>
+        <target state="new">Check subscription</target>
+      </trans-unit>
+      <trans-unit id="subscription-check-starting" datatype="html">
+        <source>Starting subscription check…</source>
+        <target state="new">Starting subscription check…</target>
+      </trans-unit>
+      <trans-unit id="subscription-check-scanning" datatype="html">
+        <source>Checking subscription for new items…</source>
+        <target state="new">Checking subscription for new items…</target>
+      </trans-unit>
+      <trans-unit id="subscription-check-cancelling" datatype="html">
+        <source>Cancelling subscription check…</source>
+        <target state="new">Cancelling subscription check…</target>
+      </trans-unit>
+      <trans-unit id="subscription-check-cancelled" datatype="html">
+        <source>Subscription check cancelled.</source>
+        <target state="new">Subscription check cancelled.</target>
+      </trans-unit>
+      <trans-unit id="subscription-check-failed" datatype="html">
+        <source>Subscription check failed. Try again.</source>
+        <target state="new">Subscription check failed. Try again.</target>
+      </trans-unit>
+      <trans-unit id="subscription-check-completed" datatype="html">
+        <source>Subscription check completed.</source>
+        <target state="new">Subscription check completed.</target>
+      </trans-unit>
+      <trans-unit id="subscription-check-new-items" datatype="html">
+        <source>New items:</source>
+        <target state="new">New items:</target>
+      </trans-unit>
+      <trans-unit id="subscription-check-completed-at" datatype="html">
+        <source>Completed:</source>
+        <target state="new">Completed:</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
