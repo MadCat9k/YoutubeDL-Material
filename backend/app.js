@@ -1114,7 +1114,8 @@ app.post('/api/subscribe', optionalJwt, async (req, res) => {
     } else {
         res.send({
             new_sub: null,
-            error: result_obj.error
+            error: result_obj.error,
+            error_code: result_obj.error_code
         })
     }
 });

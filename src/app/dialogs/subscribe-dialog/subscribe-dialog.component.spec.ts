@@ -42,14 +42,26 @@ describe('SubscribeDialogComponent', () => {
     component.name = 'Synthetic duplicate';
     component.subscribeClicked();
 
-    response.next({new_sub: null, error});
+    response.next({new_sub: null, error, error_code: 'duplicate_subscription'});
     response.complete();
 
     expect(dialogRef.close).not.toHaveBeenCalled();
     expect(component.url).toContain('synthetic');
     expect(component.name).toBe('Synthetic duplicate');
     expect(component.subscribing).toBe(false);
-    expect(component.subscriptionError).toBe(error);
+    expect(component.subscriptionError).toContain('Enter a custom name');
+  });
+
+  it('maps structured creation failures to distinct safe guidance', () => {
+    expect(component.getSubscriptionError('invalid_subscription_name')).toContain('single folder name');
+    expect(component.getSubscriptionError('subscription_metadata_unavailable')).toContain('supported and reachable');
+    expect(component.getSubscriptionError('subscription_preparation_failed')).toContain('prepare the subscription');
+  });
+
+  it('keeps actionable guidance for an older text-only response', () => {
+    const legacyError = 'Could not determine a valid subscription name. Please provide a custom name.';
+
+    expect(component.getSubscriptionError(null, legacyError)).toContain('supported and reachable');
   });
 
   it('keeps the form open after a network failure without exposing unknown details', () => {

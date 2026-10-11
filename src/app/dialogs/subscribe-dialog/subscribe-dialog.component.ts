@@ -101,11 +101,11 @@ export class SubscribeDialogComponent implements OnInit, OnDestroy {
         if (res['new_sub']) {
           this.dialogRef.close(res['new_sub']);
         } else {
-          this.subscriptionError = this.getSubscriptionError(res['error']);
+          this.subscriptionError = this.getSubscriptionError(res['error_code'], res['error']);
         }
       }, error => {
         this.subscribing = false;
-        this.subscriptionError = this.getSubscriptionError(error?.error?.error);
+        this.subscriptionError = this.getSubscriptionError(error?.error?.error_code, error?.error?.error);
         this.subscriptionRequest = null;
       }, () => {
         this.subscriptionRequest = null;
@@ -114,14 +114,24 @@ export class SubscribeDialogComponent implements OnInit, OnDestroy {
     }
   }
 
-  getSubscriptionError(error: string): string {
-    const knownErrors = [
-      'A subscription with this URL already exists. Custom name is required.',
-      'Subscription name must be a single non-empty folder name.',
-      'Could not determine a valid subscription name. Please provide a custom name.',
-      'Failed to prepare the subscription.'
-    ];
-    if (knownErrors.includes(error)) return error;
+  getSubscriptionError(errorCode: string, legacyError = ''): string {
+    switch (errorCode) {
+      case 'duplicate_subscription':
+        return $localize`:Duplicate subscription creation error@@subscription-create-duplicate:A subscription with this URL already exists. Enter a custom name to create another.`;
+      case 'invalid_subscription_name':
+        return $localize`:Invalid subscription name error@@subscription-create-invalid-name:The custom name must be a single folder name.`;
+      case 'subscription_metadata_unavailable':
+        return $localize`:Subscription metadata unavailable error@@subscription-create-metadata-unavailable:Could not read subscription details. Check that the URL is supported and reachable, then try again.`;
+      case 'subscription_preparation_failed':
+        return $localize`:Subscription preparation error@@subscription-create-preparation-failed:Could not prepare the subscription. Try again.`;
+    }
+    const legacyErrors: {[key: string]: string} = {
+      'A subscription with this URL already exists. Custom name is required.': 'duplicate_subscription',
+      'Subscription name must be a single non-empty folder name.': 'invalid_subscription_name',
+      'Could not determine a valid subscription name. Please provide a custom name.': 'subscription_metadata_unavailable',
+      'Failed to prepare the subscription.': 'subscription_preparation_failed'
+    };
+    if (legacyErrors[legacyError]) return this.getSubscriptionError(legacyErrors[legacyError]);
     return $localize`:Subscription creation fallback error@@subscription-create-failed:Could not create the subscription. Check the URL or custom name, then try again.`;
   }
 

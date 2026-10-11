@@ -2021,6 +2021,12 @@ components:
           $ref: '#/components/schemas/Subscription'
         error:
           type: string
+        error_code:
+          type: string
+          description: >-
+            Stable, non-sensitive reason for a failed subscription creation request.
+            Known values are invalid_subscription_name, duplicate_subscription,
+            subscription_metadata_unavailable, and subscription_preparation_failed.
     UnsubscribeRequest:
       required:
         - sub_id

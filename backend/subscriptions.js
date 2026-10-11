@@ -16,7 +16,8 @@ const downloader_api = require('./downloader');
 exports.subscribe = async (sub, user_uid = null, skip_get_info = false) => {
     const result_obj = {
         success: false,
-        error: ''
+        error: '',
+        error_code: null
     };
     let inserted = false;
 
@@ -29,6 +30,7 @@ exports.subscribe = async (sub, user_uid = null, skip_get_info = false) => {
             sub.name = normalizeSubscriptionName(sub.name);
             if (!sub.name) {
                 result_obj.error = 'Subscription name must be a single non-empty folder name.';
+                result_obj.error_code = 'invalid_subscription_name';
                 return result_obj;
             }
         }
@@ -42,6 +44,7 @@ exports.subscribe = async (sub, user_uid = null, skip_get_info = false) => {
             } else {
                 logger.error('A subscription with the same URL already exists; a custom name is required for another subscription.');
                 result_obj.error = 'A subscription with this URL already exists. Custom name is required.';
+                result_obj.error_code = 'duplicate_subscription';
                 return result_obj;
             }
         }
@@ -56,6 +59,7 @@ exports.subscribe = async (sub, user_uid = null, skip_get_info = false) => {
             inserted = false;
             logger.error('Subscribe: Failed to get a valid subscription name. Subscribe failed.');
             result_obj.error = 'Could not determine a valid subscription name. Please provide a custom name.';
+            result_obj.error_code = 'subscription_metadata_unavailable';
             return result_obj;
         }
 
@@ -73,6 +77,7 @@ exports.subscribe = async (sub, user_uid = null, skip_get_info = false) => {
         }
         logger.error('Subscribe: Failed while preparing the subscription.');
         result_obj.error = 'Failed to prepare the subscription.';
+        result_obj.error_code = 'subscription_preparation_failed';
         return result_obj;
     }
 

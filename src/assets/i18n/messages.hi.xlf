@@ -4824,6 +4824,22 @@
         <source>Completed:</source>
         <target state="new">Completed:</target>
       </trans-unit>
+      <trans-unit id="subscription-create-duplicate" datatype="html">
+        <source>A subscription with this URL already exists. Enter a custom name to create another.</source>
+        <target state="new">A subscription with this URL already exists. Enter a custom name to create another.</target>
+      </trans-unit>
+      <trans-unit id="subscription-create-invalid-name" datatype="html">
+        <source>The custom name must be a single folder name.</source>
+        <target state="new">The custom name must be a single folder name.</target>
+      </trans-unit>
+      <trans-unit id="subscription-create-metadata-unavailable" datatype="html">
+        <source>Could not read subscription details. Check that the URL is supported and reachable, then try again.</source>
+        <target state="new">Could not read subscription details. Check that the URL is supported and reachable, then try again.</target>
+      </trans-unit>
+      <trans-unit id="subscription-create-preparation-failed" datatype="html">
+        <source>Could not prepare the subscription. Try again.</source>
+        <target state="new">Could not prepare the subscription. Try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

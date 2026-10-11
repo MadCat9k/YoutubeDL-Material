@@ -103,6 +103,7 @@ describe('Subscription creation', function() {
         const result = await subscriptions_api.subscribe(subscription());
 
         assert.strictEqual(result.success, false);
+        assert.strictEqual(result.error_code, 'subscription_metadata_unavailable');
         assert.match(result.error, /custom name/i);
         assert.strictEqual(records.length, 0);
         assert.deepStrictEqual(metadata_writes, []);
@@ -117,6 +118,7 @@ describe('Subscription creation', function() {
         const result = await subscriptions_api.subscribe(subscription());
 
         assert.strictEqual(result.success, false);
+        assert.strictEqual(result.error_code, 'subscription_preparation_failed');
         assert.strictEqual(records.length, 0);
     });
 
@@ -142,6 +144,7 @@ describe('Subscription creation', function() {
         const result = await subscriptions_api.subscribe(subscription({name: '../outside'}), null, true);
 
         assert.strictEqual(result.success, false);
+        assert.strictEqual(result.error_code, 'invalid_subscription_name');
         assert.strictEqual(records.length, 0);
         assert.deepStrictEqual(metadata_writes, []);
     });
@@ -155,6 +158,7 @@ describe('Subscription creation', function() {
         const result = await subscriptions_api.subscribe(subscription({url: private_url}));
 
         assert.strictEqual(result.success, false);
+        assert.strictEqual(result.error_code, 'duplicate_subscription');
         assert.strictEqual(logged_message.includes(private_url), false);
         assert.strictEqual(result.error.includes(private_url), false);
     });
@@ -173,6 +177,7 @@ describe('Subscription creation', function() {
         const result = await subscriptions_api.subscribe(subscription({url: private_url}));
 
         assert.strictEqual(result.success, false);
+        assert.strictEqual(result.error_code, 'subscription_metadata_unavailable');
         assert.strictEqual(records.length, 0);
         assert.strictEqual(logged_messages.some(message => message.includes(private_url)), false);
     });

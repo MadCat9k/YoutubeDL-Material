@@ -4323,6 +4323,18 @@
       <trans-unit id="subscription-check-completed-at" datatype="html">
         <source>Completed:</source>
       </trans-unit>
+      <trans-unit id="subscription-create-duplicate" datatype="html">
+        <source>A subscription with this URL already exists. Enter a custom name to create another.</source>
+      </trans-unit>
+      <trans-unit id="subscription-create-invalid-name" datatype="html">
+        <source>The custom name must be a single folder name.</source>
+      </trans-unit>
+      <trans-unit id="subscription-create-metadata-unavailable" datatype="html">
+        <source>Could not read subscription details. Check that the URL is supported and reachable, then try again.</source>
+      </trans-unit>
+      <trans-unit id="subscription-create-preparation-failed" datatype="html">
+        <source>Could not prepare the subscription. Try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>
