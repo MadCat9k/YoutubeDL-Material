@@ -21,8 +21,34 @@
         <ng-container i18n="Clear download filters@@downloads-clear-filters">Clear filters</ng-container>
       </button>
     </div>
+    <div *ngIf="!uids && selectedDownloadUids.size" class="downloads-selection-toolbar" role="status" aria-live="polite">
+      <span i18n="Selected download count@@downloads-bulk-selected">{{selectedDownloadUids.size}} selected</span>
+      <span class="downloads-selection-spacer"></span>
+      <button mat-button type="button" (click)="clearSelection()">
+        <ng-container i18n="Clear download selection@@downloads-bulk-deselect">Deselect all</ng-container>
+      </button>
+      <button mat-stroked-button color="warn" type="button" [disabled]="!getSelectedClearableDownloads().length || bulkActionInProgress" (click)="clearSelectedDownloads()">
+        <mat-icon aria-hidden="true">delete</mat-icon>
+        <ng-container i18n="Clear selected downloads@@downloads-bulk-clear-action">Clear selected</ng-container>
+      </button>
+    </div>
     <div class="downloads-table-container" [ngClass]="uids ? 'rounded mat-elevation-z2' : 'mat-elevation-z8'">
         <mat-table class="downloads-table" [ngClass]="uids ? 'rounded-top' : null" matSort [dataSource]="dataSource">
+
+          <!-- Selection Column -->
+          <ng-container matColumnDef="select">
+            <mat-header-cell *matHeaderCellDef>
+              <mat-checkbox [checked]="allFilteredDownloadsSelected()" [indeterminate]="someFilteredDownloadsSelected()"
+                            (change)="toggleFilteredDownloadsSelection()" aria-label="Select all filtered downloads"
+                            i18n-aria-label="Select all filtered downloads@@downloads-bulk-select-all">
+              </mat-checkbox>
+            </mat-header-cell>
+            <mat-cell *matCellDef="let element">
+              <mat-checkbox [checked]="isDownloadSelected(element)" (change)="toggleDownloadSelection(element)"
+                            aria-label="Select download" i18n-aria-label="Select download@@downloads-bulk-select-one">
+              </mat-checkbox>
+            </mat-cell>
+          </ng-container>
       
           <!-- Date Column -->
           <ng-container matColumnDef="timestamp_start">

@@ -4386,6 +4386,36 @@
       <trans-unit id="downloads-clear-completed-failed" datatype="html">
         <source>Could not clear completed downloads. Try again.</source>
       </trans-unit>
+      <trans-unit id="downloads-bulk-selected" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{selectedDownloadUids.size}}"/> selected</source>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-deselect" datatype="html">
+        <source>Deselect all</source>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-action" datatype="html">
+        <source>Clear selected</source>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-select-all" datatype="html">
+        <source>Select all filtered downloads</source>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-select-one" datatype="html">
+        <source>Select download</source>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-title" datatype="html">
+        <source>Clear selected downloads?</source>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-description" datatype="html">
+        <source>Only selected completed or paused entries will be removed. Active downloads are kept.</source>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-confirm" datatype="html">
+        <source>Clear selected</source>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-failed" datatype="html">
+        <source>Some selected downloads could not be cleared. Try again.</source>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-success" datatype="html">
+        <source>Selected downloads cleared.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -9,7 +9,8 @@ import { ConfirmDialogComponent } from 'app/dialogs/confirm-dialog/confirm-dialo
 import { MatSort } from '@angular/material/sort';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { Download } from 'api-types';
-import { Subscription } from 'rxjs';
+import { forkJoin, of, Subscription } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-downloads',
@@ -48,8 +49,8 @@ export class DownloadsComponent implements OnInit, OnDestroy {
 
   actionsFlex = 2;
   minimizeButtons = false;
-  displayedColumnsBig: string[] = ['timestamp_start', 'title', 'sub_name', 'percent_complete', 'actions'];
-  displayedColumnsSmall: string[] = ['title', 'percent_complete', 'actions'];
+  displayedColumnsBig: string[] = ['select', 'timestamp_start', 'title', 'sub_name', 'percent_complete', 'actions'];
+  displayedColumnsSmall: string[] = ['select', 'title', 'percent_complete', 'actions'];
   displayedColumns: string[] = this.displayedColumnsBig;
   dataSource = null; // new MatTableDataSource<Download>();
   searchTerm = '';
@@ -64,6 +65,8 @@ export class DownloadsComponent implements OnInit, OnDestroy {
     {value: 'failed', label: $localize`:Downloads status filter@@downloads-filter-failed:Failed`},
     {value: 'cancelled', label: $localize`:Downloads status filter@@downloads-filter-cancelled:Cancelled`}
   ];
+  selectedDownloadUids = new Set<string>();
+  bulkActionInProgress = false;
 
   // The purpose of this is to reduce code reuse for displaying these actions as icons or in a menu
   downloadActions: DownloadAction[] = [
@@ -133,7 +136,10 @@ export class DownloadsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Remove sub name as it's not necessary for one-off downloads
-    if (this.uids) this.displayedColumnsBig = this.displayedColumnsBig.filter(col => col !== 'sub_name');
+    if (this.uids) {
+      this.displayedColumnsBig = this.displayedColumnsBig.filter(col => col !== 'select' && col !== 'sub_name');
+      this.displayedColumnsSmall = this.displayedColumnsSmall.filter(col => col !== 'select');
+    }
     else this.restoreViewState();
     this.innerWidth = window.innerWidth;
     this.recalculateColumns();
@@ -184,10 +190,9 @@ export class DownloadsComponent implements OnInit, OnDestroy {
           if (JSON.stringify(this.downloads) !== JSON.stringify(res['downloads'])) {
             this.downloads = this.combineDownloads(this.downloads, res['downloads']);
             this.downloads.sort(this.sort_downloads);
+            this.pruneSelection();
             this.configureDataSource();
-            this.paused_download_exists = this.downloads.find(download => download['paused'] && !download['error']);
-            this.running_download_exists = this.downloads.find(download => !download['paused'] && !download['finished']);
-            this.completed_download_exists = this.downloads.some(download => download['finished'] && !download['error'] && !download['cancelled']);
+            this.updateDownloadAvailability();
           }
       } else {
         this.markDownloadsRefreshFailed();
@@ -296,6 +301,96 @@ export class DownloadsComponent implements OnInit, OnDestroy {
 
   private isValidStatusFilter(value: string): boolean {
     return this.statusFilterOptions.some(option => option.value === value);
+  }
+
+  isDownloadSelected(download: Download): boolean {
+    return this.selectedDownloadUids.has(download.uid);
+  }
+
+  toggleDownloadSelection(download: Download): void {
+    if (this.isDownloadSelected(download)) this.selectedDownloadUids.delete(download.uid);
+    else this.selectedDownloadUids.add(download.uid);
+  }
+
+  allFilteredDownloadsSelected(): boolean {
+    return !!this.dataSource?.filteredData.length
+      && this.dataSource.filteredData.every(download => this.selectedDownloadUids.has(download.uid));
+  }
+
+  someFilteredDownloadsSelected(): boolean {
+    if (!this.dataSource?.filteredData.length) return false;
+    const selectedCount = this.dataSource.filteredData.filter(download => this.selectedDownloadUids.has(download.uid)).length;
+    return selectedCount > 0 && selectedCount < this.dataSource.filteredData.length;
+  }
+
+  toggleFilteredDownloadsSelection(): void {
+    if (!this.dataSource?.filteredData.length) return;
+    if (this.allFilteredDownloadsSelected()) {
+      this.dataSource.filteredData.forEach(download => this.selectedDownloadUids.delete(download.uid));
+    } else {
+      this.dataSource.filteredData.forEach(download => this.selectedDownloadUids.add(download.uid));
+    }
+  }
+
+  clearSelection(): void {
+    this.selectedDownloadUids.clear();
+  }
+
+  getSelectedClearableDownloads(): Download[] {
+    return this.downloads.filter(download =>
+      this.selectedDownloadUids.has(download.uid) && (download.finished || download.paused)
+    );
+  }
+
+  clearSelectedDownloads(): void {
+    const selectedDownloads = this.getSelectedClearableDownloads();
+    if (!selectedDownloads.length || this.bulkActionInProgress) return;
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        dialogTitle: $localize`:Bulk clear downloads confirmation title@@downloads-bulk-clear-title:Clear selected downloads?`,
+        dialogText: $localize`:Bulk clear downloads confirmation text@@downloads-bulk-clear-description:Only selected completed or paused entries will be removed. Active downloads are kept.`,
+        submitText: $localize`:Bulk clear downloads confirmation action@@downloads-bulk-clear-confirm:Clear selected`,
+        warnSubmitColor: true
+      }
+    });
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      this.bulkActionInProgress = true;
+      const requests = selectedDownloads.map(download =>
+        this.postsService.clearDownload(download.uid).pipe(catchError(() => of({success: false})))
+      );
+      forkJoin(requests).subscribe(results => {
+        const clearedUids = selectedDownloads
+          .filter((_, index) => results[index]['success'])
+          .map(download => download.uid);
+        clearedUids.forEach(uid => this.selectedDownloadUids.delete(uid));
+        if (clearedUids.length) {
+          this.downloads = this.downloads.filter(download => !clearedUids.includes(download.uid));
+          this.configureDataSource();
+          this.updateDownloadAvailability();
+        }
+        const failedCount = results.length - clearedUids.length;
+        if (failedCount) {
+          this.postsService.openSnackBar($localize`:Bulk clear downloads failure@@downloads-bulk-clear-failed:Some selected downloads could not be cleared. Try again.`);
+        } else {
+          this.postsService.openSnackBar($localize`:Bulk clear downloads success@@downloads-bulk-clear-success:Selected downloads cleared.`);
+        }
+        this.bulkActionInProgress = false;
+      });
+    });
+  }
+
+  private pruneSelection(): void {
+    const currentUids = new Set(this.downloads.map(download => download.uid));
+    Array.from(this.selectedDownloadUids).forEach(uid => {
+      if (!currentUids.has(uid)) this.selectedDownloadUids.delete(uid);
+    });
+  }
+
+  private updateDownloadAvailability(): void {
+    this.paused_download_exists = this.downloads.some(download => download['paused'] && !download['error']);
+    this.running_download_exists = this.downloads.some(download => !download['paused'] && !download['finished']);
+    this.completed_download_exists = this.downloads.some(download => download['finished'] && !download['error'] && !download['cancelled']);
   }
 
   clearDownloadsByType(): void {

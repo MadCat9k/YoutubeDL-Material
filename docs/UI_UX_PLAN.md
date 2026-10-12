@@ -378,13 +378,21 @@ Verification:
   confirmation, explains its scope, and removes only successful completed
   entries while retaining failed, cancelled, paused, and active downloads. The
   detailed clear-by-type dialog remains available.
+- Downloads rows now support stable ID-based selection, including select/deselect
+  across the currently filtered results. Selection survives polling object
+  replacement and automatically drops entries that disappear from the queue.
+- The first bulk operation clears selected completed or paused entries after an
+  explicit scope confirmation. Selected active entries are retained, partial
+  failures remain selected, and embedded per-item Downloads views do not expose
+  the queue-wide selection controls.
 
 Verification:
 
-- focused Downloads component suite: 12 passing in Chrome Headless, including
+- focused Downloads component suite: 15 passing in Chrome Headless, including
   combined search/status filtering, deterministic state mapping, saved-state
   restoration, polling refreshes, filter clearing, and the confirmed completed
-  cleanup workflow;
+  cleanup workflow, plus filtered selection, selection pruning, and scoped bulk
+  clearing;
 - focused backend download-clearing suite: 2 passing, covering the new scoped
   completed filter and the existing detailed clear filters;
 - the OpenAPI source and generated `ClearDownloadsRequest` model include the

@@ -13,7 +13,7 @@ describe('DownloadsComponent', () => {
   let dialog: jasmine.SpyObj<MatDialog>;
 
   beforeEach(() => {
-    postsService = jasmine.createSpyObj<PostsService>('PostsService', ['getCurrentDownloads', 'clearCompletedDownloads', 'openSnackBar']);
+    postsService = jasmine.createSpyObj<PostsService>('PostsService', ['getCurrentDownloads', 'clearCompletedDownloads', 'clearDownload', 'openSnackBar']);
     dialog = jasmine.createSpyObj<MatDialog>('MatDialog', ['open']);
     component = new DownloadsComponent(
       postsService,
@@ -69,7 +69,7 @@ describe('DownloadsComponent', () => {
 
     component.recalculateColumns();
 
-    expect(component.displayedColumns).toEqual(['title', 'percent_complete', 'actions']);
+    expect(component.displayedColumns).toEqual(['select', 'title', 'percent_complete', 'actions']);
     expect(component.actionsFlex).toBe(1);
     expect(component.minimizeButtons).toBe(true);
   });
@@ -143,6 +143,58 @@ describe('DownloadsComponent', () => {
     expect(postsService.clearCompletedDownloads).toHaveBeenCalledTimes(1);
     expect(postsService.openSnackBar).toHaveBeenCalledWith('Completed downloads cleared.');
     expect(postsService.getCurrentDownloads).toHaveBeenCalledTimes(1);
+  });
+
+  it('selects only downloads visible through the current filters', () => {
+    component.downloads = [
+      {uid: 'queued-alpha', title: 'Alpha', step_index: 0} as Download,
+      {uid: 'active-alpha', title: 'Alpha', step_index: 2} as Download,
+      {uid: 'queued-beta', title: 'Beta', step_index: 0} as Download
+    ];
+    component.configureDataSource();
+    component.updateSearch('alpha');
+    component.updateStatusFilter('queued');
+
+    component.toggleFilteredDownloadsSelection();
+
+    expect(Array.from(component.selectedDownloadUids)).toEqual(['queued-alpha']);
+    expect(component.allFilteredDownloadsSelected()).toBe(true);
+  });
+
+  it('removes selections for downloads that disappear during polling', () => {
+    const response = new Subject<any>();
+    component.downloads = [
+      {uid: 'removed', title: 'Removed', step_index: 0} as Download,
+      {uid: 'retained', title: 'Retained', step_index: 0} as Download
+    ];
+    component.selectedDownloadUids.add('removed');
+    component.selectedDownloadUids.add('retained');
+    postsService.getCurrentDownloads.and.returnValue(response.asObservable());
+
+    component.getCurrentDownloads();
+    response.next({downloads: [{uid: 'retained', title: 'Retained', step_index: 0}]});
+
+    expect(Array.from(component.selectedDownloadUids)).toEqual(['retained']);
+  });
+
+  it('bulk clears selected completed or paused entries and keeps active entries', () => {
+    const afterClosed = new Subject<boolean>();
+    const completed = {uid: 'completed', title: 'Completed', finished: true, paused: false} as Download;
+    const paused = {uid: 'paused', title: 'Paused', finished: false, paused: true} as Download;
+    const active = {uid: 'active', title: 'Active', finished: false, paused: false} as Download;
+    component.downloads = [completed, paused, active];
+    component.configureDataSource();
+    component.selectedDownloadUids = new Set(['completed', 'paused', 'active']);
+    dialog.open.and.returnValue({afterClosed: () => afterClosed.asObservable()} as any);
+    postsService.clearDownload.and.returnValue(of({success: true}));
+
+    component.clearSelectedDownloads();
+    afterClosed.next(true);
+
+    expect(postsService.clearDownload.calls.allArgs()).toEqual([['completed'], ['paused']]);
+    expect(component.downloads.map(download => download.uid)).toEqual(['active']);
+    expect(Array.from(component.selectedDownloadUids)).toEqual(['active']);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Selected downloads cleared.');
   });
 
   it('does not start another downloads request while one is in flight', () => {

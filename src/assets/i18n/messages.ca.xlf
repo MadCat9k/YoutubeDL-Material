@@ -4451,6 +4451,46 @@
         <source>Could not clear completed downloads. Try again.</source>
         <target state="new">Could not clear completed downloads. Try again.</target>
       </trans-unit>
+      <trans-unit id="downloads-bulk-selected" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{selectedDownloadUids.size}}"/> selected</source>
+        <target state="new"><x id="INTERPOLATION" equiv-text="{{selectedDownloadUids.size}}"/> selected</target>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-deselect" datatype="html">
+        <source>Deselect all</source>
+        <target state="new">Deselect all</target>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-action" datatype="html">
+        <source>Clear selected</source>
+        <target state="new">Clear selected</target>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-select-all" datatype="html">
+        <source>Select all filtered downloads</source>
+        <target state="new">Select all filtered downloads</target>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-select-one" datatype="html">
+        <source>Select download</source>
+        <target state="new">Select download</target>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-title" datatype="html">
+        <source>Clear selected downloads?</source>
+        <target state="new">Clear selected downloads?</target>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-description" datatype="html">
+        <source>Only selected completed or paused entries will be removed. Active downloads are kept.</source>
+        <target state="new">Only selected completed or paused entries will be removed. Active downloads are kept.</target>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-confirm" datatype="html">
+        <source>Clear selected</source>
+        <target state="new">Clear selected</target>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-failed" datatype="html">
+        <source>Some selected downloads could not be cleared. Try again.</source>
+        <target state="new">Some selected downloads could not be cleared. Try again.</target>
+      </trans-unit>
+      <trans-unit id="downloads-bulk-clear-success" datatype="html">
+        <source>Selected downloads cleared.</source>
+        <target state="new">Selected downloads cleared.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
