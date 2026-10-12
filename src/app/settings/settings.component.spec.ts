@@ -1,5 +1,14 @@
+import { CommonModule } from '@angular/common';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { DomSanitizer } from '@angular/platform-browser';
+import { ActivatedRoute, Router } from '@angular/router';
+import { TestBed, waitForAsync } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 
+import { PostsService } from 'app/posts.services';
 import { SettingsComponent } from './settings.component';
 
 describe('SettingsComponent', () => {
@@ -48,5 +57,40 @@ describe('SettingsComponent', () => {
 
     expect(component.tabIndex).toBe(0);
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('SettingsComponent layout', () => {
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      declarations: [SettingsComponent],
+      imports: [CommonModule, FormsModule],
+      providers: [
+        {
+          provide: PostsService,
+          useValue: {
+            config: {Advanced: {multi_user_mode: false}},
+            initialized: false,
+            service_initialized: new Subject<boolean>(),
+            getLatestGithubRelease: () => of(null),
+            theme: null
+          }
+        },
+        {provide: MatSnackBar, useValue: {}},
+        {provide: DomSanitizer, useValue: {bypassSecurityTrustUrl: value => value}},
+        {provide: MatDialog, useValue: {}},
+        {provide: Router, useValue: {navigate: jasmine.createSpy('navigate')}},
+        {provide: ActivatedRoute, useValue: {snapshot: {paramMap: {get: () => null}}}}
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
+    }).compileComponents();
+  }));
+
+  it('lets the application pane own vertical scrolling', () => {
+    const fixture = TestBed.createComponent(SettingsComponent);
+    fixture.detectChanges();
+
+    const settingsTabs = fixture.nativeElement.querySelector('.settings-tabs');
+    expect(settingsTabs.style.height).toBe('');
   });
 });

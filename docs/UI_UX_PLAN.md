@@ -417,6 +417,8 @@ Verification:
 - The Settings Save/Cancel bar now reserves space inside every tab, stays
   reachable at the bottom of the view, and uses equal-width actions on narrow
   screens instead of absolutely covering form content.
+- Settings no longer constrains its tab content to a second viewport-relative
+  scroll area; the application content pane owns vertical page scrolling.
 - The navigation drawer now separates individual subscriptions under a labelled
   section, adds search when the list is long, truncates long visible names while
   retaining a full-name tooltip, and marks the active destination.
