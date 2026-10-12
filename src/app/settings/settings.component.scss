@@ -21,6 +21,10 @@
     margin-left: 15px;
 }
 
+:host ::ng-deep .settings-tabs .mat-mdc-tab-body-content {
+    padding-bottom: 76px;
+}
+
 .ext-divider {
     margin-bottom: 14px;
 }
@@ -111,8 +115,28 @@
 }
 
 .action-buttons {
-    position: absolute;
-    bottom: 15px;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    gap: 10px;
+    padding: 12px 15px;
+    border-top: 1px solid rgba(127, 127, 127, 0.35);
+}
+
+.settings-action {
+    min-height: 40px;
+}
+
+@media (max-width: 649px) {
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .settings-action {
+        width: 100%;
+    }
 }
 
 .test-connection-spinner {

@@ -414,6 +414,9 @@ Verification:
 - Settings replaces the horizontally scrolling eight-tab header with a compact
   section selector below 650 pixels while retaining the existing desktop tabs,
   route-linked sections, translations, and disabled Users-section behavior.
+- The Settings Save/Cancel bar now reserves space inside every tab, stays
+  reachable at the bottom of the view, and uses equal-width actions on narrow
+  screens instead of absolutely covering form content.
 
 Verification:
 

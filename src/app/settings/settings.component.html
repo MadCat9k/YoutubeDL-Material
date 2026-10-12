@@ -599,11 +599,11 @@
     </mat-tab>
 </mat-tab-group>
 
-<div class="action-buttons">
-    <button style="margin-left: 10px; height: 37.3px" color="accent" (click)="saveSettings()" [disabled]="settingsSame()" mat-raised-button><mat-icon>done</mat-icon>&nbsp;&nbsp;
+<div class="action-buttons" [style.background]="postsService.theme ? postsService.theme.background_color : null">
+    <button class="settings-action" color="accent" (click)="saveSettings()" [disabled]="settingsSame()" mat-raised-button><mat-icon>done</mat-icon>&nbsp;&nbsp;
         <ng-container i18n="Settings save button">Save</ng-container>
     </button>
-    <button style="margin-left: 10px;" mat-flat-button (click)="cancelSettings()" [disabled]="settingsSame()"><mat-icon>cancel</mat-icon>&nbsp;&nbsp;
+    <button class="settings-action" mat-flat-button (click)="cancelSettings()" [disabled]="settingsSame()"><mat-icon>cancel</mat-icon>&nbsp;&nbsp;
         <span i18n="Settings cancel button">Cancel</span>
     </button>
 </div>
