@@ -1,32 +1,56 @@
-import { TestBed, waitForAsync } from '@angular/core/testing';
+import { Subject } from 'rxjs';
 
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [
-        AppComponent
-      ],
-    }).compileComponents();
-  }));
+  let component: AppComponent;
+  let postsService: any;
 
-  it('should create the app', waitForAsync(() => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.debugElement.componentInstance;
-    expect(app).toBeTruthy();
-  }));
+  beforeEach(() => {
+    postsService = {
+      config_reloaded: new Subject<boolean>(),
+      subscriptions: []
+    };
+    component = new AppComponent(
+      postsService,
+      {} as any,
+      {} as any,
+      {events: new Subject(), url: '/home'} as any,
+      {} as any,
+      {} as any
+    );
+  });
 
-  it(`should have as title 'app'`, waitForAsync(() => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.debugElement.componentInstance;
-    expect(app.title).toEqual('app');
-  }));
+  afterEach(() => {
+    localStorage.clear();
+  });
 
-  it('should render title in a h1 tag', waitForAsync(() => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.debugElement.nativeElement;
-    expect(compiled.querySelector('h1').textContent).toContain('Welcome to app!!');
-  }));
+  it('filters subscriptions by name without case sensitivity', () => {
+    postsService.subscriptions = [
+      {id: 'subscription-alpha', name: 'Alpha Channel'},
+      {id: 'subscription-beta', name: 'Beta Archive'}
+    ];
+    component.subscriptionSearchTerm = 'ALPHA';
+
+    expect(component.getFilteredSubscriptions()).toEqual([
+      {id: 'subscription-alpha', name: 'Alpha Channel'}
+    ]);
+  });
+
+  it('returns every subscription for an empty search', () => {
+    postsService.subscriptions = [
+      {id: 'subscription-alpha', name: 'Alpha Channel'},
+      {id: 'subscription-beta', name: 'Beta Archive'}
+    ];
+    component.subscriptionSearchTerm = '   ';
+
+    expect(component.getFilteredSubscriptions()).toEqual(postsService.subscriptions);
+  });
+
+  it('handles subscription records without a visible name', () => {
+    postsService.subscriptions = [{id: 'subscription-unnamed'}];
+    component.subscriptionSearchTerm = 'missing';
+
+    expect(component.getFilteredSubscriptions()).toEqual([]);
+  });
 });

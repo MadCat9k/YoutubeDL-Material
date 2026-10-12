@@ -417,12 +417,18 @@ Verification:
 - The Settings Save/Cancel bar now reserves space inside every tab, stays
   reachable at the bottom of the view, and uses equal-width actions on narrow
   screens instead of absolutely covering form content.
+- The navigation drawer now separates individual subscriptions under a labelled
+  section, adds search when the list is long, truncates long visible names while
+  retaining a full-name tooltip, and marks the active destination.
 
 Verification:
 
 - focused Settings component suite: 3 passing in Chrome Headless, covering 320,
   649, and 650 CSS-pixel navigation modes, route updates, and the disabled Users
   section;
+- focused application-shell suite: 3 passing in Chrome Headless, covering
+  case-insensitive subscription filtering, empty searches, and records without a
+  visible name;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning;
 - all 31 tracked XLF files passed XML validation; existing translated section

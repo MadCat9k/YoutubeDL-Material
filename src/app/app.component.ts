@@ -52,6 +52,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   navigator: string = null;
 
   notification_count = 0;
+  subscriptionSearchTerm = '';
 
   constructor(public postsService: PostsService, public snackBar: MatSnackBar, private dialog: MatDialog,
     public router: Router, public overlayContainer: OverlayContainer, private elementRef: ElementRef) {
@@ -224,6 +225,15 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   notificationMenuClosed(): void {
     this.notifications.setNotificationsToRead();
+  }
+
+  getFilteredSubscriptions(): any[] {
+    const subscriptions = this.postsService.subscriptions || [];
+    const normalizedSearch = this.subscriptionSearchTerm.trim().toLocaleLowerCase();
+    if (!normalizedSearch) return subscriptions;
+    return subscriptions.filter(subscription =>
+      String(subscription.name || '').toLocaleLowerCase().includes(normalizedSearch)
+    );
   }
 
 }

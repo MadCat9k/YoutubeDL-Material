@@ -41,3 +41,34 @@
     max-width: 100% !important;
     min-width: 280px !important;
 }
+
+.navigation-section-label {
+    padding: 16px 16px 6px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.subscription-navigation-search {
+    width: calc(100% - 24px);
+    margin: 4px 12px 8px;
+}
+
+.subscription-navigation-avatar {
+    display: inline-block;
+    flex: 0 0 auto;
+    margin-right: 10px;
+}
+
+.subscription-navigation-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.active-navigation-item {
+    background: rgba(127, 127, 127, 0.18);
+    font-weight: 500;
+}
