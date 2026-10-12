@@ -3119,6 +3119,50 @@
         <source>Could not prepare the subscription. Try again.</source>
         <target state="new">Could not prepare the subscription. Try again.</target>
       </trans-unit>
+      <trans-unit id="downloads-search-label" datatype="html">
+        <source>Search downloads</source>
+        <target state="new">Search downloads</target>
+      </trans-unit>
+      <trans-unit id="downloads-status-filter-label" datatype="html">
+        <source>Status</source>
+        <target state="new">Status</target>
+      </trans-unit>
+      <trans-unit id="downloads-clear-filters" datatype="html">
+        <source>Clear filters</source>
+        <target state="new">Clear filters</target>
+      </trans-unit>
+      <trans-unit id="downloads-no-results" datatype="html">
+        <source>No downloads match the current filters.</source>
+        <target state="new">No downloads match the current filters.</target>
+      </trans-unit>
+      <trans-unit id="downloads-filter-all" datatype="html">
+        <source>All statuses</source>
+        <target state="new">All statuses</target>
+      </trans-unit>
+      <trans-unit id="downloads-filter-queued" datatype="html">
+        <source>Queued</source>
+        <target state="new">Queued</target>
+      </trans-unit>
+      <trans-unit id="downloads-filter-active" datatype="html">
+        <source>Active</source>
+        <target state="new">Active</target>
+      </trans-unit>
+      <trans-unit id="downloads-filter-paused" datatype="html">
+        <source>Paused</source>
+        <target state="new">Paused</target>
+      </trans-unit>
+      <trans-unit id="downloads-filter-completed" datatype="html">
+        <source>Completed</source>
+        <target state="new">Completed</target>
+      </trans-unit>
+      <trans-unit id="downloads-filter-failed" datatype="html">
+        <source>Failed</source>
+        <target state="new">Failed</target>
+      </trans-unit>
+      <trans-unit id="downloads-filter-cancelled" datatype="html">
+        <source>Cancelled</source>
+        <target state="new">Cancelled</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -18,6 +18,34 @@ mat-header-cell, mat-cell {
     overflow: hidden;
 }
 
+.downloads-filter-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px;
+}
+
+.downloads-search-field {
+    flex: 1 1 320px;
+}
+
+.downloads-status-field {
+    flex: 0 1 220px;
+}
+
+.downloads-clear-filters {
+    flex: 0 0 auto;
+    margin-bottom: 20px;
+}
+
+.downloads-no-results {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px 12px;
+}
+
 .one-line {
     white-space: nowrap;
     overflow: hidden;
@@ -56,6 +84,19 @@ mat-header-cell, mat-cell {
 }
 
 @media (max-width: 649px) {
+    .downloads-filter-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+    }
+
+    .downloads-search-field,
+    .downloads-status-field,
+    .downloads-clear-filters {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
     .mat-column-title {
         flex: 1 1 auto !important;
         min-width: 0;

@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 
+import { Download } from 'api-types';
 import { PostsService } from 'app/posts.services';
 import { DownloadsComponent } from './downloads.component';
 
@@ -18,6 +19,11 @@ describe('DownloadsComponent', () => {
       {} as MatDialog,
       {} as Clipboard
     );
+  });
+
+  afterEach(() => {
+    localStorage.removeItem('downloads_view_state');
+    component.ngOnDestroy();
   });
 
   it('should create', () => {
@@ -64,6 +70,61 @@ describe('DownloadsComponent', () => {
     expect(component.displayedColumns).toEqual(['title', 'percent_complete', 'actions']);
     expect(component.actionsFlex).toBe(1);
     expect(component.minimizeButtons).toBe(true);
+  });
+
+  it('maps each download into one deterministic filter status', () => {
+    expect(component.getDownloadStatus({step_index: 0} as Download)).toBe('queued');
+    expect(component.getDownloadStatus({step_index: 2} as Download)).toBe('active');
+    expect(component.getDownloadStatus({paused: true, finished: false} as Download)).toBe('paused');
+    expect(component.getDownloadStatus({finished: true} as Download)).toBe('completed');
+    expect(component.getDownloadStatus({cancelled: true, finished: true} as Download)).toBe('cancelled');
+    expect(component.getDownloadStatus({error: 'synthetic failure', cancelled: true} as Download)).toBe('failed');
+  });
+
+  it('combines title search and status filtering', () => {
+    component.downloads = [
+      {uid: 'queued', title: 'Alpha item', sub_name: 'First feed', step_index: 0} as Download,
+      {uid: 'active', title: 'Beta item', sub_name: 'Second feed', step_index: 2} as Download,
+      {uid: 'failed', title: 'Gamma item', sub_name: 'First feed', step_index: 2, error: 'synthetic failure'} as Download
+    ];
+    component.configureDataSource();
+
+    component.updateSearch('first');
+    component.updateStatusFilter('queued');
+
+    expect(component.dataSource.filteredData.map(download => download.uid)).toEqual(['queued']);
+  });
+
+  it('restores valid filter state and keeps it after polling refreshes data', () => {
+    const response = new Subject<any>();
+    localStorage.setItem('downloads_view_state', JSON.stringify({search: 'alpha', status: 'queued'}));
+    postsService.initialized = true;
+    postsService.config = {Extra: {enable_downloads_manager: true}} as any;
+    postsService.getCurrentDownloads.and.returnValue(response.asObservable());
+
+    component.ngOnInit();
+    response.next({downloads: [
+      {uid: 'matching', title: 'Alpha item', step_index: 0},
+      {uid: 'wrong-status', title: 'Alpha active', step_index: 2},
+      {uid: 'wrong-title', title: 'Beta item', step_index: 0}
+    ]});
+
+    expect(component.searchTerm).toBe('alpha');
+    expect(component.statusFilter).toBe('queued');
+    expect(component.dataSource.filteredData.map(download => download.uid)).toEqual(['matching']);
+  });
+
+  it('clears active filters and their saved view state', () => {
+    component.downloads = [{uid: 'queued', title: 'Alpha item', step_index: 0} as Download];
+    component.configureDataSource();
+    component.updateSearch('missing');
+    component.updateStatusFilter('failed');
+
+    component.clearFilters();
+
+    expect(component.hasActiveFilters()).toBe(false);
+    expect(component.dataSource.filteredData.length).toBe(1);
+    expect(JSON.parse(localStorage.getItem('downloads_view_state'))).toEqual({search: '', status: 'all'});
   });
 
   it('does not start another downloads request while one is in flight', () => {

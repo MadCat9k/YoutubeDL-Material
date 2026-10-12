@@ -4,6 +4,23 @@
 </div>
 
 <div [hidden]="!(downloads && downloads.length > 0)">
+    <div *ngIf="!uids" class="downloads-filter-toolbar" role="search">
+      <mat-form-field appearance="outline" class="downloads-search-field">
+        <mat-label i18n="Downloads search label@@downloads-search-label">Search downloads</mat-label>
+        <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+        <input matInput [ngModel]="searchTerm" (ngModelChange)="updateSearch($event)" autocomplete="off">
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="downloads-status-field">
+        <mat-label i18n="Downloads status filter label@@downloads-status-filter-label">Status</mat-label>
+        <mat-select [ngModel]="statusFilter" (ngModelChange)="updateStatusFilter($event)">
+          <mat-option *ngFor="let option of statusFilterOptions" [value]="option.value">{{option.label}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button *ngIf="hasActiveFilters()" mat-stroked-button type="button" class="downloads-clear-filters" (click)="clearFilters()">
+        <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
+        <ng-container i18n="Clear download filters@@downloads-clear-filters">Clear filters</ng-container>
+      </button>
+    </div>
     <div class="downloads-table-container" [ngClass]="uids ? 'rounded mat-elevation-z2' : 'mat-elevation-z8'">
         <mat-table class="downloads-table" [ngClass]="uids ? 'rounded-top' : null" matSort [dataSource]="dataSource">
       
@@ -89,6 +106,10 @@
                        showFirstLastButtons 
                        aria-label="Select page of downloads">
         </mat-paginator>
+      </div>
+      <div *ngIf="!uids && dataSource && dataSource.filteredData.length === 0" class="downloads-no-results" role="status">
+        <mat-icon aria-hidden="true">search_off</mat-icon>
+        <span i18n="No matching downloads@@downloads-no-results">No downloads match the current filters.</span>
       </div>
       <div *ngIf="!uids" class="downloads-action-button-div">
         <button class="downloads-action-button" [disabled]="!running_download_exists" mat-stroked-button (click)="pauseAllDownloads()"><ng-container i18n="Pause all downloads">Pause all downloads</ng-container></button>

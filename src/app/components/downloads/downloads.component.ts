@@ -51,6 +51,18 @@ export class DownloadsComponent implements OnInit, OnDestroy {
   displayedColumnsSmall: string[] = ['title', 'percent_complete', 'actions'];
   displayedColumns: string[] = this.displayedColumnsBig;
   dataSource = null; // new MatTableDataSource<Download>();
+  searchTerm = '';
+  statusFilter = 'all';
+  readonly downloadsViewStateKey = 'downloads_view_state';
+  readonly statusFilterOptions = [
+    {value: 'all', label: $localize`:Downloads status filter@@downloads-filter-all:All statuses`},
+    {value: 'queued', label: $localize`:Downloads status filter@@downloads-filter-queued:Queued`},
+    {value: 'active', label: $localize`:Downloads status filter@@downloads-filter-active:Active`},
+    {value: 'paused', label: $localize`:Downloads status filter@@downloads-filter-paused:Paused`},
+    {value: 'completed', label: $localize`:Downloads status filter@@downloads-filter-completed:Completed`},
+    {value: 'failed', label: $localize`:Downloads status filter@@downloads-filter-failed:Failed`},
+    {value: 'cancelled', label: $localize`:Downloads status filter@@downloads-filter-cancelled:Cancelled`}
+  ];
 
   // The purpose of this is to reduce code reuse for displaying these actions as icons or in a menu
   downloadActions: DownloadAction[] = [
@@ -121,6 +133,7 @@ export class DownloadsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Remove sub name as it's not necessary for one-off downloads
     if (this.uids) this.displayedColumnsBig = this.displayedColumnsBig.filter(col => col !== 'sub_name');
+    else this.restoreViewState();
     this.innerWidth = window.innerWidth;
     this.recalculateColumns();
     if (this.postsService.initialized) {
@@ -170,9 +183,7 @@ export class DownloadsComponent implements OnInit, OnDestroy {
           if (JSON.stringify(this.downloads) !== JSON.stringify(res['downloads'])) {
             this.downloads = this.combineDownloads(this.downloads, res['downloads']);
             this.downloads.sort(this.sort_downloads);
-            this.dataSource = new MatTableDataSource<Download>(this.downloads);
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
+            this.configureDataSource();
             this.paused_download_exists = this.downloads.find(download => download['paused'] && !download['error']);
             this.running_download_exists = this.downloads.find(download => !download['paused'] && !download['finished']);
           }
@@ -207,6 +218,82 @@ export class DownloadsComponent implements OnInit, OnDestroy {
     if (!this.downloads_connection_error) return this.downloads_check_interval;
     const backoffMultiplier = Math.pow(2, Math.min(this.consecutive_poll_failures, 5));
     return Math.min(this.downloads_check_interval * backoffMultiplier, 30000);
+  }
+
+  configureDataSource(): void {
+    this.dataSource = new MatTableDataSource<Download>(this.downloads);
+    this.dataSource.filterPredicate = (download: Download, serializedFilter: string): boolean => {
+      const filter = JSON.parse(serializedFilter);
+      const searchableText = `${download.title || ''} ${download.sub_name || ''}`.toLocaleLowerCase();
+      const matchesSearch = !filter.search || searchableText.includes(filter.search);
+      const matchesStatus = filter.status === 'all' || this.getDownloadStatus(download) === filter.status;
+      return matchesSearch && matchesStatus;
+    };
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+    this.applyFilters(false);
+  }
+
+  updateSearch(value: string): void {
+    this.searchTerm = value || '';
+    this.applyFilters();
+  }
+
+  updateStatusFilter(value: string): void {
+    this.statusFilter = this.isValidStatusFilter(value) ? value : 'all';
+    this.applyFilters();
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.statusFilter = 'all';
+    this.applyFilters();
+  }
+
+  applyFilters(resetPage = true): void {
+    if (this.uids) return;
+    this.persistViewState();
+    if (!this.dataSource) return;
+    this.dataSource.filter = JSON.stringify({
+      search: this.searchTerm.trim().toLocaleLowerCase(),
+      status: this.statusFilter
+    });
+    if (resetPage) this.dataSource.paginator?.firstPage();
+  }
+
+  getDownloadStatus(download: Download): string {
+    if (download.error) return 'failed';
+    if (download.cancelled) return 'cancelled';
+    if (download.paused && !download.finished) return 'paused';
+    if (download.finished || download.step_index === 3) return 'completed';
+    if (download.step_index === 0) return 'queued';
+    return 'active';
+  }
+
+  hasActiveFilters(): boolean {
+    return this.searchTerm.trim() !== '' || this.statusFilter !== 'all';
+  }
+
+  private restoreViewState(): void {
+    try {
+      const storedState = JSON.parse(localStorage.getItem(this.downloadsViewStateKey));
+      this.searchTerm = typeof storedState?.search === 'string' ? storedState.search : '';
+      this.statusFilter = this.isValidStatusFilter(storedState?.status) ? storedState.status : 'all';
+    } catch (_) {
+      this.searchTerm = '';
+      this.statusFilter = 'all';
+    }
+  }
+
+  private persistViewState(): void {
+    localStorage.setItem(this.downloadsViewStateKey, JSON.stringify({
+      search: this.searchTerm,
+      status: this.statusFilter
+    }));
+  }
+
+  private isValidStatusFilter(value: string): boolean {
+    return this.statusFilterOptions.some(option => option.value === value);
   }
 
   clearDownloadsByType(): void {

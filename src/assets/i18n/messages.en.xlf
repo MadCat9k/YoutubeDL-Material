@@ -4335,6 +4335,39 @@
       <trans-unit id="subscription-create-preparation-failed" datatype="html">
         <source>Could not prepare the subscription. Try again.</source>
       </trans-unit>
+      <trans-unit id="downloads-search-label" datatype="html">
+        <source>Search downloads</source>
+      </trans-unit>
+      <trans-unit id="downloads-status-filter-label" datatype="html">
+        <source>Status</source>
+      </trans-unit>
+      <trans-unit id="downloads-clear-filters" datatype="html">
+        <source>Clear filters</source>
+      </trans-unit>
+      <trans-unit id="downloads-no-results" datatype="html">
+        <source>No downloads match the current filters.</source>
+      </trans-unit>
+      <trans-unit id="downloads-filter-all" datatype="html">
+        <source>All statuses</source>
+      </trans-unit>
+      <trans-unit id="downloads-filter-queued" datatype="html">
+        <source>Queued</source>
+      </trans-unit>
+      <trans-unit id="downloads-filter-active" datatype="html">
+        <source>Active</source>
+      </trans-unit>
+      <trans-unit id="downloads-filter-paused" datatype="html">
+        <source>Paused</source>
+      </trans-unit>
+      <trans-unit id="downloads-filter-completed" datatype="html">
+        <source>Completed</source>
+      </trans-unit>
+      <trans-unit id="downloads-filter-failed" datatype="html">
+        <source>Failed</source>
+      </trans-unit>
+      <trans-unit id="downloads-filter-cancelled" datatype="html">
+        <source>Cancelled</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

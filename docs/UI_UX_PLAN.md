@@ -362,6 +362,30 @@ Verification:
   check status messages. Non-English locales retain safe English fallbacks until
   those new messages are translated.
 
+### Phase 5 started (2026-10-12)
+
+- Downloads can now be searched by title or subscription name and filtered by
+  queued, active, paused, completed, failed, or cancelled status.
+- Status mapping is deterministic, including precedence for failed and cancelled
+  records, and the toolbar provides a direct Clear filters action plus a distinct
+  no-results state.
+- Search and status selections survive polling refreshes and navigation. Filter
+  changes reset the paginator, while background refreshes preserve the current
+  page, sort, and filter state.
+- The toolbar collapses to a single-column layout at the existing mobile
+  breakpoint. Embedded per-item Downloads views remain unchanged.
+
+Verification:
+
+- focused Downloads component suite: 11 passing in Chrome Headless, including
+  combined search/status filtering, deterministic state mapping, saved-state
+  restoration, polling refreshes, and filter clearing;
+- production frontend build: passed with the inherited `file-saver` CommonJS
+  warning;
+- all 31 tracked XLF files passed XML validation and contain the 11 stable
+  Downloads discovery messages. Non-English locales use safe English fallbacks
+  until translated.
+
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases
 should also be manually checked at representative phone, tablet, and desktop
