@@ -1,5 +1,13 @@
 <h4 class="settings-title" i18n="Settings title">Settings</h4>
-<mat-tab-group style="height: 76vh" mat-align-tabs="center" [selectedIndex]="tabIndex" (selectedTabChange)="tabChanged($event)">
+<mat-form-field *ngIf="compactNavigation" class="settings-section-select" appearance="outline">
+    <mat-label i18n="Settings title">Settings</mat-label>
+    <mat-select [value]="tabIndex" (selectionChange)="selectSettingsSection($event.value)">
+        <mat-option *ngFor="let section of settingsSections; let i = index" [value]="i" [disabled]="section.key === 'users' && !postsService.config?.Advanced.multi_user_mode">
+            {{section.label}}
+        </mat-option>
+    </mat-select>
+</mat-form-field>
+<mat-tab-group class="settings-tabs" [class.compact-settings-tabs]="compactNavigation" style="height: 76vh" mat-align-tabs="center" [selectedIndex]="tabIndex" (selectedTabChange)="tabChanged($event)">
     <!-- Server -->
     <mat-tab label="Main" i18n-label="Main settings label">
         <ng-template matTabContent style="padding: 15px;">

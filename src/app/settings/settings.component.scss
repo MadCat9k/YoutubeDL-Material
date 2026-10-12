@@ -7,6 +7,16 @@
     margin-top: 15px;
 }
 
+.settings-section-select {
+    display: block;
+    width: calc(100% - 30px);
+    margin: 0 15px 8px;
+}
+
+:host ::ng-deep .compact-settings-tabs .mat-mdc-tab-header {
+    display: none;
+}
+
 :host ::ng-deep .mat-mdc-tab-body {
     margin-left: 15px;
 }

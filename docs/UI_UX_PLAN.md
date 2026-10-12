@@ -409,6 +409,22 @@ Verification:
   discovery and clear-completed messages. Non-English locales use safe English
   fallbacks until translated.
 
+### Phase 6 started (2026-10-12)
+
+- Settings replaces the horizontally scrolling eight-tab header with a compact
+  section selector below 650 pixels while retaining the existing desktop tabs,
+  route-linked sections, translations, and disabled Users-section behavior.
+
+Verification:
+
+- focused Settings component suite: 3 passing in Chrome Headless, covering 320,
+  649, and 650 CSS-pixel navigation modes, route updates, and the disabled Users
+  section;
+- production frontend build: passed with the inherited `file-saver` CommonJS
+  warning;
+- all 31 tracked XLF files passed XML validation; existing translated section
+  labels are reused by both navigation presentations.
+
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases
 should also be manually checked at representative phone, tablet, and desktop

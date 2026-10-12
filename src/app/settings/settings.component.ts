@@ -1,4 +1,4 @@
-import { Component, OnInit, EventEmitter } from '@angular/core';
+import { Component, OnInit, EventEmitter, HostListener } from '@angular/core';
 import { PostsService } from 'app/posts.services';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {DomSanitizer} from '@angular/platform-browser';
@@ -36,8 +36,19 @@ export class SettingsComponent implements OnInit {
   latestGithubRelease = null;
   CURRENT_VERSION = CURRENT_VERSION
 
-  tabs = ['main', 'downloader', 'extra', 'database', 'notifications', 'advanced', 'users', 'logs'];
+  settingsSections = [
+    {key: 'main', label: $localize`:Main settings label:Main`},
+    {key: 'downloader', label: $localize`:Downloader settings label:Downloader`},
+    {key: 'extra', label: $localize`:Extra settings label:Extra`},
+    {key: 'database', label: $localize`:Database settings label:Database`},
+    {key: 'notifications', label: $localize`:Notifications settings label:Notifications`},
+    {key: 'advanced', label: $localize`:Host settings label:Advanced`},
+    {key: 'users', label: $localize`:Users settings label:Users`},
+    {key: 'logs', label: $localize`:Logs settings label:Logs`}
+  ];
+  tabs = this.settingsSections.map(section => section.key);
   tabIndex = 0;
+  compactNavigation = false;
   
   INDEX_TO_TAB = Object.assign({}, this.tabs);
   TAB_TO_INDEX = {};
@@ -60,6 +71,7 @@ export class SettingsComponent implements OnInit {
     }
 
   ngOnInit(): void {
+    this.updateNavigationMode();
     if (this.postsService.initialized) {
       this.getConfig();
       this.getDBInfo();
@@ -77,7 +89,12 @@ export class SettingsComponent implements OnInit {
     this.getLatestGithubRelease();
 
     const tab = this.route.snapshot.paramMap.get('tab');
-    this.tabIndex = tab && this.TAB_TO_INDEX[tab] ? this.TAB_TO_INDEX[tab] : 0;
+    this.tabIndex = tab && this.TAB_TO_INDEX[tab] ? Number(this.TAB_TO_INDEX[tab]) : 0;
+  }
+
+  @HostListener('window:resize')
+  updateNavigationMode(width = window.innerWidth): void {
+    this.compactNavigation = width < 650;
   }
 
   getConfig(): void {
@@ -111,7 +128,13 @@ export class SettingsComponent implements OnInit {
   }
 
   tabChanged(event): void {
-    const index = event['index'];
+    this.selectSettingsSection(event['index']);
+  }
+
+  selectSettingsSection(index: number): void {
+    if (index < 0 || index >= this.tabs.length || index === this.tabIndex) return;
+    if (this.tabs[index] === 'users' && !this.postsService.config?.Advanced.multi_user_mode) return;
+    this.tabIndex = index;
     this.router.navigate(['/settings', {tab: this.INDEX_TO_TAB[index]}]);
   }
 
