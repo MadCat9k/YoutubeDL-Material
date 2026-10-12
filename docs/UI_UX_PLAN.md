@@ -426,6 +426,9 @@ Verification:
 - Notification cards now expose related actions and removal in a labelled menu,
   keep removal available when no related action exists, use a neutral placeholder
   for missing affected-item metadata, and show an explicit filtered-empty state.
+- Notification loading now cancels superseded menu-open requests, ignores stale
+  results, releases initialization and active request subscriptions on teardown,
+  and safely handles the menu closing before data has loaded.
 
 Verification:
 
@@ -437,6 +440,8 @@ Verification:
   visible name, and subscription-section disclosure state;
 - focused notification-list suite: 3 passing in Chrome Headless, covering
   missing and present affected-item details plus emitted related/removal actions;
+- focused Notifications component suite: 3 passing in Chrome Headless, covering
+  superseded requests, teardown, and closing before the initial load completes;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning;
 - all 31 tracked XLF files passed XML validation; existing translated section

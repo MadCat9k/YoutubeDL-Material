@@ -1,16 +1,17 @@
-import { Component, ElementRef, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { PostsService } from 'app/posts.services';
 import { Notification, NotificationType } from 'api-types';
 import { NotificationAction } from 'api-types/models/NotificationAction';
 import { MatChipListboxChange } from '@angular/material/chips';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-notifications',
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.css']
 })
-export class NotificationsComponent implements OnInit {
+export class NotificationsComponent implements OnInit, OnDestroy {
 
   notifications: Notification[] = null;
   filtered_notifications: Notification[] = null;
@@ -34,6 +35,9 @@ export class NotificationsComponent implements OnInit {
   };
 
   selectedFilters = [];
+  initializationSubscription: Subscription = null;
+  notificationsRequest: Subscription = null;
+  notificationsRequestGeneration = 0;
 
   constructor(public postsService: PostsService, private router: Router, private elRef: ElementRef) { }
 
@@ -42,22 +46,37 @@ export class NotificationsComponent implements OnInit {
     if (this.postsService.initialized) {
       this.getNotifications();
     } else {
-      this.postsService.service_initialized.subscribe(init => {
+      const initializationSubscription = this.postsService.service_initialized.subscribe(init => {
         if (init) {
+          this.initializationSubscription?.unsubscribe();
+          this.initializationSubscription = null;
           this.getNotifications();
         }
       });
+      this.initializationSubscription = initializationSubscription.closed ? null : initializationSubscription;
     }
   }
 
+  ngOnDestroy(): void {
+    this.notificationsRequestGeneration++;
+    this.initializationSubscription?.unsubscribe();
+    this.notificationsRequest?.unsubscribe();
+    this.initializationSubscription = null;
+    this.notificationsRequest = null;
+  }
+
   getNotifications(): void {
-    this.postsService.getNotifications().subscribe(res => {
+    this.notificationsRequest?.unsubscribe();
+    const requestGeneration = ++this.notificationsRequestGeneration;
+    const notificationsRequest = this.postsService.getNotifications().subscribe(res => {
+      if (requestGeneration !== this.notificationsRequestGeneration) return;
       this.notifications = res['notifications'];
       this.notifications.sort((a, b) => b.timestamp - a.timestamp);
       this.notificationCount.emit(this.notifications.filter(notification => !notification.read).length);
 
       this.filterNotifications();
     });
+    this.notificationsRequest = notificationsRequest.closed ? null : notificationsRequest;
   }
 
   notificationAction(action_info: {notification: Notification, action: NotificationAction}): void {
@@ -102,7 +121,11 @@ export class NotificationsComponent implements OnInit {
   }
 
   setNotificationsToRead(): void {
-    const uids = this.notifications.map(notification => notification.uid);
+    const uids = (this.notifications || []).filter(notification => !notification.read).map(notification => notification.uid);
+    if (uids.length === 0) {
+      this.notificationCount.emit(0);
+      return;
+    }
     this.postsService.setNotificationsToRead(uids).subscribe(res => {
       this.getNotifications();
     });
