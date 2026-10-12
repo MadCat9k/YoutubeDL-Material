@@ -429,6 +429,10 @@ Verification:
 - Notification loading now cancels superseded menu-open requests, ignores stale
   results, releases initialization and active request subscriptions on teardown,
   and safely handles the menu closing before data has loaded.
+- Unread notification cards now use a structural accent and stronger title weight
+  in addition to the existing dot. Deleting notifications updates the local list
+  and unread badge deterministically, while delete-all waits for server success
+  before clearing the visible history and badge.
 
 Verification:
 
@@ -440,8 +444,9 @@ Verification:
   visible name, and subscription-section disclosure state;
 - focused notification-list suite: 3 passing in Chrome Headless, covering
   missing and present affected-item details plus emitted related/removal actions;
-- focused Notifications component suite: 3 passing in Chrome Headless, covering
-  superseded requests, teardown, and closing before the initial load completes;
+- focused Notifications component suite: 6 passing in Chrome Headless, covering
+  superseded requests, teardown, closing before the initial load completes,
+  unread counts, individual deletion, and confirmed delete-all state;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning;
 - all 31 tracked XLF files passed XML validation; existing translated section

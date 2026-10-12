@@ -21,6 +21,14 @@
     margin-top: 5px;
 }
 
+.unread-notification {
+    border-left: 4px solid currentColor;
+}
+
+.unread-notification mat-card-title {
+    font-weight: 600;
+}
+
 .notification-actions {
     margin-top: auto;
 }

@@ -72,7 +72,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       if (requestGeneration !== this.notificationsRequestGeneration) return;
       this.notifications = res['notifications'];
       this.notifications.sort((a, b) => b.timestamp - a.timestamp);
-      this.notificationCount.emit(this.notifications.filter(notification => !notification.read).length);
+      this.notificationCount.emit(this.getUnreadCount());
 
       this.filterNotifications();
     });
@@ -104,10 +104,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   deleteNotification(uid: string): void {
     this.postsService.deleteNotification(uid).subscribe(res => {
-      this.notifications.filter(notification => notification['uid'] !== uid);
+      this.notifications = (this.notifications || []).filter(notification => notification['uid'] !== uid);
       this.filterNotifications();
-      this.notificationCount.emit(this.notifications.length);
-      this.getNotifications();
+      this.notificationCount.emit(this.getUnreadCount());
     });
   }
 
@@ -115,9 +114,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.postsService.deleteAllNotifications().subscribe(res => {
       this.notifications = [];
       this.filtered_notifications = [];
-      this.getNotifications();
+      this.notificationCount.emit(0);
     });
-    this.notificationCount.emit(0);
   }
 
   setNotificationsToRead(): void {
@@ -147,6 +145,10 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     const avgHeight = 166;
     const calcHeight = this.filtered_notifications.length * avgHeight;
     this.list_height = calcHeight > window.innerHeight*0.65 ? '65vh' : `${calcHeight}px`;
+  }
+
+  getUnreadCount(): number {
+    return (this.notifications || []).filter(notification => !notification.read).length;
   }
 
   originalOrder = (): number => {

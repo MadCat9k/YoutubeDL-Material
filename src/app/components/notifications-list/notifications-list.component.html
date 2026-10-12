@@ -1,6 +1,6 @@
 <cdk-virtual-scroll-viewport itemSize="50" class="viewport" minBufferPx="1200" maxBufferPx="1200">
     <div #notification_parent class="notification-card-parent card-radius mat-elevation-z2" *cdkVirtualFor="let notification of notifications; let i = index;">
-        <mat-card class="notification-card card-radius">
+        <mat-card class="notification-card card-radius" [class.unread-notification]="!notification.read">
             <mat-card-header>
                 <mat-card-subtitle>
                     <div>

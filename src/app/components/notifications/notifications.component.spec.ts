@@ -1,4 +1,4 @@
-import { Subject } from 'rxjs';
+import { of, Subject } from 'rxjs';
 
 import { NotificationsComponent } from './notifications.component';
 
@@ -11,7 +11,9 @@ describe('NotificationsComponent', () => {
       initialized: true,
       service_initialized: new Subject<boolean>(),
       getNotifications: jasmine.createSpy('getNotifications'),
-      setNotificationsToRead: jasmine.createSpy('setNotificationsToRead')
+      setNotificationsToRead: jasmine.createSpy('setNotificationsToRead'),
+      deleteNotification: jasmine.createSpy('deleteNotification'),
+      deleteAllNotifications: jasmine.createSpy('deleteAllNotifications')
     };
     component = new NotificationsComponent(postsService, {} as any, {} as any);
   });
@@ -50,6 +52,44 @@ describe('NotificationsComponent', () => {
     component.setNotificationsToRead();
 
     expect(postsService.setNotificationsToRead).not.toHaveBeenCalled();
+    expect(component.notificationCount.emit).toHaveBeenCalledWith(0);
+  });
+
+  it('counts only unread notifications', () => {
+    component.notifications = [
+      {uid: 'unread', read: false},
+      {uid: 'history', read: true}
+    ] as any;
+
+    expect(component.getUnreadCount()).toBe(1);
+  });
+
+  it('removes a notification locally and emits the remaining unread count', () => {
+    spyOn(component.notificationCount, 'emit');
+    postsService.deleteNotification.and.returnValue(of({success: true}));
+    component.notifications = [
+      {uid: 'remove-me', read: false},
+      {uid: 'remaining-history', read: true}
+    ] as any;
+
+    component.deleteNotification('remove-me');
+
+    expect(component.notifications.map(notification => notification.uid)).toEqual(['remaining-history']);
+    expect(component.notificationCount.emit).toHaveBeenCalledWith(0);
+  });
+
+  it('clears local notifications and the badge only after server success', () => {
+    const response = new Subject<any>();
+    spyOn(component.notificationCount, 'emit');
+    postsService.deleteAllNotifications.and.returnValue(response);
+    component.notifications = [{uid: 'unread', read: false}] as any;
+
+    component.deleteAllNotifications();
+    expect(component.notifications.length).toBe(1);
+    expect(component.notificationCount.emit).not.toHaveBeenCalled();
+
+    response.next({success: true});
+    expect(component.notifications).toEqual([]);
     expect(component.notificationCount.emit).toHaveBeenCalledWith(0);
   });
 });
