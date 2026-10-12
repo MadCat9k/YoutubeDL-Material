@@ -54,4 +54,10 @@ export class NotificationsListComponent {
   emitDeleteNotification(uid: string): void {
     this.deleteNotification.emit(uid);
   }
+
+  getNotificationDetail(notification: Notification): string {
+    const detailKey = this.NOTIFICATION_SUFFIX_KEY[notification?.type];
+    const detail = detailKey ? notification?.data?.[detailKey] : null;
+    return detail === null || detail === undefined || detail === '' ? '—' : String(detail);
+  }
 }

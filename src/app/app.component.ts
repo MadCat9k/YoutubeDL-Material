@@ -53,6 +53,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   notification_count = 0;
   subscriptionSearchTerm = '';
+  subscriptionsExpanded = true;
 
   constructor(public postsService: PostsService, public snackBar: MatSnackBar, private dialog: MatDialog,
     public router: Router, public overlayContainer: OverlayContainer, private elementRef: ElementRef) {
@@ -234,6 +235,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     return subscriptions.filter(subscription =>
       String(subscription.name || '').toLocaleLowerCase().includes(normalizedSearch)
     );
+  }
+
+  toggleSubscriptions(): void {
+    this.subscriptionsExpanded = !this.subscriptionsExpanded;
   }
 
 }

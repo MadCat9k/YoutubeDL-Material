@@ -420,17 +420,23 @@ Verification:
 - Settings no longer constrains its tab content to a second viewport-relative
   scroll area; the application content pane owns vertical page scrolling.
 - The navigation drawer now separates individual subscriptions under a labelled
-  section, adds search when the list is long, truncates long visible names while
-  retaining a full-name tooltip, and marks the active destination.
+  section that can be collapsed, adds search when the list is long, truncates
+  long visible names while retaining a full-name tooltip, and marks the active
+  destination.
+- Notification cards now expose related actions and removal in a labelled menu,
+  keep removal available when no related action exists, use a neutral placeholder
+  for missing affected-item metadata, and show an explicit filtered-empty state.
 
 Verification:
 
-- focused Settings component suite: 3 passing in Chrome Headless, covering 320,
-  649, and 650 CSS-pixel navigation modes, route updates, and the disabled Users
-  section;
-- focused application-shell suite: 3 passing in Chrome Headless, covering
-  case-insensitive subscription filtering, empty searches, and records without a
-  visible name;
+- focused Settings component suite: 4 passing in Chrome Headless, covering 320,
+  649, and 650 CSS-pixel navigation modes, route updates, the disabled Users
+  section, and single-scroll ownership;
+- focused application-shell suite: 4 passing in Chrome Headless, covering
+  case-insensitive subscription filtering, empty searches, records without a
+  visible name, and subscription-section disclosure state;
+- focused notification-list suite: 3 passing in Chrome Headless, covering
+  missing and present affected-item details plus emitted related/removal actions;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning;
 - all 31 tracked XLF files passed XML validation; existing translated section

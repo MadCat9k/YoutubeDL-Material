@@ -54,16 +54,23 @@
                     </ng-container>
                     <ng-container *ngIf="postsService.config && allowSubscriptions && postsService.subscriptions?.length && postsService.hasPermission('subscriptions')">
                         <mat-divider></mat-divider>
-                        <div mat-subheader class="navigation-section-label" i18n="Navigation menu Subscriptions Page title">Subscriptions</div>
-                        <mat-form-field *ngIf="postsService.subscriptions.length > 5" class="subscription-navigation-search" appearance="outline">
-                            <mat-label i18n="Search">Search</mat-label>
-                            <input matInput type="search" [(ngModel)]="subscriptionSearchTerm">
-                            <mat-icon matSuffix aria-hidden="true">search</mat-icon>
-                        </mat-form-field>
-                        <a *ngFor="let subscription of getFilteredSubscriptions()" mat-list-item (click)="postsService.sidepanel_mode === 'over' ? sidenav.close() : null" [routerLink]="['/subscription', { id: subscription.id }]" routerLinkActive="active-navigation-item" ariaCurrentWhenActive="page" [matTooltip]="subscription.name">
-                            <ngx-avatars class="subscription-navigation-avatar" size="32" [name]="subscription.name"></ngx-avatars>
-                            <span class="subscription-navigation-name">{{subscription.name}}</span>
-                        </a>
+                        <div class="navigation-section-header">
+                            <div mat-subheader class="navigation-section-label" i18n="Navigation menu Subscriptions Page title">Subscriptions</div>
+                            <button class="subscription-navigation-toggle" mat-icon-button type="button" aria-label="Subscriptions" i18n-aria-label="Navigation menu Subscriptions Page title" [attr.aria-expanded]="subscriptionsExpanded" (click)="toggleSubscriptions()">
+                                <mat-icon aria-hidden="true">{{subscriptionsExpanded ? 'expand_less' : 'expand_more'}}</mat-icon>
+                            </button>
+                        </div>
+                        <ng-container *ngIf="subscriptionsExpanded">
+                            <mat-form-field *ngIf="postsService.subscriptions.length > 5" class="subscription-navigation-search" appearance="outline">
+                                <mat-label i18n="Search">Search</mat-label>
+                                <input matInput type="search" [(ngModel)]="subscriptionSearchTerm">
+                                <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+                            </mat-form-field>
+                            <a *ngFor="let subscription of getFilteredSubscriptions()" mat-list-item (click)="postsService.sidepanel_mode === 'over' ? sidenav.close() : null" [routerLink]="['/subscription', { id: subscription.id }]" routerLinkActive="active-navigation-item" ariaCurrentWhenActive="page" [matTooltip]="subscription.name">
+                                <ngx-avatars class="subscription-navigation-avatar" size="32" [name]="subscription.name"></ngx-avatars>
+                                <span class="subscription-navigation-name">{{subscription.name}}</span>
+                            </a>
+                        </ng-container>
                     </ng-container>
                 </mat-nav-list>
             </mat-sidenav>

@@ -16,15 +16,25 @@
             <mat-card-content>
                 <ng-container *ngIf="NOTIFICATION_SUFFIX_KEY[notification.type]">
                     <div style="word-break: break-word">
-                        {{notification['data'][NOTIFICATION_SUFFIX_KEY[notification.type]]}}
+                        {{getNotificationDetail(notification)}}
                     </div>
                 </ng-container>
             </mat-card-content>
-            <mat-card-actions class="notification-actions" *ngIf="notification.actions?.length > 0">
-                <button matTooltip="Remove" i18n-matTooltip="Remove" (click)="emitDeleteNotification(notification.uid)" mat-icon-button><mat-icon>close</mat-icon></button>
-                <span *ngFor="let action of notification.actions">
-                    <button [matTooltip]="NOTIFICATION_ACTION_TO_STRING[action]" (click)="emitNotificationAction(notification, action)" mat-icon-button><mat-icon>{{NOTIFICATION_ICON[action]}}</mat-icon></button>
-                </span>
+            <mat-card-actions class="notification-actions">
+                <button class="notification-menu-trigger" mat-stroked-button [matMenuTriggerFor]="notificationMenu">
+                    <mat-icon aria-hidden="true">more_horiz</mat-icon>
+                    <span i18n="Actions">Actions</span>
+                </button>
+                <mat-menu #notificationMenu="matMenu">
+                    <button (click)="emitDeleteNotification(notification.uid)" mat-menu-item>
+                        <mat-icon aria-hidden="true">close</mat-icon>
+                        <span i18n="Remove">Remove</span>
+                    </button>
+                    <button *ngFor="let action of notification.actions" (click)="emitNotificationAction(notification, action)" mat-menu-item>
+                        <mat-icon aria-hidden="true">{{NOTIFICATION_ICON[action]}}</mat-icon>
+                        <span>{{NOTIFICATION_ACTION_TO_STRING[action]}}</span>
+                    </button>
+                </mat-menu>
             </mat-card-actions>
             <span *ngIf="!notification.read" class="dot"></span>
         </mat-card>

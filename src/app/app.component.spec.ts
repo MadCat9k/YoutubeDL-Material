@@ -53,4 +53,14 @@ describe('AppComponent', () => {
 
     expect(component.getFilteredSubscriptions()).toEqual([]);
   });
+
+  it('allows the subscription section to be collapsed and expanded', () => {
+    expect(component.subscriptionsExpanded).toBe(true);
+
+    component.toggleSubscriptions();
+    expect(component.subscriptionsExpanded).toBe(false);
+
+    component.toggleSubscriptions();
+    expect(component.subscriptionsExpanded).toBe(true);
+  });
 });
