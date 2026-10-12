@@ -1,28 +1,24 @@
-<div class="container-fluid" style="max-width: 941px;">
-    <div class="row">
-        <!-- Sorting -->
-        <div class="col-12 order-2 col-sm-4 order-sm-1 d-flex justify-content-center">
+<div class="library-controls">
+    <h4 *ngIf="!customHeader" class="my-videos-title" i18n="My files title">My files</h4>
+    <h4 *ngIf="customHeader" class="my-videos-title">{{customHeader}}</h4>
+    <div class="library-toolbar">
+        <div class="library-sort">
             <app-sort-property [(sortProperty)]="sortProperty" [(descendingMode)]="descendingMode" (sortOptionChanged)="sortOptionChanged($event)"></app-sort-property>
         </div>
-        <!-- Files title -->
-        <div class="col-12 order-1 col-sm-4 order-sm-2 d-flex justify-content-center">
-            <h4 *ngIf="!customHeader" class="my-videos-title" i18n="My files title">My files</h4>
-            <h4 *ngIf="customHeader" class="my-videos-title">{{customHeader}}</h4>
-        </div>
-        <!-- Search -->
-        <div class="col-12 order-3 col-sm-4 order-sm-3 d-flex justify-content-center">
+        <div class="library-search">
             <mat-form-field appearance="outline" [ngClass]="searchIsFocused ? 'search-bar-focused' : 'search-bar-unfocused'" class="search-bar" color="accent">
                 <mat-label i18n="Search">Search</mat-label>
                 <input (focus)="searchIsFocused = true" (blur)="searchIsFocused = false" class="search-input" type="text" [(ngModel)]="search_text" (ngModelChange)="onSearchInputChanged($event)" matInput>
-                <mat-icon matSuffix>search</mat-icon>
+                <mat-icon matSuffix aria-hidden="true">search</mat-icon>
             </mat-form-field>
         </div>
-    </div>
-    <!-- Filters -->
-    <div class="row justify-content-center">
         <mat-chip-listbox class="filter-list" [value]="selectedFilters" [multiple]="true" (change)="selectedFiltersChanged($event)">
             <mat-chip-option *ngFor="let filter of fileFilters | keyvalue: originalOrder" [value]="filter.key" [selected]="selectedFilters.includes(filter.key)" color="accent">{{filter.value.label}}</mat-chip-option>
         </mat-chip-listbox>
+        <button *ngIf="hasActiveFilters()" class="clear-library-filters" mat-button type="button" (click)="clearFilters()">
+            <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
+            <ng-container i18n="Clear download filters@@downloads-clear-filters">Clear filters</ng-container>
+        </button>
     </div>
 </div>
 <div>

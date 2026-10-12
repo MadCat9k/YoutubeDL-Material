@@ -189,6 +189,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
 
   onSearchInputChanged(newvalue: string): void {
     this.normal_files_received = false;
+    this.resetPaginator();
     this.searchChangedSubject.next(newvalue);
   }
 
@@ -197,7 +198,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
     localStorage.setItem('recent_videos_sort_order', value['order'] === -1 ? 'descending' : 'ascending');
     this.descendingMode = value['order'] === -1;
     this.sortProperty = value['by'];
-    
+    this.resetPaginator();
     this.getAllFiles();
   }
 
@@ -223,7 +224,31 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
     } else {
       this.selectedFilters = event.value;
     }
+    this.resetPaginator();
     this.filterChanged(JSON.stringify(this.selectedFilters));
+  }
+
+  hasActiveFilters(): boolean {
+    return !!this.search_text.trim() || this.selectedFilters.length > 0;
+  }
+
+  clearFilters(): void {
+    if (!this.hasActiveFilters()) return;
+    const searchWasActive = !!this.search_text;
+    this.search_text = '';
+    this.search_mode = false;
+    this.selectedFilters = [];
+    localStorage.setItem('file_filter', JSON.stringify(this.selectedFilters));
+    this.resetPaginator();
+    if (this.filterChangeTimer !== null) {
+      window.clearTimeout(this.filterChangeTimer);
+      this.filterChangeTimer = null;
+    }
+    if (searchWasActive) {
+      this.searchChangedSubject.next('');
+    } else {
+      this.getAllFiles();
+    }
   }
 
   getFileTypeFilter(): string {
@@ -301,6 +326,12 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   private cancelPendingFileRequest(): void {
     this.fileRequest?.unsubscribe();
     this.fileRequest = null;
+  }
+
+  private resetPaginator(): void {
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
   }
 
   private getCachedFileCountKey(): string {

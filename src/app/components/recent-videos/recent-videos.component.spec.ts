@@ -179,4 +179,45 @@ describe('RecentVideosComponent', () => {
     expect(locationStrategy.prepareExternalUrl).toHaveBeenCalledWith('/player;uid=file-2;type=audio');
     expect(openSpy).toHaveBeenCalledWith('/#/player;uid=file-2;type=audio', '_blank', 'noopener');
   });
+
+  it('resets pagination when search, sort, or media filters change', () => {
+    fixture.componentRef.setInput('sub_id', 'subscriptionA');
+    fixture.detectChanges();
+    postsService.getAllFiles.calls.reset();
+    component.paginator = {pageIndex: 4} as any;
+    component.onSearchInputChanged('alpha');
+    expect(component.paginator.pageIndex).toBe(0);
+
+    component.paginator.pageIndex = 3;
+    component.sortOptionChanged({by: 'title', order: 1});
+    expect(component.paginator.pageIndex).toBe(0);
+
+    component.paginator.pageIndex = 2;
+    component.selectedFilters = [];
+    component.selectedFiltersChanged({value: ['favorited']} as any);
+    expect(component.paginator.pageIndex).toBe(0);
+  });
+
+  it('clears library search and media filters while preserving sort settings', () => {
+    fixture.componentRef.setInput('sub_id', 'subscriptionA');
+    fixture.detectChanges();
+    postsService.getAllFiles.calls.reset();
+    component.paginator = {pageIndex: 3} as any;
+    component.search_text = '';
+    component.search_mode = false;
+    component.selectedFilters = ['favorited'];
+    component.sortProperty = 'title';
+    component.descendingMode = false;
+
+    component.clearFilters();
+
+    expect(component.search_text).toBe('');
+    expect(component.search_mode).toBe(false);
+    expect(component.selectedFilters).toEqual([]);
+    expect(component.paginator.pageIndex).toBe(0);
+    expect(component.sortProperty).toBe('title');
+    expect(component.descendingMode).toBe(false);
+    expect(localStorage.getItem('file_filter')).toBe('[]');
+    expect(postsService.getAllFiles).toHaveBeenCalledTimes(1);
+  });
 });

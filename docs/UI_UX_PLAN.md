@@ -385,6 +385,9 @@ Verification:
   explicit scope confirmation. Selected active entries are retained, partial
   failures remain selected, and embedded per-item Downloads views do not expose
   the queue-wide selection controls.
+- Home library search, sorting, media filters, and filter clearing now share one
+  responsive toolbar. Changing discovery criteria returns to the first page,
+  while Clear filters removes search and media filters without changing sort.
 
 Verification:
 
@@ -393,6 +396,9 @@ Verification:
   restoration, polling refreshes, filter clearing, and the confirmed completed
   cleanup workflow, plus filtered selection, selection pruning, and scoped bulk
   clearing;
+- focused Recent Videos component suite: 8 passing in Chrome Headless, including
+  first-page reset for discovery changes and one-step clearing that preserves
+  sort settings;
 - focused backend download-clearing suite: 2 passing, covering the new scoped
   completed filter and the existing detailed clear filters;
 - the OpenAPI source and generated `ClearDownloadsRequest` model include the
