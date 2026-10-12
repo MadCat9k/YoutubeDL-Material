@@ -374,17 +374,26 @@ Verification:
   page, sort, and filter state.
 - The toolbar collapses to a single-column layout at the existing mobile
   breakpoint. Embedded per-item Downloads views remain unchanged.
+- Downloads now provides a direct Clear completed action. It requires explicit
+  confirmation, explains its scope, and removes only successful completed
+  entries while retaining failed, cancelled, paused, and active downloads. The
+  detailed clear-by-type dialog remains available.
 
 Verification:
 
-- focused Downloads component suite: 11 passing in Chrome Headless, including
+- focused Downloads component suite: 12 passing in Chrome Headless, including
   combined search/status filtering, deterministic state mapping, saved-state
-  restoration, polling refreshes, and filter clearing;
+  restoration, polling refreshes, filter clearing, and the confirmed completed
+  cleanup workflow;
+- focused backend download-clearing suite: 2 passing, covering the new scoped
+  completed filter and the existing detailed clear filters;
+- the OpenAPI source and generated `ClearDownloadsRequest` model include the
+  optional `clear_completed` field;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning;
-- all 31 tracked XLF files passed XML validation and contain the 11 stable
-  Downloads discovery messages. Non-English locales use safe English fallbacks
-  until translated.
+- all 31 tracked XLF files passed XML validation and contain the stable Downloads
+  discovery and clear-completed messages. Non-English locales use safe English
+  fallbacks until translated.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases

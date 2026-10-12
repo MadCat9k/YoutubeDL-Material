@@ -645,6 +645,11 @@ export class PostsService implements CanActivate {
         return this.http.post<SuccessObject>(this.path + 'clearDownloads', body, this.httpOptions);
     }
 
+    clearCompletedDownloads() {
+        const body: ClearDownloadsRequest = {clear_completed: true};
+        return this.http.post<SuccessObject>(this.path + 'clearDownloads', body, this.httpOptions);
+    }
+
     getTasks() {
         return this.http.post<GetAllTasksResponse>(this.path + 'getTasks', {}, this.httpOptions);
     }

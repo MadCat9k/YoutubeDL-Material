@@ -37,6 +37,7 @@ export class DownloadsComponent implements OnInit, OnDestroy {
 
   paused_download_exists = false;
   running_download_exists = false;
+  completed_download_exists = false;
 
   STEP_INDEX_TO_LABEL = {
       0: $localize`:@@2827589726081052618:Queued`,
@@ -186,6 +187,7 @@ export class DownloadsComponent implements OnInit, OnDestroy {
             this.configureDataSource();
             this.paused_download_exists = this.downloads.find(download => download['paused'] && !download['error']);
             this.running_download_exists = this.downloads.find(download => !download['paused'] && !download['finished']);
+            this.completed_download_exists = this.downloads.some(download => download['finished'] && !download['error'] && !download['cancelled']);
           }
       } else {
         this.markDownloadsRefreshFailed();
@@ -334,6 +336,30 @@ export class DownloadsComponent implements OnInit, OnDestroy {
           }
         });
       }
+    });
+  }
+
+  clearCompletedDownloads(): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        dialogTitle: $localize`:Clear completed downloads confirmation title@@downloads-clear-completed-title:Clear completed downloads?`,
+        dialogText: $localize`:Clear completed downloads confirmation text@@downloads-clear-completed-description:This removes completed entries from the Downloads list. Failed, cancelled, paused, and active downloads are kept.`,
+        submitText: $localize`:Clear completed downloads confirmation action@@downloads-clear-completed-confirm:Clear completed`,
+        warnSubmitColor: true
+      }
+    });
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      this.postsService.clearCompletedDownloads().subscribe(res => {
+        if (res['success']) {
+          this.postsService.openSnackBar($localize`:Clear completed downloads success@@downloads-clear-completed-success:Completed downloads cleared.`);
+          this.getCurrentDownloads();
+        } else {
+          this.postsService.openSnackBar($localize`:Clear completed downloads failure@@downloads-clear-completed-failed:Could not clear completed downloads. Try again.`);
+        }
+      }, () => {
+        this.postsService.openSnackBar($localize`:Clear completed downloads failure@@downloads-clear-completed-failed:Could not clear completed downloads. Try again.`);
+      });
     });
   }
 

@@ -10,13 +10,15 @@ import { DownloadsComponent } from './downloads.component';
 describe('DownloadsComponent', () => {
   let component: DownloadsComponent;
   let postsService: jasmine.SpyObj<PostsService>;
+  let dialog: jasmine.SpyObj<MatDialog>;
 
   beforeEach(() => {
-    postsService = jasmine.createSpyObj<PostsService>('PostsService', ['getCurrentDownloads']);
+    postsService = jasmine.createSpyObj<PostsService>('PostsService', ['getCurrentDownloads', 'clearCompletedDownloads', 'openSnackBar']);
+    dialog = jasmine.createSpyObj<MatDialog>('MatDialog', ['open']);
     component = new DownloadsComponent(
       postsService,
       {} as Router,
-      {} as MatDialog,
+      dialog,
       {} as Clipboard
     );
   });
@@ -125,6 +127,22 @@ describe('DownloadsComponent', () => {
     expect(component.hasActiveFilters()).toBe(false);
     expect(component.dataSource.filteredData.length).toBe(1);
     expect(JSON.parse(localStorage.getItem('downloads_view_state'))).toEqual({search: '', status: 'all'});
+  });
+
+  it('confirms and clears only completed downloads', () => {
+    const afterClosed = new Subject<boolean>();
+    dialog.open.and.returnValue({afterClosed: () => afterClosed.asObservable()} as any);
+    postsService.clearCompletedDownloads.and.returnValue(of({success: true}));
+    postsService.getCurrentDownloads.and.returnValue(of({downloads: []}));
+
+    component.clearCompletedDownloads();
+    expect(postsService.clearCompletedDownloads).not.toHaveBeenCalled();
+
+    afterClosed.next(true);
+
+    expect(postsService.clearCompletedDownloads).toHaveBeenCalledTimes(1);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Completed downloads cleared.');
+    expect(postsService.getCurrentDownloads).toHaveBeenCalledTimes(1);
   });
 
   it('does not start another downloads request while one is in flight', () => {

@@ -114,6 +114,7 @@
       <div *ngIf="!uids" class="downloads-action-button-div">
         <button class="downloads-action-button" [disabled]="!running_download_exists" mat-stroked-button (click)="pauseAllDownloads()"><ng-container i18n="Pause all downloads">Pause all downloads</ng-container></button>
         <button class="downloads-action-button" [disabled]="!paused_download_exists" mat-stroked-button (click)="resumeAllDownloads()"><ng-container i18n="Resume all downloads">Resume all downloads</ng-container></button>
+        <button class="downloads-action-button" [disabled]="!completed_download_exists" mat-stroked-button (click)="clearCompletedDownloads()"><ng-container i18n="Clear completed downloads@@downloads-clear-completed-action">Clear completed</ng-container></button>
         <button class="downloads-action-button" color="warn" mat-stroked-button (click)="clearDownloadsByType()"><ng-container i18n="Clear downloads">Clear downloads</ng-container></button>
       </div>
 </div>

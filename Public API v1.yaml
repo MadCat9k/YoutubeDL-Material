@@ -1790,6 +1790,9 @@ components:
     ClearDownloadsRequest:
       type: object
       properties:
+        clear_completed:
+          type: boolean
+          description: Clears only successfully completed downloads, retaining failures and cancellations
         clear_finished:
           type: boolean
         clear_paused:

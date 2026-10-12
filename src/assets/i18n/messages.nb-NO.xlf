@@ -3037,6 +3037,30 @@
         <source>Cancelled</source>
         <target state="new">Cancelled</target>
       </trans-unit>
+      <trans-unit id="downloads-clear-completed-action" datatype="html">
+        <source>Clear completed</source>
+        <target state="new">Clear completed</target>
+      </trans-unit>
+      <trans-unit id="downloads-clear-completed-title" datatype="html">
+        <source>Clear completed downloads?</source>
+        <target state="new">Clear completed downloads?</target>
+      </trans-unit>
+      <trans-unit id="downloads-clear-completed-description" datatype="html">
+        <source>This removes completed entries from the Downloads list. Failed, cancelled, paused, and active downloads are kept.</source>
+        <target state="new">This removes completed entries from the Downloads list. Failed, cancelled, paused, and active downloads are kept.</target>
+      </trans-unit>
+      <trans-unit id="downloads-clear-completed-confirm" datatype="html">
+        <source>Clear completed</source>
+        <target state="new">Clear completed</target>
+      </trans-unit>
+      <trans-unit id="downloads-clear-completed-success" datatype="html">
+        <source>Completed downloads cleared.</source>
+        <target state="new">Completed downloads cleared.</target>
+      </trans-unit>
+      <trans-unit id="downloads-clear-completed-failed" datatype="html">
+        <source>Could not clear completed downloads. Try again.</source>
+        <target state="new">Could not clear completed downloads. Try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

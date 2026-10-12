@@ -4368,6 +4368,24 @@
       <trans-unit id="downloads-filter-cancelled" datatype="html">
         <source>Cancelled</source>
       </trans-unit>
+      <trans-unit id="downloads-clear-completed-action" datatype="html">
+        <source>Clear completed</source>
+      </trans-unit>
+      <trans-unit id="downloads-clear-completed-title" datatype="html">
+        <source>Clear completed downloads?</source>
+      </trans-unit>
+      <trans-unit id="downloads-clear-completed-description" datatype="html">
+        <source>This removes completed entries from the Downloads list. Failed, cancelled, paused, and active downloads are kept.</source>
+      </trans-unit>
+      <trans-unit id="downloads-clear-completed-confirm" datatype="html">
+        <source>Clear completed</source>
+      </trans-unit>
+      <trans-unit id="downloads-clear-completed-success" datatype="html">
+        <source>Completed downloads cleared.</source>
+      </trans-unit>
+      <trans-unit id="downloads-clear-completed-failed" datatype="html">
+        <source>Could not clear completed downloads. Try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

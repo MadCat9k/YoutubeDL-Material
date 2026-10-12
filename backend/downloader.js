@@ -136,6 +136,23 @@ exports.clearDownload = async (download_uid) => {
     return await db_api.removeRecord('download_queue', {uid: download_uid});
 }
 
+exports.clearDownloads = async (clear_options, user_uid = null) => {
+    let success = true;
+    if (clear_options.clear_completed) {
+        success &= await db_api.removeAllRecords('download_queue', {finished: true, error: null, user_uid: user_uid});
+    }
+    if (clear_options.clear_finished) {
+        success &= await db_api.removeAllRecords('download_queue', {finished: true, user_uid: user_uid});
+    }
+    if (clear_options.clear_paused) {
+        success &= await db_api.removeAllRecords('download_queue', {paused: true, user_uid: user_uid});
+    }
+    if (clear_options.clear_errors) {
+        success &= await db_api.removeAllRecords('download_queue', {error: {$ne: null}, user_uid: user_uid});
+    }
+    return !!success;
+}
+
 async function handleDownloadError(download_uid, error_message, error_type = null) {
     if (!download_uid) return;
     const download = await db_api.getRecord('download_queue', {uid: download_uid});
