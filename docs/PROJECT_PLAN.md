@@ -109,6 +109,21 @@ Acceptance criteria:
   selects the placeholder immediately. Further placeholder errors do not change
   the source, preventing an error loop.
 
+#### Local fallback generation (2026-10-13)
+
+- File cards now request a UID-scoped local thumbnail endpoint. The endpoint
+  reuses a valid stored or same-name sidecar before doing any new work.
+- When no local image exists, the backend attempts a bounded remote image fetch
+  and stores the result beside the media. Fetches accept only HTTP(S) JPEG, PNG,
+  or WebP responses, enforce timeout/size/redirect limits, pin a validated public
+  address, and reject local or private network destinations.
+- If the remote image is unavailable or unsafe, video files receive an FFmpeg
+  JPEG preview. The frame is selected at 10 percent of duration, bounded between
+  one and 30 seconds. Audio files do not use the video-frame fallback.
+- Work is lazy and deduplicated per media path, so only thumbnails requested by
+  the browser are prepared and concurrent requests do not start duplicate fetch
+  or FFmpeg jobs. Successful paths are persisted to the file record.
+
 Verification:
 
 - Focused backend thumbnail/path tests: 6 passing, including extension/path
@@ -118,12 +133,20 @@ Verification:
   card fallback/rendering and auxiliary-click filtering.
 - Production frontend build: completed successfully with the existing
   `file-saver` CommonJS warning.
+- Focused local-thumbnail backend suites: 10 passing, covering local precedence,
+  remote persistence, FFmpeg fallback selection, path handling, and private
+  address rejection. The focused file-card suite passed 3 tests in headless
+  Chrome, and the production frontend build completed successfully.
 
 Remaining risks:
 
 - The repair is lazy and runs as affected file-list pages are loaded; records on
   pages that are never opened remain unchanged until a later repair task scans
   them.
+- Remote availability and FFmpeg generation still require runtime validation in
+  the built container; host-side full backend tests cannot exercise them because
+  the host test environment lacks FFmpeg and its inherited downloader tests also
+  require external network access and a newer Python runtime.
 - Synology validation is still required with an actual historical stale record,
   a container restart, and a browser cache clear.
 - A custom installation that intentionally stored thumbnails outside all four

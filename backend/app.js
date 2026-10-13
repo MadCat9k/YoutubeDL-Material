@@ -31,6 +31,7 @@ const youtubedl_api = require('./youtube-dl');
 const archive_api = require('./archive');
 const files_api = require('./files');
 const media_paths = require('./media-paths');
+const thumbnails_api = require('./thumbnails');
 const notifications_api = require('./notifications');
 
 var app = express();
@@ -1616,6 +1617,27 @@ app.get('/api/stream', optionalJwt, async (req, res) => {
         }
         res.writeHead(200, head)
         fs.createReadStream(file_path).pipe(res)
+    }
+});
+
+app.get('/api/thumbnail/file/:uid', optionalJwt, async (req, res) => {
+    try {
+        const file = await files_api.getVideo(req.params.uid);
+        if (!file) return res.sendStatus(404);
+
+        const thumbnail_path = await thumbnails_api.ensureLocalThumbnail(file);
+        if (!thumbnail_path) {
+            logger.warn(`Could not prepare a local thumbnail for file ${file.uid}.`);
+            return res.sendStatus(404);
+        }
+
+        if (thumbnail_path !== file.thumbnailPath) {
+            await db_api.updateRecord('files', {uid: file.uid}, {thumbnailPath: thumbnail_path});
+        }
+        return res.sendFile(thumbnail_path);
+    } catch {
+        logger.warn('Failed to serve a local thumbnail.');
+        return res.sendStatus(500);
     }
 });
 

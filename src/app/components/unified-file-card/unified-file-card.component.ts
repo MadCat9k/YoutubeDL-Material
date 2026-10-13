@@ -35,6 +35,7 @@ export class UnifiedFileCardComponent implements OnChanges, OnInit {
   // optional vars
   thumbnailBlobURL = null;
   thumbnailFallbackStage = 0;
+  thumbnailUsesLocalEndpoint = false;
   readonly thumbnailPlaceholderURL = 'assets/images/logo_128px.png';
 
   streamURL = null;
@@ -92,16 +93,22 @@ export class UnifiedFileCardComponent implements OnChanges, OnInit {
     this.thumbnailFallbackStage = 0;
     if (!this.file_obj) {
       this.thumbnailBlobURL = null;
+      this.thumbnailUsesLocalEndpoint = false;
       return;
     }
 
-    this.thumbnailBlobURL = this.file_obj.thumbnailPath
-      ? `${this.baseStreamPath}thumbnail/${encodeURIComponent(this.file_obj.thumbnailPath)}?jwt=${this.jwtString}`
-      : this.file_obj.thumbnailURL || this.thumbnailPlaceholderURL;
+    this.thumbnailUsesLocalEndpoint = !this.is_playlist && !!this.file_obj.uid;
+    if (this.thumbnailUsesLocalEndpoint) {
+      this.thumbnailBlobURL = `${this.baseStreamPath}thumbnail/file/${encodeURIComponent(this.file_obj.uid)}?jwt=${this.jwtString}`;
+    } else {
+      this.thumbnailBlobURL = this.file_obj.thumbnailPath
+        ? `${this.baseStreamPath}thumbnail/${encodeURIComponent(this.file_obj.thumbnailPath)}?jwt=${this.jwtString}`
+        : this.file_obj.thumbnailURL || this.thumbnailPlaceholderURL;
+    }
   }
 
   onThumbnailError(): void {
-    if (this.thumbnailFallbackStage === 0 && this.file_obj?.thumbnailPath && this.file_obj.thumbnailURL) {
+    if (this.thumbnailFallbackStage === 0 && this.thumbnailUsesLocalEndpoint && this.file_obj?.thumbnailURL) {
       this.thumbnailFallbackStage = 1;
       this.thumbnailBlobURL = this.file_obj.thumbnailURL;
       return;

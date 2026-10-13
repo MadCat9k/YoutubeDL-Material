@@ -1,7 +1,7 @@
 import { UnifiedFileCardComponent } from './unified-file-card.component';
 
 describe('UnifiedFileCardComponent', () => {
-  it('falls back from a missing local thumbnail to the remote URL and then the placeholder', () => {
+  it('requests a local thumbnail and falls back to the remote URL and then the placeholder', () => {
     const component = new UnifiedFileCardComponent({} as any);
     component.baseStreamPath = 'http://localhost:17442/api/';
     component.jwtString = 'token';
@@ -14,7 +14,7 @@ describe('UnifiedFileCardComponent', () => {
     };
 
     component.ngOnInit();
-    expect(component.thumbnailBlobURL).toContain('api/thumbnail/subscriptions%2Fsample.webp');
+    expect(component.thumbnailBlobURL).toContain('api/thumbnail/file/file-1');
 
     component.onThumbnailError();
     expect(component.thumbnailBlobURL).toBe('https://example.com/remote.jpg');
@@ -26,7 +26,7 @@ describe('UnifiedFileCardComponent', () => {
     expect(component.thumbnailBlobURL).toBe(component.thumbnailPlaceholderURL);
   });
 
-  it('uses a local thumbnail without a remote URL and defaults to the placeholder', () => {
+  it('requests a local thumbnail without a remote URL and defaults to the placeholder', () => {
     const component = new UnifiedFileCardComponent({} as any);
     component.baseStreamPath = 'http://localhost:17442/api/';
     component.file_obj = {
@@ -37,9 +37,9 @@ describe('UnifiedFileCardComponent', () => {
     };
 
     component.ngOnInit();
-    expect(component.thumbnailBlobURL).toContain('api/thumbnail/video%2Fsample.webp');
+    expect(component.thumbnailBlobURL).toContain('api/thumbnail/file/file-local');
 
-    component.file_obj = {uid: 'file-missing', duration: 10, isAudio: false};
+    component.file_obj = {duration: 10, isAudio: false};
     component.ngOnChanges({file_obj: {} as any});
     expect(component.thumbnailBlobURL).toBe(component.thumbnailPlaceholderURL);
   });
