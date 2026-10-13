@@ -109,7 +109,13 @@ export class SettingsComponent implements OnInit {
     return JSON.stringify(this.new_config) === JSON.stringify(this.initial_config);
   }
 
+  settingsValid(): boolean {
+    const port = Number(this.new_config?.Host?.port);
+    return Number.isInteger(port) && port >= 1 && port <= 65535;
+  }
+
   saveSettings(): void {
+    if (!this.settingsValid()) return;
     const settingsToSave = {'YoutubeDLMaterial': this.new_config};
     this.postsService.setConfig(settingsToSave).subscribe(res => {
       if (res['success']) {

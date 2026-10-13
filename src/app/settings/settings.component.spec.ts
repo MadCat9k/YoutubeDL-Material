@@ -63,6 +63,23 @@ describe('SettingsComponent', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
+  it('accepts only valid TCP ports', () => {
+    component.new_config = {Host: {port: '17442'}};
+    expect(component.settingsValid()).toBe(true);
+
+    component.new_config.Host.port = '0';
+    expect(component.settingsValid()).toBe(false);
+
+    component.new_config.Host.port = '65536';
+    expect(component.settingsValid()).toBe(false);
+
+    component.new_config.Host.port = '12.5';
+    expect(component.settingsValid()).toBe(false);
+
+    component.new_config.Host.port = '';
+    expect(component.settingsValid()).toBe(false);
+  });
+
   it('does not restart the server when confirmation is cancelled', () => {
     dialog.open.and.returnValue({afterClosed: () => of(false)});
 

@@ -4952,6 +4952,10 @@
         <source>The application will be unavailable briefly while the server restarts.</source>
         <target state="new">The application will be unavailable briefly while the server restarts.</target>
       </trans-unit>
+      <trans-unit id="settingsPortValidationError" datatype="html">
+        <source>Enter a port from 1 to 65535.</source>
+        <target state="new">Enter a port from 1 to 65535.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
