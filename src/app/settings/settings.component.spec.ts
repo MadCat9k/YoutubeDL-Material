@@ -15,20 +15,24 @@ describe('SettingsComponent', () => {
   let component: SettingsComponent;
   let postsService: any;
   let router: jasmine.SpyObj<any>;
+  let dialog: jasmine.SpyObj<any>;
 
   beforeEach(() => {
     postsService = {
       config: {Advanced: {multi_user_mode: false}},
       initialized: false,
       service_initialized: new Subject<boolean>(),
-      getLatestGithubRelease: () => of(null)
+      getLatestGithubRelease: () => of(null),
+      restartServer: jasmine.createSpy('restartServer').and.returnValue(of({success: true})),
+      openSnackBar: jasmine.createSpy('openSnackBar')
     };
     router = jasmine.createSpyObj('Router', ['navigate']);
+    dialog = jasmine.createSpyObj('MatDialog', ['open']);
     component = new SettingsComponent(
       postsService,
       {} as any,
       {bypassSecurityTrustUrl: value => value} as any,
-      {} as any,
+      dialog,
       router,
       {snapshot: {paramMap: {get: () => null}}} as any
     );
@@ -57,6 +61,23 @@ describe('SettingsComponent', () => {
 
     expect(component.tabIndex).toBe(0);
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('does not restart the server when confirmation is cancelled', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(false)});
+
+    component.restartServer();
+
+    expect(postsService.restartServer).not.toHaveBeenCalled();
+  });
+
+  it('restarts the server after confirmation', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+
+    component.restartServer();
+
+    expect(postsService.restartServer).toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Restarting!');
   });
 });
 

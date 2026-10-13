@@ -419,6 +419,10 @@ Verification:
   screens instead of absolutely covering form content.
 - Settings no longer constrains its tab content to a second viewport-relative
   scroll area; the application content pane owns vertical page scrolling.
+- Settings now places the download-termination and server-restart controls in
+  visually separated danger sections with explicit impact text. Restarting the
+  server requires confirmation before the request is sent, matching the existing
+  confirmation protection for terminating downloads.
 - The navigation drawer now separates individual subscriptions under a labelled
   section that can be collapsed, adds search when the list is long, truncates
   long visible names while retaining a full-name tooltip, and marks the active
@@ -439,9 +443,9 @@ Verification:
 
 Verification:
 
-- focused Settings component suite: 4 passing in Chrome Headless, covering 320,
+- focused Settings component suite: 6 passing in Chrome Headless, covering 320,
   649, and 650 CSS-pixel navigation modes, route updates, the disabled Users
-  section, and single-scroll ownership;
+  section, single-scroll ownership, and cancelled and confirmed server restarts;
 - focused application-shell suite: 4 passing in Chrome Headless, covering
   case-insensitive subscription filtering, empty searches, records without a
   visible name, and subscription-section disclosure state;
@@ -454,7 +458,8 @@ Verification:
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning;
 - all 31 tracked XLF files passed XML validation; existing translated section
-  labels are reused by both navigation presentations.
+  labels are reused by both navigation presentations, and new danger-section
+  copy uses safe English fallbacks until translated.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases

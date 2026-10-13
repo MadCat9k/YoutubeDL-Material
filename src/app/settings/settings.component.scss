@@ -114,6 +114,23 @@
     margin-bottom: 10px;
 }
 
+.settings-danger-zone {
+    max-width: 500px;
+    padding: 16px;
+    border: 1px solid rgba(244, 67, 54, 0.55);
+    border-radius: 4px;
+    background: rgba(244, 67, 54, 0.06);
+}
+
+.settings-danger-zone h6 {
+    margin: 0 0 8px;
+}
+
+.settings-danger-zone p {
+    margin: 0 0 14px;
+    line-height: 1.4;
+}
+
 .action-buttons {
     position: sticky;
     bottom: 0;

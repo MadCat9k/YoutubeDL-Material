@@ -3399,6 +3399,18 @@
         <source>Retry</source>
         <target state="new">Retry</target>
       </trans-unit>
+      <trans-unit id="settingsDangerZone" datatype="html">
+        <source>Danger zone</source>
+        <target state="new">Danger zone</target>
+      </trans-unit>
+      <trans-unit id="settingsKillAllDownloadsWarning" datatype="html">
+        <source>Stops every active download immediately. Subscription and manual downloads are both affected.</source>
+        <target state="new">Stops every active download immediately. Subscription and manual downloads are both affected.</target>
+      </trans-unit>
+      <trans-unit id="settingsRestartServerWarning" datatype="html">
+        <source>The application will be unavailable briefly while the server restarts.</source>
+        <target state="new">The application will be unavailable briefly while the server restarts.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

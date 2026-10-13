@@ -4422,6 +4422,15 @@
       <trans-unit id="retry-action" datatype="html">
         <source>Retry</source>
       </trans-unit>
+      <trans-unit id="settingsDangerZone" datatype="html">
+        <source>Danger zone</source>
+      </trans-unit>
+      <trans-unit id="settingsKillAllDownloadsWarning" datatype="html">
+        <source>Stops every active download immediately. Subscription and manual downloads are both affected.</source>
+      </trans-unit>
+      <trans-unit id="settingsRestartServerWarning" datatype="html">
+        <source>The application will be unavailable briefly while the server restarts.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

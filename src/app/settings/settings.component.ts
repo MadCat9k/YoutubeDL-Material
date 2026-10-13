@@ -54,6 +54,9 @@ export class SettingsComponent implements OnInit {
   TAB_TO_INDEX = {};
   
   usersTabDisabledTooltip = $localize`You must enable multi-user mode to access this tab.`;
+  dangerZoneLabel = $localize`:Settings danger zone heading@@settingsDangerZone:Danger zone`;
+  killAllDownloadsWarning = $localize`:Kill all downloads warning@@settingsKillAllDownloadsWarning:Stops every active download immediately. Subscription and manual downloads are both affected.`;
+  restartServerWarning = $localize`:Restart server warning@@settingsRestartServerWarning:The application will be unavailable briefly while the server restarts.`;
 
   get settingsAreTheSame(): boolean {
     this._settingsSame = this.settingsSame()
@@ -283,9 +286,9 @@ export class SettingsComponent implements OnInit {
     const done = new EventEmitter<boolean>();
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
-        dialogTitle: 'Kill downloads',
-        dialogText: 'Are you sure you want to kill all downloads? Any subscription and non-subscription downloads will end immediately, though this operation may take a minute or so to complete.',
-        submitText: 'Kill all downloads',
+        dialogTitle: $localize`:Kill all downloads button:Kill all downloads`,
+        dialogText: this.killAllDownloadsWarning,
+        submitText: $localize`:Kill all downloads button:Kill all downloads`,
         doneEmitter: done,
         warnSubmitColor: true
       }
@@ -309,10 +312,21 @@ export class SettingsComponent implements OnInit {
   }
 
   restartServer(): void {
-    this.postsService.restartServer().subscribe(() => {
-      this.postsService.openSnackBar($localize`Restarting!`);
-    }, () => {
-      this.postsService.openSnackBar($localize`Failed to restart the server.`);
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        dialogTitle: $localize`:Restart server button:Restart server`,
+        dialogText: this.restartServerWarning,
+        submitText: $localize`:Restart server button:Restart server`,
+        warnSubmitColor: true
+      }
+    });
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      this.postsService.restartServer().subscribe(() => {
+        this.postsService.openSnackBar($localize`Restarting!`);
+      }, () => {
+        this.postsService.openSnackBar($localize`Failed to restart the server.`);
+      });
     });
   }
 

@@ -192,7 +192,11 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
-                        <button (click)="killAllDownloads()" mat-stroked-button color="warn"><ng-container i18n="Kill all downloads button">Kill all downloads</ng-container></button>
+                        <section class="settings-danger-zone">
+                            <h6>{{dangerZoneLabel}}</h6>
+                            <p>{{killAllDownloadsWarning}}</p>
+                            <button (click)="killAllDownloads()" mat-stroked-button color="warn"><ng-container i18n="Kill all downloads button">Kill all downloads</ng-container></button>
+                        </section>
                     </div>
                 </div>
             </div>
@@ -524,7 +528,11 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-4">
-                        <button (click)="restartServer()" mat-stroked-button color="warn"><ng-container i18n="Restart server button">Restart server</ng-container></button>
+                        <section class="settings-danger-zone">
+                            <h6>{{dangerZoneLabel}}</h6>
+                            <p>{{restartServerWarning}}</p>
+                            <button (click)="restartServer()" mat-stroked-button color="warn"><ng-container i18n="Restart server button">Restart server</ng-container></button>
+                        </section>
                     </div>
                 </div>
             </div>
