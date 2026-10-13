@@ -4416,6 +4416,12 @@
       <trans-unit id="downloads-bulk-clear-success" datatype="html">
         <source>Selected downloads cleared.</source>
       </trans-unit>
+      <trans-unit id="notifications-refresh-failed" datatype="html">
+        <source>Unable to load notifications.</source>
+      </trans-unit>
+      <trans-unit id="retry-action" datatype="html">
+        <source>Retry</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

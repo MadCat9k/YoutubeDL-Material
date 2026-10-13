@@ -4468,6 +4468,14 @@
         <source>Selected downloads cleared.</source>
         <target state="new">Selected downloads cleared.</target>
       </trans-unit>
+      <trans-unit id="notifications-refresh-failed" datatype="html">
+        <source>Unable to load notifications.</source>
+        <target state="new">Unable to load notifications.</target>
+      </trans-unit>
+      <trans-unit id="retry-action" datatype="html">
+        <source>Retry</source>
+        <target state="new">Retry</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

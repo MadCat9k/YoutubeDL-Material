@@ -433,6 +433,9 @@ Verification:
   in addition to the existing dot. Deleting notifications updates the local list
   and unread badge deterministically, while delete-all waits for server success
   before clearing the visible history and badge.
+- Notification request failures now show an explicit connection-error state with
+  a retry action; retrying clears the stale error immediately while the guarded
+  request lifecycle prevents superseded responses from replacing current state.
 
 Verification:
 
@@ -444,9 +447,10 @@ Verification:
   visible name, and subscription-section disclosure state;
 - focused notification-list suite: 3 passing in Chrome Headless, covering
   missing and present affected-item details plus emitted related/removal actions;
-- focused Notifications component suite: 6 passing in Chrome Headless, covering
+- focused Notifications component suite: 7 passing in Chrome Headless, covering
   superseded requests, teardown, closing before the initial load completes,
-  unread counts, individual deletion, and confirmed delete-all state;
+  connection-error recovery, unread counts, individual deletion, and confirmed
+  delete-all state;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning;
 - all 31 tracked XLF files passed XML validation; existing translated section

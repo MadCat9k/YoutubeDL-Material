@@ -1,3 +1,8 @@
+<div class="notifications-connection-state" *ngIf="notifications_connection_error" role="alert">
+    <mat-icon>cloud_off</mat-icon>
+    <span i18n="Notifications refresh failure@@notifications-refresh-failed">Unable to load notifications.</span>
+    <button mat-stroked-button color="accent" (click)="getNotifications()" i18n="Retry action@@retry-action">Retry</button>
+</div>
 <div *ngIf="notifications !== null && notifications.length === 0" style="text-align: center; margin: 10px;" i18n="No notifications available">No notifications available</div>
 <div *ngIf="notifications?.length > 0">
     <div class="notifications-list-parent">

@@ -32,6 +32,24 @@ describe('NotificationsComponent', () => {
     expect(component.notifications.map(notification => notification.uid)).toEqual(['current']);
   });
 
+  it('shows a connection error and clears it when retrying', () => {
+    const failedResponse = new Subject<any>();
+    const retryResponse = new Subject<any>();
+    postsService.getNotifications.and.returnValues(failedResponse, retryResponse);
+
+    component.getNotifications();
+    failedResponse.error(new Error('request failed'));
+
+    expect(component.notifications_connection_error).toBe(true);
+
+    component.getNotifications();
+    expect(component.notifications_connection_error).toBe(false);
+
+    retryResponse.next({notifications: []});
+    expect(component.notifications).toEqual([]);
+    expect(component.notifications_connection_error).toBe(false);
+  });
+
   it('releases initialization and active request subscriptions on destruction', () => {
     const response = new Subject<any>();
     postsService.initialized = false;

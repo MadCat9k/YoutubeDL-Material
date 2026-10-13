@@ -35,6 +35,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   };
 
   selectedFilters = [];
+  notifications_connection_error = false;
   initializationSubscription: Subscription = null;
   notificationsRequest: Subscription = null;
   notificationsRequestGeneration = 0;
@@ -68,6 +69,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   getNotifications(): void {
     this.notificationsRequest?.unsubscribe();
     const requestGeneration = ++this.notificationsRequestGeneration;
+    this.notifications_connection_error = false;
     const notificationsRequest = this.postsService.getNotifications().subscribe(res => {
       if (requestGeneration !== this.notificationsRequestGeneration) return;
       this.notifications = res['notifications'];
@@ -75,6 +77,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       this.notificationCount.emit(this.getUnreadCount());
 
       this.filterNotifications();
+    }, () => {
+      if (requestGeneration !== this.notificationsRequestGeneration) return;
+      this.notifications_connection_error = true;
     });
     this.notificationsRequest = notificationsRequest.closed ? null : notificationsRequest;
   }
