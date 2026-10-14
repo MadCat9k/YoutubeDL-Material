@@ -5492,6 +5492,22 @@
         <source>Application updates</source>
         <target state="new">Application updates</target>
       </trans-unit>
+      <trans-unit id="settingsUsersRegistrationSection" datatype="html">
+        <source>Registration</source>
+        <target state="new">Registration</target>
+      </trans-unit>
+      <trans-unit id="settingsUsersAuthenticationSection" datatype="html">
+        <source>Authentication</source>
+        <target state="new">Authentication</target>
+      </trans-unit>
+      <trans-unit id="settingsUsersLdapSection" datatype="html">
+        <source>LDAP directory</source>
+        <target state="new">LDAP directory</target>
+      </trans-unit>
+      <trans-unit id="settingsUsersManagementSection" datatype="html">
+        <source>User management</source>
+        <target state="new">User management</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -113,6 +113,12 @@ export class SettingsComponent implements OnInit {
     authentication: $localize`:Advanced authentication section@@settingsAdvancedAuthenticationSection:Download authentication`,
     updates: $localize`:Advanced updates section@@settingsAdvancedUpdatesSection:Application updates`
   };
+  userSectionLabels = {
+    registration: $localize`:Users registration section@@settingsUsersRegistrationSection:Registration`,
+    authentication: $localize`:Users authentication section@@settingsUsersAuthenticationSection:Authentication`,
+    ldap: $localize`:Users LDAP section@@settingsUsersLdapSection:LDAP directory`,
+    management: $localize`:Users management section@@settingsUsersManagementSection:User management`
+  };
   tabs = this.settingsSections.map(section => section.key);
   tabIndex = 0;
   compactNavigation = false;

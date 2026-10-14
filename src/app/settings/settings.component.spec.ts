@@ -102,6 +102,15 @@ describe('SettingsComponent', () => {
     });
   });
 
+  it('provides descriptive groups for the Users settings section', () => {
+    expect(component.userSectionLabels).toEqual({
+      registration: 'Registration',
+      authentication: 'Authentication',
+      ldap: 'LDAP directory',
+      management: 'User management'
+    });
+  });
+
   it('finds settings sections by labels and help concepts', () => {
     component.settingsSearchQuery = 'DOWNLOAD RATE';
     expect(component.filteredSettingsSections.map(section => section.key)).toEqual(['downloader']);

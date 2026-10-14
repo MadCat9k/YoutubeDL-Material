@@ -4536,6 +4536,18 @@
       <trans-unit id="settingsAdvancedUpdatesSection" datatype="html">
         <source>Application updates</source>
       </trans-unit>
+      <trans-unit id="settingsUsersRegistrationSection" datatype="html">
+        <source>Registration</source>
+      </trans-unit>
+      <trans-unit id="settingsUsersAuthenticationSection" datatype="html">
+        <source>Authentication</source>
+      </trans-unit>
+      <trans-unit id="settingsUsersLdapSection" datatype="html">
+        <source>LDAP directory</source>
+      </trans-unit>
+      <trans-unit id="settingsUsersManagementSection" datatype="html">
+        <source>User management</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>
