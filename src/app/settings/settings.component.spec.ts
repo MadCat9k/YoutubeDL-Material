@@ -93,6 +93,15 @@ describe('SettingsComponent', () => {
     });
   });
 
+  it('provides descriptive groups for the Advanced settings section', () => {
+    expect(component.advancedSectionLabels).toEqual({
+      downloader: 'Download engine',
+      runtime: 'Runtime and sessions',
+      authentication: 'Download authentication',
+      updates: 'Application updates'
+    });
+  });
+
   it('finds settings sections by labels and help concepts', () => {
     component.settingsSearchQuery = 'DOWNLOAD RATE';
     expect(component.filteredSettingsSections.map(section => section.key)).toEqual(['downloader']);

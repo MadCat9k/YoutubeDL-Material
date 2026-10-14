@@ -4608,6 +4608,22 @@
         <source>Push services</source>
         <target state="new">Push services</target>
       </trans-unit>
+      <trans-unit id="settingsAdvancedDownloaderSection" datatype="html">
+        <source>Download engine</source>
+        <target state="new">Download engine</target>
+      </trans-unit>
+      <trans-unit id="settingsAdvancedRuntimeSection" datatype="html">
+        <source>Runtime and sessions</source>
+        <target state="new">Runtime and sessions</target>
+      </trans-unit>
+      <trans-unit id="settingsAdvancedAuthenticationSection" datatype="html">
+        <source>Download authentication</source>
+        <target state="new">Download authentication</target>
+      </trans-unit>
+      <trans-unit id="settingsAdvancedUpdatesSection" datatype="html">
+        <source>Application updates</source>
+        <target state="new">Application updates</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

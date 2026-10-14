@@ -107,6 +107,12 @@ export class SettingsComponent implements OnInit {
     webhooks: $localize`:Notification webhooks section@@settingsNotificationWebhooksSection:Webhooks`,
     pushServices: $localize`:Notification push services section@@settingsNotificationPushServicesSection:Push services`
   };
+  advancedSectionLabels = {
+    downloader: $localize`:Advanced downloader section@@settingsAdvancedDownloaderSection:Download engine`,
+    runtime: $localize`:Advanced runtime section@@settingsAdvancedRuntimeSection:Runtime and sessions`,
+    authentication: $localize`:Advanced authentication section@@settingsAdvancedAuthenticationSection:Download authentication`,
+    updates: $localize`:Advanced updates section@@settingsAdvancedUpdatesSection:Application updates`
+  };
   tabs = this.settingsSections.map(section => section.key);
   tabIndex = 0;
   compactNavigation = false;

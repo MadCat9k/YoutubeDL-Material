@@ -4524,6 +4524,18 @@
       <trans-unit id="settingsNotificationPushServicesSection" datatype="html">
         <source>Push services</source>
       </trans-unit>
+      <trans-unit id="settingsAdvancedDownloaderSection" datatype="html">
+        <source>Download engine</source>
+      </trans-unit>
+      <trans-unit id="settingsAdvancedRuntimeSection" datatype="html">
+        <source>Runtime and sessions</source>
+      </trans-unit>
+      <trans-unit id="settingsAdvancedAuthenticationSection" datatype="html">
+        <source>Download authentication</source>
+      </trans-unit>
+      <trans-unit id="settingsAdvancedUpdatesSection" datatype="html">
+        <source>Application updates</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

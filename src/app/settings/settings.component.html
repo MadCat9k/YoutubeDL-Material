@@ -515,6 +515,9 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{advancedSectionLabels.downloader}}</h5>
+                    </div>
+                    <div class="col-12 mt-2">
                         <mat-form-field>
                             <mat-label><ng-container i18n="Default downloader select label">Select a downloader</ng-container></mat-label>
                             <mat-select color="accent" [(ngModel)]="new_config['Advanced']['default_downloader']">
@@ -542,6 +545,12 @@
                             </mat-select>
                         </mat-form-field>
                     </div>
+                    <div class="col-12 mb-3">
+                        <mat-checkbox color="accent" [(ngModel)]="new_config['Advanced']['allow_advanced_download']"><ng-container i18n="Allow advanced downloading setting">Allow advanced download</ng-container></mat-checkbox>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{advancedSectionLabels.runtime}}</h5>
+                    </div>
                     <div class="col-12">
                         <mat-form-field>
                             <mat-label><ng-container i18n="Log Level label">Log Level</ng-container></mat-label>
@@ -566,15 +575,13 @@
                             </mat-select>
                         </mat-form-field>
                     </div>
-                    <div class="col-12 mb-1">
-                        <mat-checkbox color="accent" [(ngModel)]="new_config['Advanced']['allow_advanced_download']"><ng-container i18n="Allow advanced downloading setting">Allow advanced download</ng-container></mat-checkbox>
-                    </div>
                 </div>
             </div>
             <mat-divider></mat-divider>
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-2 mb-2">
+                        <h5 class="settings-section-heading">{{advancedSectionLabels.authentication}}</h5>
                         <mat-checkbox color="accent" [(ngModel)]="new_config['Advanced']['use_cookies']"><ng-container i18n="Use cookies setting">Use Cookies</ng-container></mat-checkbox>
                         <button class="checkbox-button" mat-stroked-button (click)="openCookiesUploaderDialog()"><ng-container i18n="Set cookies button">Set Cookies</ng-container></button>
                     </div>
@@ -582,6 +589,7 @@
             </div>
             <mat-divider></mat-divider>
             <div *ngIf="new_config" class="container-fluid mt-3">
+                <h5 class="settings-section-heading">{{advancedSectionLabels.updates}}</h5>
                 <app-updater></app-updater>
             </div>
             <mat-divider></mat-divider>
