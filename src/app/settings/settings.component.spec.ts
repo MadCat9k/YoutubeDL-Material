@@ -85,6 +85,14 @@ describe('SettingsComponent', () => {
     });
   });
 
+  it('provides descriptive groups for the Notifications settings section', () => {
+    expect(component.notificationSectionLabels).toEqual({
+      scope: 'Notification scope',
+      webhooks: 'Webhooks',
+      pushServices: 'Push services'
+    });
+  });
+
   it('finds settings sections by labels and help concepts', () => {
     component.settingsSearchQuery = 'DOWNLOAD RATE';
     expect(component.filteredSettingsSections.map(section => section.key)).toEqual(['downloader']);

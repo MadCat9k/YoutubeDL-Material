@@ -102,6 +102,11 @@ export class SettingsComponent implements OnInit {
     connection: $localize`:Database connection section@@settingsDatabaseConnectionSection:MongoDB connection`,
     transfer: $localize`:Database transfer section@@settingsDatabaseTransferSection:Data transfer`
   };
+  notificationSectionLabels = {
+    scope: $localize`:Notification scope section@@settingsNotificationScopeSection:Notification scope`,
+    webhooks: $localize`:Notification webhooks section@@settingsNotificationWebhooksSection:Webhooks`,
+    pushServices: $localize`:Notification push services section@@settingsNotificationPushServicesSection:Push services`
+  };
   tabs = this.settingsSections.map(section => section.key);
   tabIndex = 0;
   compactNavigation = false;

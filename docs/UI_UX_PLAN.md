@@ -442,6 +442,9 @@ Verification:
 - Database Settings now separates status and record counts, MongoDB connection
   controls, and data transfer under descriptive headings without changing
   database behavior.
+- Notification Settings now separates notification scope, webhook endpoints,
+  and push-service configuration under descriptive headings without changing
+  delivery behavior.
 - The navigation drawer now separates individual subscriptions under a labelled
   section that can be collapsed, adds search when the list is long, truncates
   long visible names while retaining a full-name tooltip, and marks the active
@@ -462,12 +465,12 @@ Verification:
 
 Verification:
 
-- focused Settings component suite: 13 passing in Chrome Headless, covering 320,
+- focused Settings component suite: 14 passing in Chrome Headless, covering 320,
   649, and 650 CSS-pixel navigation modes, route updates, the disabled Users
   section, single-scroll ownership, cancelled and confirmed server restarts, and
   valid and invalid TCP port values, Main-section grouping labels, search
-  matching, search-result navigation, and Main, Downloader, Extra, and Database
-  grouping labels;
+  matching, search-result navigation, and Main, Downloader, Extra, Database, and
+  Notifications grouping labels;
 - focused application-shell suite: 4 passing in Chrome Headless, covering
   case-insensitive subscription filtering, empty searches, records without a
   visible name, and subscription-section disclosure state;
@@ -500,6 +503,10 @@ Verification:
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
 - validation image at commit `a2ccd6c` rebuilt and redeployed on port `18084`;
+  the container remained healthy with HTTP 200 and all five persistent volumes
+  attached after a deliberate restart, with a verified appdata/users archive
+  and the prior container retained for rollback;
+- validation image at commit `025328e` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;

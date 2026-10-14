@@ -410,6 +410,7 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{notificationSectionLabels.scope}}</h5>
                         <div><a target="_blank" href="https://github.com/Tzahi12345/YoutubeDL-Material/wiki/Notifications"><ng-container i18n="Documentation">Documentation</ng-container></a></div>
                         <mat-checkbox color="accent" [(ngModel)]="new_config['Extra']['enable_notifications']"><ng-container i18n="Enable notifications setting">Enable notifications</ng-container></mat-checkbox>
                     </div>
@@ -425,6 +426,9 @@
                                 <mat-option value="task_finished" i18n="Task finished">Task finished</mat-option>
                             </mat-select>
                         </mat-form-field>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{notificationSectionLabels.webhooks}}</h5>
                     </div>
                     <div class="col-12 mb-2 mt-2">
                         <mat-form-field class="text-field" color="accent">
@@ -446,6 +450,9 @@
                             <input placeholder="https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX" [(ngModel)]="new_config['API']['slack_webhook_URL']" matInput>
                                 <mat-hint><a target="_blank" href="https://api.slack.com/messaging/webhooks"><ng-container i18n="Slack API setting hint">See docs here.</ng-container></a></mat-hint>
                         </mat-form-field>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{notificationSectionLabels.pushServices}}</h5>
                     </div>
                     <div class="col-12 mt-3">
                         <mat-checkbox color="accent" [disabled]="!new_config['Extra']['enable_notifications']" [(ngModel)]="new_config['API']['use_ntfy_API']"><ng-container i18n="Use ntfy API setting">Use ntfy API</ng-container></mat-checkbox>

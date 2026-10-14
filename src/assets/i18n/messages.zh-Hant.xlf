@@ -4818,6 +4818,18 @@
         <source>Data transfer</source>
         <target state="new">Data transfer</target>
       </trans-unit>
+      <trans-unit id="settingsNotificationScopeSection" datatype="html">
+        <source>Notification scope</source>
+        <target state="new">Notification scope</target>
+      </trans-unit>
+      <trans-unit id="settingsNotificationWebhooksSection" datatype="html">
+        <source>Webhooks</source>
+        <target state="new">Webhooks</target>
+      </trans-unit>
+      <trans-unit id="settingsNotificationPushServicesSection" datatype="html">
+        <source>Push services</source>
+        <target state="new">Push services</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

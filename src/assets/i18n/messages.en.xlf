@@ -4515,6 +4515,15 @@
       <trans-unit id="settingsDatabaseTransferSection" datatype="html">
         <source>Data transfer</source>
       </trans-unit>
+      <trans-unit id="settingsNotificationScopeSection" datatype="html">
+        <source>Notification scope</source>
+      </trans-unit>
+      <trans-unit id="settingsNotificationWebhooksSection" datatype="html">
+        <source>Webhooks</source>
+      </trans-unit>
+      <trans-unit id="settingsNotificationPushServicesSection" datatype="html">
+        <source>Push services</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>
