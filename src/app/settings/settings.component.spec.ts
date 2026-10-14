@@ -67,6 +67,16 @@ describe('SettingsComponent', () => {
     });
   });
 
+  it('provides descriptive groups for the Extra settings section', () => {
+    expect(component.extraSectionLabels).toEqual({
+      interface: 'Interface and playback',
+      publicApi: 'Public API',
+      integrations: 'Media integrations',
+      rss: 'RSS feed',
+      browserTools: 'Browser tools'
+    });
+  });
+
   it('finds settings sections by labels and help concepts', () => {
     component.settingsSearchQuery = 'DOWNLOAD RATE';
     expect(component.filteredSettingsSections.map(section => section.key)).toEqual(['downloader']);

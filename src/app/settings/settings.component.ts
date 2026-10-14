@@ -90,6 +90,13 @@ export class SettingsComponent implements OnInit {
     files: $localize`:Downloader archive and files section@@settingsDownloaderFilesSection:Archive and sidecar files`,
     limits: $localize`:Downloader limits section@@settingsDownloaderLimitsSection:Limits`
   };
+  extraSectionLabels = {
+    interface: $localize`:Extra interface section@@settingsExtraInterfaceSection:Interface and playback`,
+    publicApi: $localize`:Extra public API section@@settingsExtraPublicApiSection:Public API`,
+    integrations: $localize`:Extra integrations section@@settingsExtraIntegrationsSection:Media integrations`,
+    rss: $localize`:Extra RSS section@@settingsExtraRssSection:RSS feed`,
+    browserTools: $localize`:Extra browser tools section@@settingsExtraBrowserToolsSection:Browser tools`
+  };
   tabs = this.settingsSections.map(section => section.key);
   tabIndex = 0;
   compactNavigation = false;

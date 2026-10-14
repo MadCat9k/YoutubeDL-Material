@@ -4837,6 +4837,26 @@
         <source>Limits</source>
         <target state="new">Limits</target>
       </trans-unit>
+      <trans-unit id="settingsExtraInterfaceSection" datatype="html">
+        <source>Interface and playback</source>
+        <target state="new">Interface and playback</target>
+      </trans-unit>
+      <trans-unit id="settingsExtraPublicApiSection" datatype="html">
+        <source>Public API</source>
+        <target state="new">Public API</target>
+      </trans-unit>
+      <trans-unit id="settingsExtraIntegrationsSection" datatype="html">
+        <source>Media integrations</source>
+        <target state="new">Media integrations</target>
+      </trans-unit>
+      <trans-unit id="settingsExtraRssSection" datatype="html">
+        <source>RSS feed</source>
+        <target state="new">RSS feed</target>
+      </trans-unit>
+      <trans-unit id="settingsExtraBrowserToolsSection" datatype="html">
+        <source>Browser tools</source>
+        <target state="new">Browser tools</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -248,6 +248,9 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{extraSectionLabels.interface}}</h5>
+                    </div>
+                    <div class="col-12 mt-2">
                         <mat-form-field class="text-field" color="accent">
                             <mat-label i18n="Top title">Top title</mat-label>
                             <input [(ngModel)]="new_config['Extra']['title_top']" matInput required>
@@ -275,6 +278,9 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{extraSectionLabels.publicApi}}</h5>
+                    </div>
+                    <div class="col-12 mt-2">
                         <mat-checkbox color="accent" [(ngModel)]="new_config['API']['use_API_key']"><ng-container i18n="Enable Public API key setting">Enable Public API</ng-container></mat-checkbox>
                     </div>
                     <div class="col-12 mb-3">
@@ -295,6 +301,9 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{extraSectionLabels.integrations}}</h5>
+                    </div>
+                    <div class="col-12 mt-2">
                         <mat-checkbox color="accent" [(ngModel)]="new_config['API']['use_youtube_API']"><ng-container i18n="Use YouTube API setting">Use YouTube API</ng-container></mat-checkbox>
                     </div>
                     <div class="col-12 mb-2">
@@ -319,7 +328,7 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
-                        <h6>RSS Feed</h6>
+                        <h5 class="settings-section-heading">{{extraSectionLabels.rss}}</h5>
                         <mat-checkbox color="accent" [(ngModel)]="new_config['Extra']['enable_rss_feed']" ><ng-container i18n="Enable RSS Feed setting">Enable RSS Feed</ng-container></mat-checkbox>
                         <p><ng-container i18n="RSS Feed prefix">Be careful enabling this with multi-user mode! User data may be exposed.</ng-container></p>
                         <button mat-stroked-button (click)="openGenerateRSSURLDialog()" [disabled]="!new_config['Extra']['enable_rss_feed']" i18n="Generate RSS URL">Generate RSS URL</button>
@@ -331,6 +340,7 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{extraSectionLabels.browserTools}}</h5>
                         <h6>Chrome</h6>
                         <p><a href="https://github.com/Tzahi12345/YoutubeDL-Material/blob/master/chrome-extension/youtubedl-material-chrome-extension.zip?raw=true"><ng-container i18n="Chrome ext click here">Click here</ng-container></a>&nbsp;<ng-container i18n="Chrome click here suffix">to download the official YoutubeDL-Material Chrome extension manually.</ng-container></p>
                         <p><ng-container i18n="Chrome setup suffix">You must manually load the extension and modify the extension's settings to set the frontend URL.</ng-container></p>

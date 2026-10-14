@@ -4491,6 +4491,21 @@
       <trans-unit id="settingsDownloaderLimitsSection" datatype="html">
         <source>Limits</source>
       </trans-unit>
+      <trans-unit id="settingsExtraInterfaceSection" datatype="html">
+        <source>Interface and playback</source>
+      </trans-unit>
+      <trans-unit id="settingsExtraPublicApiSection" datatype="html">
+        <source>Public API</source>
+      </trans-unit>
+      <trans-unit id="settingsExtraIntegrationsSection" datatype="html">
+        <source>Media integrations</source>
+      </trans-unit>
+      <trans-unit id="settingsExtraRssSection" datatype="html">
+        <source>RSS feed</source>
+      </trans-unit>
+      <trans-unit id="settingsExtraBrowserToolsSection" datatype="html">
+        <source>Browser tools</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>
