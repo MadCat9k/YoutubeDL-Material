@@ -370,6 +370,7 @@
                 <div class="row">
                     <div class="col-12 mt-3">
                         <div *ngIf="db_info">
+                            <h5 class="settings-section-heading">{{databaseSectionLabels.status}}</h5>
                             <p><ng-container i18n="Database location label">Database location:</ng-container>&nbsp;<strong>{{db_info['using_local_db'] ? 'Local' : 'MongoDB'}}</strong></p>
                             <h6 i18n="Records per table label">Records per table</h6>
                             <mat-list style="padding-top: 0px">
@@ -378,7 +379,8 @@
                                 </mat-list-item>
                             </mat-list>
 
-                            <mat-form-field style="width: 100%; margin-top: 15px; margin-bottom: 10px" color="accent">
+                            <h5 class="settings-section-heading mt-4">{{databaseSectionLabels.connection}}</h5>
+                            <mat-form-field style="width: 100%; margin-top: 8px; margin-bottom: 10px" color="accent">
                                 <mat-label i18n="MongoDB Connection String">MongoDB Connection String</mat-label>
                                 <input [(ngModel)]="new_config['Database']['mongodb_connection_string']" matInput required>
                                 <mat-hint><ng-container i18n="MongoDB Connection String setting hint AKA preamble">Example:</ng-container>&nbsp;mongodb://127.0.0.1:27017/?compressors=zlib<br>Docker: mongodb://&lt;container name&gt;:27017/?compressors=zlib</mat-hint>
@@ -390,6 +392,7 @@
                             </div>
 
                             <div class="transfer-db-div">
+                                <h5 class="settings-section-heading">{{databaseSectionLabels.transfer}}</h5>
                                 <button [disabled]="db_transferring" color="accent" (click)="transferDB()" mat-raised-button><ng-container i18n="Transfer DB button">Transfer DB to </ng-container>{{db_info['using_local_db'] ? 'MongoDB' : 'Local'}}</button>
                             </div>
                         </div>

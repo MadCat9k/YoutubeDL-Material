@@ -97,6 +97,11 @@ export class SettingsComponent implements OnInit {
     rss: $localize`:Extra RSS section@@settingsExtraRssSection:RSS feed`,
     browserTools: $localize`:Extra browser tools section@@settingsExtraBrowserToolsSection:Browser tools`
   };
+  databaseSectionLabels = {
+    status: $localize`:Database status section@@settingsDatabaseStatusSection:Status and records`,
+    connection: $localize`:Database connection section@@settingsDatabaseConnectionSection:MongoDB connection`,
+    transfer: $localize`:Database transfer section@@settingsDatabaseTransferSection:Data transfer`
+  };
   tabs = this.settingsSections.map(section => section.key);
   tabIndex = 0;
   compactNavigation = false;

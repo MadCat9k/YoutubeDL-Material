@@ -4353,6 +4353,18 @@
         <source>Browser tools</source>
         <target state="new">Browser tools</target>
       </trans-unit>
+      <trans-unit id="settingsDatabaseStatusSection" datatype="html">
+        <source>Status and records</source>
+        <target state="new">Status and records</target>
+      </trans-unit>
+      <trans-unit id="settingsDatabaseConnectionSection" datatype="html">
+        <source>MongoDB connection</source>
+        <target state="new">MongoDB connection</target>
+      </trans-unit>
+      <trans-unit id="settingsDatabaseTransferSection" datatype="html">
+        <source>Data transfer</source>
+        <target state="new">Data transfer</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

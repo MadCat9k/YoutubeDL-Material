@@ -4506,6 +4506,15 @@
       <trans-unit id="settingsExtraBrowserToolsSection" datatype="html">
         <source>Browser tools</source>
       </trans-unit>
+      <trans-unit id="settingsDatabaseStatusSection" datatype="html">
+        <source>Status and records</source>
+      </trans-unit>
+      <trans-unit id="settingsDatabaseConnectionSection" datatype="html">
+        <source>MongoDB connection</source>
+      </trans-unit>
+      <trans-unit id="settingsDatabaseTransferSection" datatype="html">
+        <source>Data transfer</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

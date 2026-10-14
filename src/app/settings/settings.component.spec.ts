@@ -77,6 +77,14 @@ describe('SettingsComponent', () => {
     });
   });
 
+  it('provides descriptive groups for the Database settings section', () => {
+    expect(component.databaseSectionLabels).toEqual({
+      status: 'Status and records',
+      connection: 'MongoDB connection',
+      transfer: 'Data transfer'
+    });
+  });
+
   it('finds settings sections by labels and help concepts', () => {
     component.settingsSearchQuery = 'DOWNLOAD RATE';
     expect(component.filteredSettingsSections.map(section => section.key)).toEqual(['downloader']);
