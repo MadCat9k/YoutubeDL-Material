@@ -426,6 +426,9 @@ Verification:
 - The server port now states that a restart is required, accepts only integer
   TCP ports from 1 through 65535, presents an inline validation error, and keeps
   Save disabled while the value is invalid.
+- Main Settings now groups its fields under Server connection, User access,
+  Subscriptions, and Appearance headings so related controls remain scannable
+  without changing their existing behavior.
 - The navigation drawer now separates individual subscriptions under a labelled
   section that can be collapsed, adds search when the list is long, truncates
   long visible names while retaining a full-name tooltip, and marks the active
@@ -446,10 +449,10 @@ Verification:
 
 Verification:
 
-- focused Settings component suite: 7 passing in Chrome Headless, covering 320,
+- focused Settings component suite: 8 passing in Chrome Headless, covering 320,
   649, and 650 CSS-pixel navigation modes, route updates, the disabled Users
   section, single-scroll ownership, cancelled and confirmed server restarts, and
-  valid and invalid TCP port values;
+  valid and invalid TCP port values plus the Main-section grouping labels;
 - focused application-shell suite: 4 passing in Chrome Headless, covering
   case-insensitive subscription filtering, empty searches, records without a
   visible name, and subscription-section disclosure state;
@@ -465,6 +468,10 @@ Verification:
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, while the previous container and a
   verified appdata/users archive remain available for rollback;
+- validation image at commit `7d561ca` rebuilt and redeployed on port `18084`;
+  the container again remained healthy with HTTP 200 and all five persistent
+  volumes attached after a deliberate restart, with its prior container and
+  verified appdata/users archive retained for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, and new danger-section
   copy uses safe English fallbacks until translated.

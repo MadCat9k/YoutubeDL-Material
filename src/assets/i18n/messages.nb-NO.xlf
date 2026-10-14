@@ -3125,6 +3125,22 @@
         <source>Enter a port from 1 to 65535.</source>
         <target state="new">Enter a port from 1 to 65535.</target>
       </trans-unit>
+      <trans-unit id="settingsMainServerSection" datatype="html">
+        <source>Server connection</source>
+        <target state="new">Server connection</target>
+      </trans-unit>
+      <trans-unit id="settingsMainUserAccessSection" datatype="html">
+        <source>User access</source>
+        <target state="new">User access</target>
+      </trans-unit>
+      <trans-unit id="settingsMainSubscriptionsSection" datatype="html">
+        <source>Subscriptions</source>
+        <target state="new">Subscriptions</target>
+      </trans-unit>
+      <trans-unit id="settingsMainAppearanceSection" datatype="html">
+        <source>Appearance</source>
+        <target state="new">Appearance</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

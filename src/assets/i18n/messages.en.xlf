@@ -4434,6 +4434,18 @@
       <trans-unit id="settingsPortValidationError" datatype="html">
         <source>Enter a port from 1 to 65535.</source>
       </trans-unit>
+      <trans-unit id="settingsMainServerSection" datatype="html">
+        <source>Server connection</source>
+      </trans-unit>
+      <trans-unit id="settingsMainUserAccessSection" datatype="html">
+        <source>User access</source>
+      </trans-unit>
+      <trans-unit id="settingsMainSubscriptionsSection" datatype="html">
+        <source>Subscriptions</source>
+      </trans-unit>
+      <trans-unit id="settingsMainAppearanceSection" datatype="html">
+        <source>Appearance</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

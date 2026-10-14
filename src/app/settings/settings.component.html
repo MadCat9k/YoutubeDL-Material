@@ -14,6 +14,9 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{mainSectionLabels.server}}</h5>
+                    </div>
+                    <div class="col-12 mt-2">
                         <mat-form-field class="text-field" color="accent">
                             <mat-label i18n="URL">URL</mat-label>
                             <input [(ngModel)]="new_config['Host']['url']" matInput required>
@@ -35,6 +38,9 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{mainSectionLabels.userAccess}}</h5>
+                    </div>
+                    <div class="col-12 mt-2">
                         <mat-checkbox color="accent" [(ngModel)]="new_config['Advanced']['multi_user_mode']"><ng-container i18n="Multi user mode setting">Multi-user mode</ng-container></mat-checkbox>
                     </div>
                     <div class="col-12 mt-3 mb-4">
@@ -50,6 +56,9 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{mainSectionLabels.subscriptions}}</h5>
+                    </div>
+                    <div class="col-12 mt-2">
                         <mat-checkbox color="accent" [(ngModel)]="new_config['Subscriptions']['allow_subscriptions']"><ng-container i18n="Allow subscriptions setting">Allow subscriptions</ng-container></mat-checkbox>
                     </div>
                     <div class="col-12 mt-2 mb-3">
@@ -75,6 +84,9 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{mainSectionLabels.appearance}}</h5>
+                    </div>
+                    <div class="col-12 mt-2">
                         <mat-form-field>
                             <mat-label><ng-container i18n="Theme select label">Theme</ng-container></mat-label>
                             <mat-select color="accent" [(ngModel)]="new_config['Themes']['default_theme']">

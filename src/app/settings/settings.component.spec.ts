@@ -49,6 +49,15 @@ describe('SettingsComponent', () => {
     expect(component.compactNavigation).toBe(false);
   });
 
+  it('provides descriptive groups for the Main settings section', () => {
+    expect(component.mainSectionLabels).toEqual({
+      server: 'Server connection',
+      userAccess: 'User access',
+      subscriptions: 'Subscriptions',
+      appearance: 'Appearance'
+    });
+  });
+
   it('updates the route when a settings section is selected', () => {
     component.selectSettingsSection(3);
 

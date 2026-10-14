@@ -13,6 +13,11 @@
     margin: 0 15px 8px;
 }
 
+.settings-section-heading {
+    margin: 0;
+    font-weight: 500;
+}
+
 :host ::ng-deep .compact-settings-tabs .mat-mdc-tab-header {
     display: none;
 }

@@ -46,6 +46,12 @@ export class SettingsComponent implements OnInit {
     {key: 'users', label: $localize`:Users settings label:Users`},
     {key: 'logs', label: $localize`:Logs settings label:Logs`}
   ];
+  mainSectionLabels = {
+    server: $localize`:Main settings server section@@settingsMainServerSection:Server connection`,
+    userAccess: $localize`:Main settings user access section@@settingsMainUserAccessSection:User access`,
+    subscriptions: $localize`:Main settings subscriptions section@@settingsMainSubscriptionsSection:Subscriptions`,
+    appearance: $localize`:Main settings appearance section@@settingsMainAppearanceSection:Appearance`
+  };
   tabs = this.settingsSections.map(section => section.key);
   tabIndex = 0;
   compactNavigation = false;
