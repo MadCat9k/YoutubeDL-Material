@@ -451,6 +451,9 @@ Verification:
 - Users Settings now separates registration, authentication method, LDAP
   directory configuration, and user management while preserving the existing
   multi-user-mode guard and behavior.
+- Logs Settings now uses the application content pane for vertical scrolling,
+  allows long lines to wrap, and reflows its line selector and actions on narrow
+  screens instead of relying on fixed-height and absolutely positioned controls.
 - The navigation drawer now separates individual subscriptions under a labelled
   section that can be collapsed, adds search when the list is long, truncates
   long visible names while retaining a full-name tooltip, and marks the active
@@ -477,6 +480,8 @@ Verification:
   valid and invalid TCP port values, Main-section grouping labels, search
   matching, search-result navigation, and Main, Downloader, Extra, Database,
   Notifications, Advanced, and Users grouping labels;
+- focused Logs viewer suite: 2 passing in Chrome Headless, covering initial log
+  retrieval, page-owned scrolling, rendered log rows, and the responsive toolbar;
 - focused application-shell suite: 4 passing in Chrome Headless, covering
   case-insensitive subscription filtering, empty searches, records without a
   visible name, and subscription-section disclosure state;
@@ -521,6 +526,10 @@ Verification:
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
 - validation image at commit `8bc8acf` rebuilt and redeployed on port `18084`;
+  the container remained healthy with HTTP 200 and all five persistent volumes
+  attached after a deliberate restart, with a verified appdata/users archive
+  and the prior container retained for rollback;
+- validation image at commit `38d78cd` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;

@@ -1,1 +1,49 @@
-.spacer {flex: 1 1 auto;}
+.logs-viewer {
+    position: relative;
+}
+
+.logs-loading {
+    display: flex;
+    justify-content: center;
+    padding: 32px;
+}
+
+.logs-output {
+    font-family: monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.logs-toolbar,
+.logs-lines,
+.logs-actions {
+    display: flex;
+    align-items: center;
+}
+
+.logs-toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.logs-lines,
+.logs-actions {
+    gap: 8px;
+}
+
+.logs-lines-select {
+    width: 75px;
+}
+
+.logs-actions {
+    margin-left: auto;
+}
+
+@media (max-width: 649px) {
+    .logs-actions {
+        width: 100%;
+        margin-left: 0;
+        justify-content: space-between;
+    }
+}

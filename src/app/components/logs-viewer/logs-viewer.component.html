@@ -1,5 +1,5 @@
-<div style="height: 100%;">
-    <div *ngIf="logs_loading" style="z-index: 999; position: absolute; top: 40%; left: 50%">
+<div class="logs-viewer">
+    <div *ngIf="logs_loading" class="logs-loading">
         <mat-spinner [diameter]="32"></mat-spinner>
     </div>
     <!-- Virtual mode (fast, select text buggy) -->
@@ -10,17 +10,16 @@
     </cdk-virtual-scroll-viewport>-->
 
     <!-- Non-virtual mode (slow, bug-free) -->
-    <div style="height: 100%; overflow-y: auto">
+    <div class="logs-output">
         <div *ngFor="let log of logs; let i = index" class="example-item">
             <span [ngStyle]="{'color':log.color}">{{log.text}}</span>
         </div>
     </div>
 
-    <div>
-        <button style="position: absolute; right: 0px; top: 12px;" [cdkCopyToClipboard]="logs_text" (click)="copiedLogsToClipboard()" mat-mini-fab color="primary"><mat-icon style="font-size: 22px !important;">content_copy</mat-icon></button>
-        <div style="display: inline-block;">
-            <ng-container i18n="Label for lines select in logger view">Lines:</ng-container>&nbsp;
-            <mat-form-field style="width: 75px;">
+    <div class="logs-toolbar">
+        <div class="logs-lines">
+            <ng-container i18n="Label for lines select in logger view">Lines:</ng-container>
+            <mat-form-field class="logs-lines-select">
                 <mat-select (selectionChange)="getLogs()" [(ngModel)]="requested_lines">
                     <mat-option [value]="10">10</mat-option>
                     <mat-option [value]="25">25</mat-option>
@@ -30,8 +29,9 @@
                 </mat-select>
             </mat-form-field>
         </div>
-        <span class="spacer"></span>
-        <button style="float: right; margin-top: 12px;" (click)="clearLogs()" mat-stroked-button color="warn"><ng-container i18n="Clear logs button">Clear logs</ng-container></button>
+        <div class="logs-actions">
+            <button [cdkCopyToClipboard]="logs_text" (click)="copiedLogsToClipboard()" mat-mini-fab color="primary"><mat-icon>content_copy</mat-icon></button>
+            <button (click)="clearLogs()" mat-stroked-button color="warn"><ng-container i18n="Clear logs button">Clear logs</ng-container></button>
+        </div>
     </div>
-    
 </div>

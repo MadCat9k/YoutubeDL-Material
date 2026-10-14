@@ -47,6 +47,10 @@
     font-weight: 500;
 }
 
+.settings-logs {
+    margin-top: 15px;
+}
+
 :host ::ng-deep .compact-settings-tabs .mat-mdc-tab-header {
     display: none;
 }
