@@ -58,6 +58,15 @@ describe('SettingsComponent', () => {
     });
   });
 
+  it('provides descriptive groups for the Downloader settings section', () => {
+    expect(component.downloaderSectionLabels).toEqual({
+      paths: 'Paths and naming',
+      categories: 'Categories',
+      files: 'Archive and sidecar files',
+      limits: 'Limits'
+    });
+  });
+
   it('finds settings sections by labels and help concepts', () => {
     component.settingsSearchQuery = 'DOWNLOAD RATE';
     expect(component.filteredSettingsSections.map(section => section.key)).toEqual(['downloader']);

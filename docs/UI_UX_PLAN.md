@@ -433,6 +433,9 @@ Verification:
   all eight sections. Matching is case-insensitive, supports independent
   multi-word terms, exposes clear and empty states, and navigates directly to an
   enabled matching section.
+- Downloader Settings now groups its existing controls under Paths and naming,
+  Categories, Archive and sidecar files, and Limits headings, improving scanability
+  without changing downloader behavior.
 - The navigation drawer now separates individual subscriptions under a labelled
   section that can be collapsed, adds search when the list is long, truncates
   long visible names while retaining a full-name tooltip, and marks the active
@@ -453,11 +456,11 @@ Verification:
 
 Verification:
 
-- focused Settings component suite: 10 passing in Chrome Headless, covering 320,
+- focused Settings component suite: 11 passing in Chrome Headless, covering 320,
   649, and 650 CSS-pixel navigation modes, route updates, the disabled Users
   section, single-scroll ownership, cancelled and confirmed server restarts, and
   valid and invalid TCP port values, Main-section grouping labels, search
-  matching, and search-result navigation;
+  matching, search-result navigation, and Downloader-section grouping labels;
 - focused application-shell suite: 4 passing in Chrome Headless, covering
   case-insensitive subscription filtering, empty searches, records without a
   visible name, and subscription-section disclosure state;
@@ -478,6 +481,10 @@ Verification:
   volumes attached after a deliberate restart, with its prior container and
   verified appdata/users archive retained for rollback;
 - validation image at commit `d4db6c9` rebuilt and redeployed on port `18084`;
+  the container remained healthy with HTTP 200 and all five persistent volumes
+  attached after a deliberate restart, with a verified appdata/users archive
+  and the prior container retained for rollback;
+- validation image at commit `3f9bc41` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;

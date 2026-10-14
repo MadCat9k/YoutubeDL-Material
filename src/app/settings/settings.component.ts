@@ -84,6 +84,12 @@ export class SettingsComponent implements OnInit {
     subscriptions: $localize`:Main settings subscriptions section@@settingsMainSubscriptionsSection:Subscriptions`,
     appearance: $localize`:Main settings appearance section@@settingsMainAppearanceSection:Appearance`
   };
+  downloaderSectionLabels = {
+    paths: $localize`:Downloader paths section@@settingsDownloaderPathsSection:Paths and naming`,
+    categories: $localize`:Downloader categories section@@settingsDownloaderCategoriesSection:Categories`,
+    files: $localize`:Downloader archive and files section@@settingsDownloaderFilesSection:Archive and sidecar files`,
+    limits: $localize`:Downloader limits section@@settingsDownloaderLimitsSection:Limits`
+  };
   tabs = this.settingsSections.map(section => section.key);
   tabIndex = 0;
   compactNavigation = false;

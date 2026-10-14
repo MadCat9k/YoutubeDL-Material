@@ -126,6 +126,9 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{downloaderSectionLabels.paths}}</h5>
+                    </div>
+                    <div class="col-12 mt-2">
                         <mat-form-field class="text-field" color="accent">
                             <mat-label i18n="Audio folder path">Audio folder path</mat-label>
                             <input matInput [(ngModel)]="new_config['Downloader']['path-audio']" required>
@@ -166,7 +169,7 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
-                        <h6 i18n="Categories">Categories</h6>
+                        <h5 class="settings-section-heading">{{downloaderSectionLabels.categories}}</h5>
                         <div *ngIf="postsService.categories && postsService.categories.length > 0" cdkDropList class="category-list" (cdkDropListDropped)="dropCategory($event)">
                             <div class="category-box" *ngFor="let category of postsService.categories" cdkDrag>
                                 <div class="category-custom-placeholder" *cdkDragPlaceholder></div>
@@ -188,6 +191,9 @@
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
                     <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{downloaderSectionLabels.files}}</h5>
+                    </div>
+                    <div class="col-12 mt-2">
                         <mat-checkbox color="accent" [(ngModel)]="new_config['Downloader']['use_youtubedl_archive']"><ng-container i18n="Use youtubedl archive setting">Use youtube-dl archive</ng-container></mat-checkbox>
                     </div>
 
@@ -203,7 +209,10 @@
             <mat-divider></mat-divider>
             <div *ngIf="new_config" class="container-fluid">
                 <div class="row">
-                    <div class="col-12 mt-3 mb-4">
+                    <div class="col-12 mt-3">
+                        <h5 class="settings-section-heading">{{downloaderSectionLabels.limits}}</h5>
+                    </div>
+                    <div class="col-12 mt-2 mb-4">
                         <mat-form-field class="text-field" color="accent">
                             <mat-label i18n="Max concurrent downloads">Max concurrent downloads</mat-label>
                             <input type="number" [(ngModel)]="new_config['Downloader']['max_concurrent_downloads']" matInput>

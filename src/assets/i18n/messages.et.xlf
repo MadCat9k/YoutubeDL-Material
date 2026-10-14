@@ -4672,6 +4672,22 @@
         <source>logs server messages errors diagnostics</source>
         <target state="new">logs server messages errors diagnostics</target>
       </trans-unit>
+      <trans-unit id="settingsDownloaderPathsSection" datatype="html">
+        <source>Paths and naming</source>
+        <target state="new">Paths and naming</target>
+      </trans-unit>
+      <trans-unit id="settingsDownloaderCategoriesSection" datatype="html">
+        <source>Categories</source>
+        <target state="new">Categories</target>
+      </trans-unit>
+      <trans-unit id="settingsDownloaderFilesSection" datatype="html">
+        <source>Archive and sidecar files</source>
+        <target state="new">Archive and sidecar files</target>
+      </trans-unit>
+      <trans-unit id="settingsDownloaderLimitsSection" datatype="html">
+        <source>Limits</source>
+        <target state="new">Limits</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

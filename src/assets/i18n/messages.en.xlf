@@ -4479,6 +4479,18 @@
       <trans-unit id="settingsSearchLogsTerms" datatype="html">
         <source>logs server messages errors diagnostics</source>
       </trans-unit>
+      <trans-unit id="settingsDownloaderPathsSection" datatype="html">
+        <source>Paths and naming</source>
+      </trans-unit>
+      <trans-unit id="settingsDownloaderCategoriesSection" datatype="html">
+        <source>Categories</source>
+      </trans-unit>
+      <trans-unit id="settingsDownloaderFilesSection" datatype="html">
+        <source>Archive and sidecar files</source>
+      </trans-unit>
+      <trans-unit id="settingsDownloaderLimitsSection" datatype="html">
+        <source>Limits</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>
