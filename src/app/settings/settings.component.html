@@ -1,4 +1,21 @@
 <h4 class="settings-title" i18n="Settings title">Settings</h4>
+<div class="settings-search-container">
+    <mat-form-field class="settings-search" appearance="outline">
+        <mat-label i18n="Settings search label@@settingsSearchLabel">Search settings</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input [(ngModel)]="settingsSearchQuery" matInput autocomplete="off">
+        <button *ngIf="settingsSearchQuery" type="button" matSuffix mat-icon-button (click)="settingsSearchQuery = ''" aria-label="Clear settings search" i18n-aria-label="Clear settings search label@@settingsSearchClearLabel">
+            <mat-icon>close</mat-icon>
+        </button>
+    </mat-form-field>
+    <div *ngIf="settingsSearchQuery.trim()" class="settings-search-results" role="list">
+        <button *ngFor="let section of filteredSettingsSections" type="button" mat-button role="listitem" (click)="selectSettingsSearchSection(section)" [disabled]="section.key === 'users' && !postsService.config?.Advanced.multi_user_mode">
+            <span>{{section.label}}</span>
+            <mat-icon>arrow_forward</mat-icon>
+        </button>
+        <p *ngIf="filteredSettingsSections.length === 0" class="settings-search-empty" i18n="Settings search empty state@@settingsSearchEmpty">No matching settings found.</p>
+    </div>
+</div>
 <mat-form-field *ngIf="compactNavigation" class="settings-section-select" appearance="outline">
     <mat-label i18n="Settings title">Settings</mat-label>
     <mat-select [value]="tabIndex" (selectionChange)="selectSettingsSection($event.value)">

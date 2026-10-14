@@ -7,6 +7,35 @@
     margin-top: 15px;
 }
 
+.settings-search-container {
+    width: calc(100% - 30px);
+    max-width: 720px;
+    margin: 0 auto 8px;
+}
+
+.settings-search {
+    width: 100%;
+}
+
+.settings-search-results {
+    display: grid;
+    gap: 4px;
+    margin-top: -12px;
+    padding: 8px;
+    border: 1px solid rgba(127, 127, 127, 0.35);
+    border-radius: 4px;
+}
+
+.settings-search-results button {
+    display: flex;
+    justify-content: space-between;
+    text-align: left;
+}
+
+.settings-search-empty {
+    margin: 8px;
+}
+
 .settings-section-select {
     display: block;
     width: calc(100% - 30px);

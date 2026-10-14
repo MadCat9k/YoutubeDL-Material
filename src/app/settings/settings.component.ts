@@ -37,14 +37,46 @@ export class SettingsComponent implements OnInit {
   CURRENT_VERSION = CURRENT_VERSION
 
   settingsSections = [
-    {key: 'main', label: $localize`:Main settings label:Main`},
-    {key: 'downloader', label: $localize`:Downloader settings label:Downloader`},
-    {key: 'extra', label: $localize`:Extra settings label:Extra`},
-    {key: 'database', label: $localize`:Database settings label:Database`},
-    {key: 'notifications', label: $localize`:Notifications settings label:Notifications`},
-    {key: 'advanced', label: $localize`:Host settings label:Advanced`},
-    {key: 'users', label: $localize`:Users settings label:Users`},
-    {key: 'logs', label: $localize`:Logs settings label:Logs`}
+    {
+      key: 'main',
+      label: $localize`:Main settings label:Main`,
+      searchText: $localize`:Main settings search terms@@settingsSearchMainTerms:server connection URL port multi-user mode user access users base path subscriptions base path check interval redownload fresh uploads theme appearance`
+    },
+    {
+      key: 'downloader',
+      label: $localize`:Downloader settings label:Downloader`,
+      searchText: $localize`:Downloader settings search terms@@settingsSearchDownloaderTerms:audio folder path video folder path default file output global custom arguments categories playlist categorization archive thumbnail metadata concurrent downloads rate limit kill downloads`
+    },
+    {
+      key: 'extra',
+      label: $localize`:Extra settings label:Extra`,
+      searchText: $localize`:Extra settings search terms@@settingsSearchExtraTerms:title file manager quality download only autoplay downloads manager API key YouTube API Twitch chat SponsorBlock NFO RSS browser extension bookmarklet`
+    },
+    {
+      key: 'database',
+      label: $localize`:Database settings label:Database`,
+      searchText: $localize`:Database settings search terms@@settingsSearchDatabaseTerms:database records MongoDB connection string test connection transfer local database`
+    },
+    {
+      key: 'notifications',
+      label: $localize`:Notifications settings label:Notifications`,
+      searchText: $localize`:Notifications settings search terms@@settingsSearchNotificationTerms:notifications allowed notification types webhook Discord Slack ntfy Gotify Telegram server URL token chat ID proxy`
+    },
+    {
+      key: 'advanced',
+      label: $localize`:Host settings label:Advanced`,
+      searchText: $localize`:Advanced settings search terms@@settingsSearchAdvancedTerms:default downloader download agent log level login expiration advanced download cookies updater restart server`
+    },
+    {
+      key: 'users',
+      label: $localize`:Users settings label:Users`,
+      searchText: $localize`:Users settings search terms@@settingsSearchUsersTerms:users authentication internal LDAP bind DN credentials search base search filter permissions`
+    },
+    {
+      key: 'logs',
+      label: $localize`:Logs settings label:Logs`,
+      searchText: $localize`:Logs settings search terms@@settingsSearchLogsTerms:logs server messages errors diagnostics`
+    }
   ];
   mainSectionLabels = {
     server: $localize`:Main settings server section@@settingsMainServerSection:Server connection`,
@@ -55,6 +87,7 @@ export class SettingsComponent implements OnInit {
   tabs = this.settingsSections.map(section => section.key);
   tabIndex = 0;
   compactNavigation = false;
+  settingsSearchQuery = '';
   
   INDEX_TO_TAB = Object.assign({}, this.tabs);
   TAB_TO_INDEX = {};
@@ -151,6 +184,23 @@ export class SettingsComponent implements OnInit {
     if (this.tabs[index] === 'users' && !this.postsService.config?.Advanced.multi_user_mode) return;
     this.tabIndex = index;
     this.router.navigate(['/settings', {tab: this.INDEX_TO_TAB[index]}]);
+  }
+
+  get filteredSettingsSections() {
+    const query = this.settingsSearchQuery.trim().toLocaleLowerCase();
+    if (!query) return [];
+    const terms = query.split(/\s+/);
+    return this.settingsSections.filter(section => {
+      const searchableText = `${section.label} ${section.searchText}`.toLocaleLowerCase();
+      return terms.every(term => searchableText.includes(term));
+    });
+  }
+
+  selectSettingsSearchSection(section): void {
+    const index = this.settingsSections.indexOf(section);
+    if (index < 0 || (section.key === 'users' && !this.postsService.config?.Advanced.multi_user_mode)) return;
+    this.settingsSearchQuery = '';
+    this.selectSettingsSection(index);
   }
 
   dropCategory(event: CdkDragDrop<string[]>): void {

@@ -58,6 +58,27 @@ describe('SettingsComponent', () => {
     });
   });
 
+  it('finds settings sections by labels and help concepts', () => {
+    component.settingsSearchQuery = 'DOWNLOAD RATE';
+    expect(component.filteredSettingsSections.map(section => section.key)).toEqual(['downloader']);
+
+    component.settingsSearchQuery = 'webhook';
+    expect(component.filteredSettingsSections.map(section => section.key)).toEqual(['notifications']);
+
+    component.settingsSearchQuery = '   ';
+    expect(component.filteredSettingsSections).toEqual([]);
+  });
+
+  it('navigates to an enabled search result and clears the query', () => {
+    component.settingsSearchQuery = 'database';
+
+    component.selectSettingsSearchSection(component.filteredSettingsSections[0]);
+
+    expect(component.tabIndex).toBe(3);
+    expect(component.settingsSearchQuery).toBe('');
+    expect(router.navigate).toHaveBeenCalledWith(['/settings', {tab: 'database'}]);
+  });
+
   it('updates the route when a settings section is selected', () => {
     component.selectSettingsSection(3);
 

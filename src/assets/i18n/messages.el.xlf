@@ -3609,6 +3609,50 @@
         <source>Appearance</source>
         <target state="new">Appearance</target>
       </trans-unit>
+      <trans-unit id="settingsSearchLabel" datatype="html">
+        <source>Search settings</source>
+        <target state="new">Search settings</target>
+      </trans-unit>
+      <trans-unit id="settingsSearchClearLabel" datatype="html">
+        <source>Clear settings search</source>
+        <target state="new">Clear settings search</target>
+      </trans-unit>
+      <trans-unit id="settingsSearchEmpty" datatype="html">
+        <source>No matching settings found.</source>
+        <target state="new">No matching settings found.</target>
+      </trans-unit>
+      <trans-unit id="settingsSearchMainTerms" datatype="html">
+        <source>server connection URL port multi-user mode user access users base path subscriptions base path check interval redownload fresh uploads theme appearance</source>
+        <target state="new">server connection URL port multi-user mode user access users base path subscriptions base path check interval redownload fresh uploads theme appearance</target>
+      </trans-unit>
+      <trans-unit id="settingsSearchDownloaderTerms" datatype="html">
+        <source>audio folder path video folder path default file output global custom arguments categories playlist categorization archive thumbnail metadata concurrent downloads rate limit kill downloads</source>
+        <target state="new">audio folder path video folder path default file output global custom arguments categories playlist categorization archive thumbnail metadata concurrent downloads rate limit kill downloads</target>
+      </trans-unit>
+      <trans-unit id="settingsSearchExtraTerms" datatype="html">
+        <source>title file manager quality download only autoplay downloads manager API key YouTube API Twitch chat SponsorBlock NFO RSS browser extension bookmarklet</source>
+        <target state="new">title file manager quality download only autoplay downloads manager API key YouTube API Twitch chat SponsorBlock NFO RSS browser extension bookmarklet</target>
+      </trans-unit>
+      <trans-unit id="settingsSearchDatabaseTerms" datatype="html">
+        <source>database records MongoDB connection string test connection transfer local database</source>
+        <target state="new">database records MongoDB connection string test connection transfer local database</target>
+      </trans-unit>
+      <trans-unit id="settingsSearchNotificationTerms" datatype="html">
+        <source>notifications allowed notification types webhook Discord Slack ntfy Gotify Telegram server URL token chat ID proxy</source>
+        <target state="new">notifications allowed notification types webhook Discord Slack ntfy Gotify Telegram server URL token chat ID proxy</target>
+      </trans-unit>
+      <trans-unit id="settingsSearchAdvancedTerms" datatype="html">
+        <source>default downloader download agent log level login expiration advanced download cookies updater restart server</source>
+        <target state="new">default downloader download agent log level login expiration advanced download cookies updater restart server</target>
+      </trans-unit>
+      <trans-unit id="settingsSearchUsersTerms" datatype="html">
+        <source>users authentication internal LDAP bind DN credentials search base search filter permissions</source>
+        <target state="new">users authentication internal LDAP bind DN credentials search base search filter permissions</target>
+      </trans-unit>
+      <trans-unit id="settingsSearchLogsTerms" datatype="html">
+        <source>logs server messages errors diagnostics</source>
+        <target state="new">logs server messages errors diagnostics</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
