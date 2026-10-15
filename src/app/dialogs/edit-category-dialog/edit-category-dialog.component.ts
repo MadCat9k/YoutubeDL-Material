@@ -13,6 +13,13 @@ export class EditCategoryDialogComponent implements OnInit {
   original_category = null;
   category = null;
 
+  ruleActionLabels = {
+    moveDown: $localize`:Move category rule down action@@categoryMoveRuleDownAction:Move rule down`,
+    moveUp: $localize`:Move category rule up action@@categoryMoveRuleUpAction:Move rule up`,
+    remove: $localize`:Remove category rule action@@categoryRemoveRuleAction:Remove rule`,
+    add: $localize`:Add category rule action@@categoryAddRuleAction:Add rule`
+  };
+
   propertyOptions = [
     {
       value: 'fulltitle',

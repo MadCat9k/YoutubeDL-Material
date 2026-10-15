@@ -5572,6 +5572,22 @@
         <source>Descending order</source>
         <target state="new">Descending order</target>
       </trans-unit>
+      <trans-unit id="categoryMoveRuleDownAction" datatype="html">
+        <source>Move rule down</source>
+        <target state="new">Move rule down</target>
+      </trans-unit>
+      <trans-unit id="categoryMoveRuleUpAction" datatype="html">
+        <source>Move rule up</source>
+        <target state="new">Move rule up</target>
+      </trans-unit>
+      <trans-unit id="categoryRemoveRuleAction" datatype="html">
+        <source>Remove rule</source>
+        <target state="new">Remove rule</target>
+      </trans-unit>
+      <trans-unit id="categoryAddRuleAction" datatype="html">
+        <source>Add rule</source>
+        <target state="new">Add rule</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

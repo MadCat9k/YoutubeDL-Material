@@ -32,14 +32,14 @@
                 <input matInput [(ngModel)]="rule['value']">
             </mat-form-field>
             <span class="rule-buttons">
-                <button [disabled]="i === category['rules'].length-1" (click)="swapRules(i, i+1)" mat-icon-button><mat-icon>arrow_downward</mat-icon></button>
-                <button [disabled]="i === 0" (click)="swapRules(i, i-1)" mat-icon-button><mat-icon>arrow_upward</mat-icon></button>
-                <button (click)="removeRule(i)" mat-icon-button><mat-icon>cancel</mat-icon></button>
+                <button [disabled]="i === category['rules'].length-1" (click)="swapRules(i, i+1)" mat-icon-button [attr.aria-label]="ruleActionLabels.moveDown"><mat-icon>arrow_downward</mat-icon></button>
+                <button [disabled]="i === 0" (click)="swapRules(i, i-1)" mat-icon-button [attr.aria-label]="ruleActionLabels.moveUp"><mat-icon>arrow_upward</mat-icon></button>
+                <button (click)="removeRule(i)" mat-icon-button [attr.aria-label]="ruleActionLabels.remove"><mat-icon>cancel</mat-icon></button>
             </span>
         </mat-list-item>
     </mat-list>
 
-    <button style="margin-bottom: 8px;" mat-icon-button (click)="addNewRule()" matTooltip="Add new rule" i18n-matTooltip="Add new rule tooltip"><mat-icon>add</mat-icon></button>
+    <button style="margin-bottom: 8px;" mat-icon-button (click)="addNewRule()" matTooltip="Add new rule" i18n-matTooltip="Add new rule tooltip" [attr.aria-label]="ruleActionLabels.add"><mat-icon>add</mat-icon></button>
 
     <mat-divider></mat-divider>
 

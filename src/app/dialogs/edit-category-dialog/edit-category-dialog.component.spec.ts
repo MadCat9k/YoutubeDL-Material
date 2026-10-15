@@ -1,25 +1,25 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
+import { PostsService } from 'app/posts.services';
 import { EditCategoryDialogComponent } from './edit-category-dialog.component';
 
 describe('EditCategoryDialogComponent', () => {
   let component: EditCategoryDialogComponent;
-  let fixture: ComponentFixture<EditCategoryDialogComponent>;
-
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [ EditCategoryDialogComponent ]
-    })
-    .compileComponents();
-  }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(EditCategoryDialogComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    component = new EditCategoryDialogComponent({
+      category: {name: 'Synthetic category', rules: []}
+    }, {} as PostsService);
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('provides localized names for category rule actions', () => {
+    expect(component.ruleActionLabels).toEqual({
+      moveDown: 'Move rule down',
+      moveUp: 'Move rule up',
+      remove: 'Remove rule',
+      add: 'Add rule'
+    });
   });
 });
