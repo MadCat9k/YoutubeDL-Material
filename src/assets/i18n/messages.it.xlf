@@ -5484,6 +5484,18 @@
         <source>Twitch chat</source>
         <target state="new">Twitch chat</target>
       </trans-unit>
+      <trans-unit id="mainCustomArgsAction" datatype="html">
+        <source>Custom arguments</source>
+        <target state="new">Custom arguments</target>
+      </trans-unit>
+      <trans-unit id="libraryReverseSelectionOrderAction" datatype="html">
+        <source>Reverse selection order</source>
+        <target state="new">Reverse selection order</target>
+      </trans-unit>
+      <trans-unit id="libraryRemoveSelectedItemAction" datatype="html">
+        <source>Remove selected item</source>
+        <target state="new">Remove selected item</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

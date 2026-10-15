@@ -65,6 +65,13 @@ describe('RecentVideosComponent', () => {
     localStorage.clear();
   });
 
+  it('provides localized names for selection actions', () => {
+    expect(component.selectionActionLabels).toEqual({
+      reverseOrder: 'Reverse selection order',
+      removeItem: 'Remove selected item'
+    });
+  });
+
   it('reloads and resets subscription state when sub_id changes on the same instance', () => {
     localStorage.setItem('cached_file_count_subscriptionA', '7');
     localStorage.setItem('cached_file_count_subscriptionB', '2');

@@ -19,6 +19,11 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
 
   @Input() usePaginator = true;
 
+  selectionActionLabels = {
+    reverseOrder: $localize`:Reverse selection order action@@libraryReverseSelectionOrderAction:Reverse selection order`,
+    removeItem: $localize`:Remove selected item action@@libraryRemoveSelectedItemAction:Remove selected item`
+  };
+
   // File selection
 
   @Input() selectMode = false;

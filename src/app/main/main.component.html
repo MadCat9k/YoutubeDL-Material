@@ -117,7 +117,7 @@
                                 Use custom args
                             </ng-container>
                         </mat-checkbox>
-                        <button class="edit-button" (click)="openArgsModifierDialog()" mat-icon-button><mat-icon>edit</mat-icon></button>
+                        <button class="edit-button" (click)="openArgsModifierDialog()" mat-icon-button [attr.aria-label]="mainActionLabels.customArgs"><mat-icon>edit</mat-icon></button>
                         <mat-checkbox color="accent" [disabled]="!customArgsEnabled || !!current_download" (change)="replaceArgsChanged($event)" [(ngModel)]="replaceArgs" style="z-index: 999; margin-left: 10px" [ngModelOptions]="{standalone: true}">
                             <ng-container i18n="Replace args">
                                 Replace args

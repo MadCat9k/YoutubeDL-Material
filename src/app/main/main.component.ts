@@ -20,6 +20,10 @@ import { DatabaseFile, Download, FileType, Playlist } from 'api-types';
 export class MainComponent implements OnInit, OnDestroy {
   youtubeAuthDisabledOverride = false;
 
+  mainActionLabels = {
+    customArgs: $localize`:Custom args action@@mainCustomArgsAction:Custom arguments`
+  };
+
   iOS = false;
 
   // local settings

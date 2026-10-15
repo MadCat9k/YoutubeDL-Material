@@ -29,6 +29,10 @@ describe('MainComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('provides a localized name for the custom arguments action', () => {
+    expect(component.mainActionLabels.customArgs).toBe('Custom arguments');
+  });
+
   it('does not overlap active download progress requests', () => {
     const response = new Subject<any>();
     postsService.getCurrentDownload.and.returnValue(response.asObservable());

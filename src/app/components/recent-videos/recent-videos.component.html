@@ -51,13 +51,13 @@
                 <div *ngIf="selected_data.length">
                     <span *ngIf="reverse_order === false" i18n="Normal order">Normal order&nbsp;</span>
                     <span *ngIf="reverse_order === true" i18n="Reverse order">Reverse order&nbsp;</span>
-                    <button (click)="toggleSelectionOrder()" mat-icon-button><mat-icon>{{!reverse_order ? 'arrow_downward' : 'arrow_upward'}}</mat-icon></button>
+                    <button (click)="toggleSelectionOrder()" mat-icon-button [attr.aria-label]="selectionActionLabels.reverseOrder"><mat-icon>{{!reverse_order ? 'arrow_downward' : 'arrow_upward'}}</mat-icon></button>
                 </div>
 
                 <!-- Selection order -->
                 <mat-button-toggle-group *ngIf="selected_data.length" class="media-list" cdkDropList (cdkDropListDropped)="drop($event)" style="width: 80%; left: 9%" vertical #group="matButtonToggleGroup">
                     <!-- The following for loop can be optimized but it requires a pipe https://stackoverflow.com/a/35703364/8088021 -->
-                    <mat-button-toggle class="media-box" cdkDrag *ngFor="let file of (reverse_order ? selected_data_objs.slice().reverse() : selected_data_objs); let i = index" [checked]="false"><div><div class="playlist-item-text">{{file.title}}</div> <button (click)="removeSelectedFile(i)" class="remove-item-button" mat-icon-button><mat-icon>cancel</mat-icon></button></div></mat-button-toggle>
+                    <mat-button-toggle class="media-box" cdkDrag *ngFor="let file of (reverse_order ? selected_data_objs.slice().reverse() : selected_data_objs); let i = index" [checked]="false"><div><div class="playlist-item-text">{{file.title}}</div> <button (click)="removeSelectedFile(i)" class="remove-item-button" mat-icon-button [attr.aria-label]="selectionActionLabels.removeItem"><mat-icon>cancel</mat-icon></button></div></mat-button-toggle>
                 </mat-button-toggle-group>
                 
                 <div style="margin-top: 20px;" *ngIf="!selected_data.length">

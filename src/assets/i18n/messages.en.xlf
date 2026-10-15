@@ -4578,6 +4578,15 @@
       <trans-unit id="playerTwitchChatAction" datatype="html">
         <source>Twitch chat</source>
       </trans-unit>
+      <trans-unit id="mainCustomArgsAction" datatype="html">
+        <source>Custom arguments</source>
+      </trans-unit>
+      <trans-unit id="libraryReverseSelectionOrderAction" datatype="html">
+        <source>Reverse selection order</source>
+      </trans-unit>
+      <trans-unit id="libraryRemoveSelectedItemAction" datatype="html">
+        <source>Remove selected item</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

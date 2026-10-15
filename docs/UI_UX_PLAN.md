@@ -201,6 +201,8 @@ Acceptance criteria:
   keyboard focus outline.
 - Player actions for playlist and file downloads, sharing, file information, and
   Twitch chat now expose localized accessible names instead of relying on icons.
+- Home custom-argument, selection-order, and selected-item removal actions now
+  expose localized accessible names instead of relying on icons.
 - Full download records are no longer written to the browser console when an
   error dialog is opened.
 - Focused Downloads tests cover the queued-state label in addition to the
@@ -291,9 +293,9 @@ Verification:
 - focused Subscription component suite: 2 passing in Chrome Headless, covering
   route replacement, request cancellation, serialized polling, backoff, and
   recovery;
-- focused Main component suite: 5 passing in Chrome Headless, covering overlap
+- focused Main component suite: 6 passing in Chrome Headless, covering overlap
   prevention, stale-response protection, bounded backoff, recovery, and
-  active-request teardown;
+  active-request teardown, plus the localized custom-arguments action name;
 - focused Update Progress Dialog component suite: 6 passing in Chrome Headless,
   covering overlap prevention, active/finished polling decisions, bounded
   backoff, recovery, and active-request teardown;
@@ -401,9 +403,9 @@ Verification:
   restoration, polling refreshes, filter clearing, and the confirmed completed
   cleanup workflow, plus filtered selection, selection pruning, and scoped bulk
   clearing;
-- focused Recent Videos component suite: 8 passing in Chrome Headless, including
+- focused Recent Videos component suite: 9 passing in Chrome Headless, including
   first-page reset for discovery changes and one-step clearing that preserves
-  sort settings;
+  sort settings, plus localized selection action names;
 - focused backend download-clearing suite: 2 passing, covering the new scoped
   completed filter and the existing detailed clear filters;
 - the OpenAPI source and generated `ClearDownloadsRequest` model include the
@@ -555,10 +557,14 @@ Verification:
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
+- validation image at commit `ffbdce5` rebuilt and redeployed on port `18084`;
+  the container remained healthy with HTTP 200 and all five persistent volumes
+  attached after a deliberate restart, with a verified appdata/users archive
+  and the prior container retained for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section
   copy, category-action names, top-bar navigation names, and player action names
-  use safe English fallbacks until translated.
+  plus Home library action names use safe English fallbacks until translated.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases
