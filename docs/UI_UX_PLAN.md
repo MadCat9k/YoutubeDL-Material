@@ -199,6 +199,8 @@ Acceptance criteria:
 - The remaining top-bar side-navigation and player back controls now expose
   localized accessible names, and the menu button no longer suppresses its
   keyboard focus outline.
+- Player actions for playlist and file downloads, sharing, file information, and
+  Twitch chat now expose localized accessible names instead of relying on icons.
 - Full download records are no longer written to the browser console when an
   error dialog is opened.
 - Focused Downloads tests cover the queued-state label in addition to the
@@ -304,7 +306,7 @@ Verification:
 - focused Twitch Chat component suite: 8 passing in Chrome Headless, covering
   pre-input safety, duplicate-request prevention, timer replacement, VOD URL
   validation, input replacement, and active-request teardown;
-- focused Player component suite: 7 passing in Chrome Headless, covering reused
+- focused Player component suite: 8 passing in Chrome Headless, covering reused
   route parameters, delayed and already-complete initialization, route and
   initialization teardown, media-event replacement, and active-request teardown;
 - production frontend build: passed with the inherited `file-saver` CommonJS
@@ -549,10 +551,14 @@ Verification:
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
+- validation image at commit `f4641e4` rebuilt and redeployed on port `18084`;
+  the container remained healthy with HTTP 200 and all five persistent volumes
+  attached after a deliberate restart, with a verified appdata/users archive
+  and the prior container retained for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section
-  copy, category-action names, and top-bar navigation names use safe English
-  fallbacks until translated.
+  copy, category-action names, top-bar navigation names, and player action names
+  use safe English fallbacks until translated.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases

@@ -4563,6 +4563,21 @@
       <trans-unit id="backNavigationAction" datatype="html">
         <source>Back</source>
       </trans-unit>
+      <trans-unit id="playerDownloadPlaylistAction" datatype="html">
+        <source>Download playlist</source>
+      </trans-unit>
+      <trans-unit id="playerShareAction" datatype="html">
+        <source>Share</source>
+      </trans-unit>
+      <trans-unit id="playerDownloadFileAction" datatype="html">
+        <source>Download file</source>
+      </trans-unit>
+      <trans-unit id="playerFileInfoAction" datatype="html">
+        <source>File information</source>
+      </trans-unit>
+      <trans-unit id="playerTwitchChatAction" datatype="html">
+        <source>Twitch chat</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

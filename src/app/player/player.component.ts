@@ -64,6 +64,13 @@ export class PlayerComponent implements OnInit, AfterViewInit, OnDestroy {
   name = null;
 
   downloading = false;
+  playerActionLabels = {
+    downloadPlaylist: $localize`:Download playlist action@@playerDownloadPlaylistAction:Download playlist`,
+    share: $localize`:Share media action@@playerShareAction:Share`,
+    downloadFile: $localize`:Download file action@@playerDownloadFileAction:Download file`,
+    fileInfo: $localize`:File information action@@playerFileInfoAction:File information`,
+    twitchChat: $localize`:Twitch chat action@@playerTwitchChatAction:Twitch chat`
+  };
 
   save_volume_timer = null;
   original_volume = null;

@@ -29,18 +29,18 @@
                                 </div>
                                 <div class="col-2">
                                     <span class="buttons" *ngIf="db_playlist">
-                                        <button (click)="downloadContent()" [disabled]="downloading" mat-icon-button><mat-icon>save</mat-icon></button>
+                                        <button (click)="downloadContent()" [disabled]="downloading" [attr.aria-label]="playerActionLabels.downloadPlaylist" mat-icon-button><mat-icon>save</mat-icon></button>
                                         <mat-spinner *ngIf="downloading" class="spinner" [diameter]="35"></mat-spinner>
-                                        <button *ngIf="(!postsService.isLoggedIn || postsService.permissions.includes('sharing')) && !auto" (click)="openShareDialog()" mat-icon-button><mat-icon>share</mat-icon></button>
+                                        <button *ngIf="(!postsService.isLoggedIn || postsService.permissions.includes('sharing')) && !auto" (click)="openShareDialog()" [attr.aria-label]="playerActionLabels.share" mat-icon-button><mat-icon>share</mat-icon></button>
                                     </span>
                                     <span class="buttons" *ngIf="db_file">
-                                        <button (click)="downloadFile()" [disabled]="downloading" mat-icon-button><mat-icon>cloud_download</mat-icon></button>
+                                        <button (click)="downloadFile()" [disabled]="downloading" [attr.aria-label]="playerActionLabels.downloadFile" mat-icon-button><mat-icon>cloud_download</mat-icon></button>
                                         <mat-spinner *ngIf="downloading" class="spinner" [diameter]="35"></mat-spinner>
-                                        <button *ngIf="!postsService.isLoggedIn || postsService.permissions.includes('sharing')" (click)="openShareDialog()" mat-icon-button><mat-icon>share</mat-icon></button>
+                                        <button *ngIf="!postsService.isLoggedIn || postsService.permissions.includes('sharing')" (click)="openShareDialog()" [attr.aria-label]="playerActionLabels.share" mat-icon-button><mat-icon>share</mat-icon></button>
                                     </span>
                                     <ng-container *ngIf="db_file || playlist[currentIndex]"></ng-container>
-                                    <button (click)="openFileInfoDialog()" *ngIf="db_file || db_playlist" mat-icon-button><mat-icon>info</mat-icon></button>
-                                    <button *ngIf="db_file && db_file.url.includes('twitch.tv')" (click)="drawer.toggle()" mat-icon-button><mat-icon>chat</mat-icon></button>
+                                    <button (click)="openFileInfoDialog()" *ngIf="db_file || db_playlist" [attr.aria-label]="playerActionLabels.fileInfo" mat-icon-button><mat-icon>info</mat-icon></button>
+                                    <button *ngIf="db_file && db_file.url.includes('twitch.tv')" (click)="drawer.toggle()" [attr.aria-label]="playerActionLabels.twitchChat" mat-icon-button><mat-icon>chat</mat-icon></button>
                                 </div>
                             </div>
                         </div>

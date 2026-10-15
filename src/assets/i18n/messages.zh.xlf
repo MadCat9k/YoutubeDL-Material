@@ -5528,6 +5528,26 @@
         <source>Back</source>
         <target state="new">Back</target>
       </trans-unit>
+      <trans-unit id="playerDownloadPlaylistAction" datatype="html">
+        <source>Download playlist</source>
+        <target state="new">Download playlist</target>
+      </trans-unit>
+      <trans-unit id="playerShareAction" datatype="html">
+        <source>Share</source>
+        <target state="new">Share</target>
+      </trans-unit>
+      <trans-unit id="playerDownloadFileAction" datatype="html">
+        <source>Download file</source>
+        <target state="new">Download file</target>
+      </trans-unit>
+      <trans-unit id="playerFileInfoAction" datatype="html">
+        <source>File information</source>
+        <target state="new">File information</target>
+      </trans-unit>
+      <trans-unit id="playerTwitchChatAction" datatype="html">
+        <source>Twitch chat</source>
+        <target state="new">Twitch chat</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

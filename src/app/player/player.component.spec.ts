@@ -50,6 +50,16 @@ describe('PlayerComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('provides accessible names for icon-only player actions', () => {
+    expect(component.playerActionLabels).toEqual({
+      downloadPlaylist: 'Download playlist',
+      share: 'Share',
+      downloadFile: 'Download file',
+      fileInfo: 'File information',
+      twitchChat: 'Twitch chat'
+    });
+  });
+
   it('cancels old media loading when player route parameters change', () => {
     const firstResponse = new Subject<any>();
     const secondResponse = new Subject<any>();
