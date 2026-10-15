@@ -1,23 +1,22 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { SortPropertyComponent } from './sort-property.component';
 
 describe('SortPropertyComponent', () => {
   let component: SortPropertyComponent;
-  let fixture: ComponentFixture<SortPropertyComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [ SortPropertyComponent ]
-    })
-    .compileComponents();
-
-    fixture = TestBed.createComponent(SortPropertyComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+  beforeEach(() => {
+    component = new SortPropertyComponent();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('provides localized names for the sort controls and current direction', () => {
+    expect(component.sortControlLabels.sortBy).toBe('Sort by');
+    expect(component.sortDirectionLabel).toBe('Descending order');
+
+    component.descendingMode = false;
+
+    expect(component.sortDirectionLabel).toBe('Ascending order');
   });
 });

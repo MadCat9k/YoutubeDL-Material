@@ -203,6 +203,8 @@ Acceptance criteria:
   Twitch chat now expose localized accessible names instead of relying on icons.
 - Home custom-argument, selection-order, and selected-item removal actions now
   expose localized accessible names instead of relying on icons.
+- The reusable Home library sort selector and direction control now expose
+  localized accessible names, including the current direction.
 - Full download records are no longer written to the browser console when an
   error dialog is opened.
 - Focused Downloads tests cover the queued-state label in addition to the
@@ -406,6 +408,8 @@ Verification:
 - focused Recent Videos component suite: 9 passing in Chrome Headless, including
   first-page reset for discovery changes and one-step clearing that preserves
   sort settings, plus localized selection action names;
+- focused Sort Property component suite: 2 passing in Chrome Headless, covering
+  localized selector and current-direction names;
 - focused backend download-clearing suite: 2 passing, covering the new scoped
   completed filter and the existing detailed clear filters;
 - the OpenAPI source and generated `ClearDownloadsRequest` model include the
@@ -561,10 +565,15 @@ Verification:
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
+- validation image at commit `aa33d4a` rebuilt and redeployed on port `18084`;
+  the container remained healthy with HTTP 200 and all five persistent volumes
+  attached after a deliberate restart, with a verified appdata/users archive
+  and the prior container retained for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section
   copy, category-action names, top-bar navigation names, and player action names
-  plus Home library action names use safe English fallbacks until translated.
+  plus Home library action and sort-control names use safe English fallbacks
+  until translated.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases

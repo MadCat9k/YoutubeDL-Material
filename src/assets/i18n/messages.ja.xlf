@@ -5157,6 +5157,18 @@
         <source>Remove selected item</source>
         <target state="new">Remove selected item</target>
       </trans-unit>
+      <trans-unit id="librarySortByControl" datatype="html">
+        <source>Sort by</source>
+        <target state="new">Sort by</target>
+      </trans-unit>
+      <trans-unit id="libraryAscendingSortDirection" datatype="html">
+        <source>Ascending order</source>
+        <target state="new">Ascending order</target>
+      </trans-unit>
+      <trans-unit id="libraryDescendingSortDirection" datatype="html">
+        <source>Descending order</source>
+        <target state="new">Descending order</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

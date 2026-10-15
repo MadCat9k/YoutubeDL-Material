@@ -4587,6 +4587,15 @@
       <trans-unit id="libraryRemoveSelectedItemAction" datatype="html">
         <source>Remove selected item</source>
       </trans-unit>
+      <trans-unit id="librarySortByControl" datatype="html">
+        <source>Sort by</source>
+      </trans-unit>
+      <trans-unit id="libraryAscendingSortDirection" datatype="html">
+        <source>Ascending order</source>
+      </trans-unit>
+      <trans-unit id="libraryDescendingSortDirection" datatype="html">
+        <source>Descending order</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

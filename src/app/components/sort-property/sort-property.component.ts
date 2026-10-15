@@ -7,6 +7,12 @@ import { Sort } from 'api-types';
   styleUrls: ['./sort-property.component.scss']
 })
 export class SortPropertyComponent {
+  sortControlLabels = {
+    sortBy: $localize`:Sort property control@@librarySortByControl:Sort by`,
+    ascending: $localize`:Ascending sort direction@@libraryAscendingSortDirection:Ascending order`,
+    descending: $localize`:Descending sort direction@@libraryDescendingSortDirection:Descending order`
+  };
+
   sortProperties = {
     'registered': {
       'key': 'registered',
@@ -36,6 +42,10 @@ export class SortPropertyComponent {
   @Output() sortPropertyChange = new EventEmitter<string>();
   @Output() descendingModeChange = new EventEmitter<boolean>();
   @Output() sortOptionChanged = new EventEmitter<Sort>();
+
+  get sortDirectionLabel(): string {
+    return this.descendingMode ? this.sortControlLabels.descending : this.sortControlLabels.ascending;
+  }
 
   toggleModeChange(): void {
     this.descendingMode = !this.descendingMode;
