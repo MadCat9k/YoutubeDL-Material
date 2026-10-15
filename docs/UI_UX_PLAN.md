@@ -454,6 +454,8 @@ Verification:
 - Logs Settings now uses the application content pane for vertical scrolling,
   allows long lines to wrap, and reflows its line selector and actions on narrow
   screens instead of relying on fixed-height and absolutely positioned controls.
+- Icon-only Settings controls for custom arguments, category management, and log
+  copying now expose localized accessible names.
 - The navigation drawer now separates individual subscriptions under a labelled
   section that can be collapsed, adds search when the list is long, truncates
   long visible names while retaining a full-name tooltip, and marks the active
@@ -474,14 +476,16 @@ Verification:
 
 Verification:
 
-- focused Settings component suite: 16 passing in Chrome Headless, covering 320,
+- focused Settings component suite: 17 passing in Chrome Headless, covering 320,
   649, and 650 CSS-pixel navigation modes, route updates, the disabled Users
   section, single-scroll ownership, cancelled and confirmed server restarts, and
   valid and invalid TCP port values, Main-section grouping labels, search
   matching, search-result navigation, and Main, Downloader, Extra, Database,
-  Notifications, Advanced, and Users grouping labels;
+  Notifications, Advanced, and Users grouping labels plus accessible names for
+  icon-only Settings actions;
 - focused Logs viewer suite: 2 passing in Chrome Headless, covering initial log
-  retrieval, page-owned scrolling, rendered log rows, and the responsive toolbar;
+  retrieval, page-owned scrolling, rendered log rows, the responsive toolbar,
+  and its localized copy-action name;
 - focused application-shell suite: 4 passing in Chrome Headless, covering
   case-insensitive subscription filtering, empty searches, records without a
   visible name, and subscription-section disclosure state;
@@ -533,9 +537,13 @@ Verification:
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
+- validation image at commit `e51750c` rebuilt and redeployed on port `18084`;
+  the container remained healthy with HTTP 200 and all five persistent volumes
+  attached after a deliberate restart, with a verified appdata/users archive
+  and the prior container retained for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
-  labels are reused by both navigation presentations, and new danger-section
-  copy uses safe English fallbacks until translated.
+  labels are reused by both navigation presentations, while new danger-section
+  copy and category-action names use safe English fallbacks until translated.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases

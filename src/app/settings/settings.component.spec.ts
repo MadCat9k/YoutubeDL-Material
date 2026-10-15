@@ -111,6 +111,15 @@ describe('SettingsComponent', () => {
     });
   });
 
+  it('provides accessible names for icon-only Settings actions', () => {
+    expect(component.settingsActionLabels).toEqual({
+      customArgs: 'Custom args',
+      editCategory: 'Edit category',
+      deleteCategory: 'Delete category',
+      addCategory: 'Add category'
+    });
+  });
+
   it('finds settings sections by labels and help concepts', () => {
     component.settingsSearchQuery = 'DOWNLOAD RATE';
     expect(component.filteredSettingsSections.map(section => section.key)).toEqual(['downloader']);

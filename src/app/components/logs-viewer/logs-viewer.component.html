@@ -30,7 +30,7 @@
             </mat-form-field>
         </div>
         <div class="logs-actions">
-            <button [cdkCopyToClipboard]="logs_text" (click)="copiedLogsToClipboard()" mat-mini-fab color="primary"><mat-icon>content_copy</mat-icon></button>
+            <button [cdkCopyToClipboard]="logs_text" (click)="copiedLogsToClipboard()" [attr.aria-label]="copyLogsLabel" mat-mini-fab color="primary"><mat-icon>content_copy</mat-icon></button>
             <button (click)="clearLogs()" mat-stroked-button color="warn"><ng-container i18n="Clear logs button">Clear logs</ng-container></button>
         </div>
     </div>

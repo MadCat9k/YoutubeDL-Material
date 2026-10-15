@@ -5124,6 +5124,18 @@
         <source>User management</source>
         <target state="new">User management</target>
       </trans-unit>
+      <trans-unit id="settingsEditCategoryAction" datatype="html">
+        <source>Edit category</source>
+        <target state="new">Edit category</target>
+      </trans-unit>
+      <trans-unit id="settingsDeleteCategoryAction" datatype="html">
+        <source>Delete category</source>
+        <target state="new">Delete category</target>
+      </trans-unit>
+      <trans-unit id="settingsAddCategoryAction" datatype="html">
+        <source>Add category</source>
+        <target state="new">Add category</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

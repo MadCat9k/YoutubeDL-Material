@@ -14,6 +14,7 @@ export class LogsViewerComponent implements OnInit {
   logs_text: string = null;
   requested_lines = 50;
   logs_loading = false;
+  copyLogsLabel = $localize`:Copy to clipboard button:Copy to clipboard`;
   constructor(private postsService: PostsService, private dialog: MatDialog) { }
 
   ngOnInit(): void {

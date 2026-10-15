@@ -52,5 +52,6 @@ describe('LogsViewerComponent', () => {
     expect(element.querySelectorAll('.logs-output .example-item').length).toBe(2);
     expect(element.querySelector('.logs-toolbar')).not.toBeNull();
     expect(element.querySelector('.logs-actions')).not.toBeNull();
+    expect(element.querySelector('.logs-actions button').getAttribute('aria-label')).toBe('Copy to clipboard');
   });
 });

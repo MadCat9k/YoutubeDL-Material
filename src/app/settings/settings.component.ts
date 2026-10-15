@@ -119,6 +119,12 @@ export class SettingsComponent implements OnInit {
     ldap: $localize`:Users LDAP section@@settingsUsersLdapSection:LDAP directory`,
     management: $localize`:Users management section@@settingsUsersManagementSection:User management`
   };
+  settingsActionLabels = {
+    customArgs: $localize`:Custom args:Custom args`,
+    editCategory: $localize`:Edit category action@@settingsEditCategoryAction:Edit category`,
+    deleteCategory: $localize`:Delete category action@@settingsDeleteCategoryAction:Delete category`,
+    addCategory: $localize`:Add category action@@settingsAddCategoryAction:Add category`
+  };
   tabs = this.settingsSections.map(section => section.key);
   tabIndex = 0;
   compactNavigation = false;

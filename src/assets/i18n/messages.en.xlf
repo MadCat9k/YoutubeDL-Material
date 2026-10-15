@@ -4548,6 +4548,15 @@
       <trans-unit id="settingsUsersManagementSection" datatype="html">
         <source>User management</source>
       </trans-unit>
+      <trans-unit id="settingsEditCategoryAction" datatype="html">
+        <source>Edit category</source>
+      </trans-unit>
+      <trans-unit id="settingsDeleteCategoryAction" datatype="html">
+        <source>Delete category</source>
+      </trans-unit>
+      <trans-unit id="settingsAddCategoryAction" datatype="html">
+        <source>Add category</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>
