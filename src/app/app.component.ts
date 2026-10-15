@@ -54,6 +54,10 @@ export class AppComponent implements OnInit, AfterViewInit {
   notification_count = 0;
   subscriptionSearchTerm = '';
   subscriptionsExpanded = true;
+  navigationActionLabels = {
+    toggleSideNavigation: $localize`:Toggle side navigation action@@toggleSideNavigationAction:Toggle side navigation`,
+    back: $localize`:Back navigation action@@backNavigationAction:Back`
+  };
 
   constructor(public postsService: PostsService, public snackBar: MatSnackBar, private dialog: MatDialog,
     public router: Router, public overlayContainer: OverlayContainer, private elementRef: ElementRef) {

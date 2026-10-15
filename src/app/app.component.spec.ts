@@ -63,4 +63,11 @@ describe('AppComponent', () => {
     component.toggleSubscriptions();
     expect(component.subscriptionsExpanded).toBe(true);
   });
+
+  it('provides accessible names for top-bar navigation actions', () => {
+    expect(component.navigationActionLabels).toEqual({
+      toggleSideNavigation: 'Toggle side navigation',
+      back: 'Back'
+    });
+  });
 });

@@ -4557,6 +4557,12 @@
       <trans-unit id="settingsAddCategoryAction" datatype="html">
         <source>Add category</source>
       </trans-unit>
+      <trans-unit id="toggleSideNavigationAction" datatype="html">
+        <source>Toggle side navigation</source>
+      </trans-unit>
+      <trans-unit id="backNavigationAction" datatype="html">
+        <source>Back</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

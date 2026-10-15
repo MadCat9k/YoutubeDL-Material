@@ -5,8 +5,8 @@
                 <div class="row" width="100%" height="100%">
                     <div class="col-6" style="text-align: left; margin-top: 1px;">
                         <div style="display: flex; align-items: center;">
-                            <button #hamburgerMenu style="outline: none" *ngIf="router.url.split(';')[0] !== '/player'" mat-icon-button aria-label="Toggle side navigation" (click)="toggleSidenav()"><mat-icon>menu</mat-icon></button>
-                            <button (click)="goBack()" *ngIf="router.url.split(';')[0] === '/player'" mat-icon-button><mat-icon>arrow_back</mat-icon></button>
+                            <button #hamburgerMenu *ngIf="router.url.split(';')[0] !== '/player'" mat-icon-button [attr.aria-label]="navigationActionLabels.toggleSideNavigation" (click)="toggleSidenav()"><mat-icon>menu</mat-icon></button>
+                            <button (click)="goBack()" *ngIf="router.url.split(';')[0] === '/player'" mat-icon-button [attr.aria-label]="navigationActionLabels.back"><mat-icon>arrow_back</mat-icon></button>
                             <div style="margin-left: 8px; display: inline-block;"><button mat-icon-button routerLink='/home' aria-label="Home" i18n-aria-label="Home navigation button"><img style="width: 32px;" src="assets/images/logo_128px.png" alt=""></button></div>
                         </div>
                     </div>

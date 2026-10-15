@@ -5120,6 +5120,14 @@
         <source>Add category</source>
         <target state="new">Add category</target>
       </trans-unit>
+      <trans-unit id="toggleSideNavigationAction" datatype="html">
+        <source>Toggle side navigation</source>
+        <target state="new">Toggle side navigation</target>
+      </trans-unit>
+      <trans-unit id="backNavigationAction" datatype="html">
+        <source>Back</source>
+        <target state="new">Back</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

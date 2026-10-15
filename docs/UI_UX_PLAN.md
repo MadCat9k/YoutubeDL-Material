@@ -196,6 +196,9 @@ Acceptance criteria:
 - The Home, notifications, and settings controls in the global shell, plus
   download, subscription, and task actions, now expose accessible names instead
   of relying on icons or hover tooltips.
+- The remaining top-bar side-navigation and player back controls now expose
+  localized accessible names, and the menu button no longer suppresses its
+  keyboard focus outline.
 - Full download records are no longer written to the browser console when an
   error dialog is opened.
 - Focused Downloads tests cover the queued-state label in addition to the
@@ -486,9 +489,10 @@ Verification:
 - focused Logs viewer suite: 2 passing in Chrome Headless, covering initial log
   retrieval, page-owned scrolling, rendered log rows, the responsive toolbar,
   and its localized copy-action name;
-- focused application-shell suite: 4 passing in Chrome Headless, covering
+- focused application-shell suite: 5 passing in Chrome Headless, covering
   case-insensitive subscription filtering, empty searches, records without a
-  visible name, and subscription-section disclosure state;
+  visible name, subscription-section disclosure state, and localized top-bar
+  navigation action names;
 - focused notification-list suite: 3 passing in Chrome Headless, covering
   missing and present affected-item details plus emitted related/removal actions;
 - focused Notifications component suite: 7 passing in Chrome Headless, covering
@@ -541,9 +545,14 @@ Verification:
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
+- validation image at commit `2368d90` rebuilt and redeployed on port `18084`;
+  the container remained healthy with HTTP 200 and all five persistent volumes
+  attached after a deliberate restart, with a verified appdata/users archive
+  and the prior container retained for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section
-  copy and category-action names use safe English fallbacks until translated.
+  copy, category-action names, and top-bar navigation names use safe English
+  fallbacks until translated.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases
