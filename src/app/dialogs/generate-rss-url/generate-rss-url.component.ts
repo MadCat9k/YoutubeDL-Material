@@ -10,6 +10,8 @@ import { Clipboard } from '@angular/cdk/clipboard';
   styleUrls: ['./generate-rss-url.component.scss']
 })
 export class GenerateRssUrlComponent {
+  copyUrlLabel = $localize`:Copy to clipboard button:Copy to clipboard`;
+
   usersList = null;
   userFilter = '';
   titleFilter = '';

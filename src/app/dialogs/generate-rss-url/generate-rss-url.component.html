@@ -56,7 +56,7 @@
     <mat-form-field style="width: 100%;">
         <mat-label i18n="URL">URL</mat-label>
         <input readonly [(ngModel)]="url" matInput>
-        <button mat-icon-button matSuffix (click)="copyURL()">
+        <button mat-icon-button matSuffix (click)="copyURL()" [attr.aria-label]="copyUrlLabel">
             <mat-icon>content_copy</mat-icon>
         </button>
     </mat-form-field>

@@ -39,7 +39,7 @@
                 <mat-form-field color="accent">
                     <mat-label i18n="Custom args">Custom args</mat-label>
                     <input [(ngModel)]="new_sub.custom_args" matInput>
-                    <button class="args-edit-button" (click)="openArgsModifierDialog()" mat-icon-button><mat-icon>edit</mat-icon></button>
+                    <button class="args-edit-button" (click)="openArgsModifierDialog()" mat-icon-button [attr.aria-label]="subscriptionActionLabels.customArgs"><mat-icon>edit</mat-icon></button>
                     <mat-hint>
                         <ng-container i18n="Custom args hint">These are added after the standard args.</ng-container>
                     </mat-hint>

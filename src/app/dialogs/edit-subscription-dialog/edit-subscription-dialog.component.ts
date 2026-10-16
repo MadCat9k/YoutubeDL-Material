@@ -12,6 +12,10 @@ export class EditSubscriptionDialogComponent implements OnInit {
 
   updating = false;
 
+  subscriptionActionLabels = {
+    customArgs: $localize`:Custom args action@@mainCustomArgsAction:Custom arguments`
+  };
+
   sub = null;
   new_sub = null;
 
