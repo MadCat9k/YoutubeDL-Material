@@ -10,6 +10,7 @@ const CONSTS = require('./consts');
 
 const debugMode = process.env.YTDL_MODE === 'debug';
 const SUBSCRIPTION_SCAN_LOG_INTERVAL_MS = 60 * 1000;
+const SUBSCRIPTION_SCAN_TIMEOUT_MS = 10 * 60 * 1000;
 
 const db_api = require('./db');
 const downloader_api = require('./downloader');
@@ -322,6 +323,9 @@ async function _getVideosForSub(sub) {
     const safe_sub_id = getSafeSubscriptionID(sub);
     const started_at = Date.now();
     let progress_interval = null;
+    let timeout = null;
+    let timed_out = false;
+    let child_process = null;
 
     await updateSubscriptionProperty(sub, {downloading: true}, user_uid);
     logger.info(`Subscription scan started for ${safe_sub_id}.`);
@@ -329,6 +333,12 @@ async function _getVideosForSub(sub) {
         logger.info(`Subscription scan still running for ${safe_sub_id} after ${getElapsedSeconds(started_at)} seconds.`);
     }, SUBSCRIPTION_SCAN_LOG_INTERVAL_MS);
     if (progress_interval.unref) progress_interval.unref();
+    timeout = setTimeout(() => {
+        timed_out = true;
+        logger.error(`Subscription scan timed out for ${safe_sub_id} after ${getElapsedSeconds(started_at)} seconds.`);
+        if (child_process) killSubscriptionScan(child_process, safe_sub_id);
+    }, SUBSCRIPTION_SCAN_TIMEOUT_MS);
+    if (timeout.unref) timeout.unref();
 
     try {
         // get basePath
@@ -347,11 +357,18 @@ async function _getVideosForSub(sub) {
             throw new Error('Downloader did not start.');
         }
 
-        const {child_process, callback} = downloader;
+        ({child_process} = downloader);
+        if (timed_out) {
+            if (child_process) killSubscriptionScan(child_process, safe_sub_id);
+            return null;
+        }
+        const {callback} = downloader;
         await updateSubscriptionProperty(sub, {child_process: child_process}, user_uid);
         const {parsed_output, err} = await callback;
         if (!parsed_output) {
-            logger.error(`Subscription scan failed for ${safe_sub_id} after ${getElapsedSeconds(started_at)} seconds${getSafeDownloaderStatus(err)}.`);
+            if (!timed_out) {
+                logger.error(`Subscription scan failed for ${safe_sub_id} after ${getElapsedSeconds(started_at)} seconds${getSafeDownloaderStatus(err)}.`);
+            }
             return null;
         }
 
@@ -370,6 +387,7 @@ async function _getVideosForSub(sub) {
         return null;
     } finally {
         if (progress_interval) clearInterval(progress_interval);
+        if (timeout) clearTimeout(timeout);
         await updateSubscriptionProperty(sub, {downloading: false, child_process: null}, user_uid);
     }
 }
@@ -392,6 +410,14 @@ function getSafeDownloaderStatus(err) {
     return details.length > 0 ? ` (${details.join(', ')})` : '';
 }
 
+function killSubscriptionScan(child_process, safe_sub_id) {
+    try {
+        youtubedl_api.killYoutubeDLProcess(child_process);
+    } catch (err) {
+        logger.error(`Failed to stop timed-out subscription scan for ${safe_sub_id}.`);
+    }
+}
+
 async function handleOutputJSON(output_jsons, sub, user_uid) {
     if (config_api.getConfigItem('ytdl_subscriptions_redownload_fresh_uploads')) {
         await setFreshUploads(sub, user_uid);
@@ -408,8 +434,12 @@ async function handleOutputJSON(output_jsons, sub, user_uid) {
 
     for (let j = 0; j < files_to_download.length; j++) {
         const file_to_download = files_to_download[j];
-        file_to_download['formats'] = utils.stripPropertiesFromObject(file_to_download['formats'], ['format_id', 'filesize', 'filesize_approx']);  // prevent download object from blowing up in size
-        await downloader_api.createDownload(file_to_download['webpage_url'], sub.type || 'video', base_download_options, user_uid, sub.id, sub.name, [file_to_download]);
+        const has_full_metadata = Array.isArray(file_to_download['formats']) && typeof file_to_download['_filename'] === 'string';
+        if (has_full_metadata) {
+            file_to_download['formats'] = utils.stripPropertiesFromObject(file_to_download['formats'], ['format_id', 'filesize', 'filesize_approx']);  // prevent download object from blowing up in size
+        }
+        const prefetched_info = has_full_metadata ? [file_to_download] : null;
+        await downloader_api.createDownload(file_to_download['webpage_url'], sub.type || 'video', base_download_options, user_uid, sub.id, sub.name, prefetched_info);
     }
 
     return files_to_download;
@@ -455,6 +485,9 @@ async function generateArgsForSubscription(sub, user_uid, redownload = false, de
     }
 
     let downloadConfig = ['--dump-json', '-o', fullOutput, !redownload ? '-ciw' : '-ci', '--write-info-json', '--print-json'];
+    if (!redownload) {
+        downloadConfig.push('--flat-playlist', '--lazy-playlist', '--socket-timeout', '30');
+    }
 
     let qualityPath = null;
     if (sub.type && sub.type === 'audio') {
@@ -524,21 +557,39 @@ async function getFilesToDownload(sub, output_jsons) {
     const files_to_download = [];
     for (let i = 0; i < output_jsons.length; i++) {
         const output_json = output_jsons[i];
-        const file_missing = !(await db_api.getRecord('files', {sub_id: sub.id, url: output_json['webpage_url']})) && !(await db_api.getRecord('download_queue', {sub_id: sub.id, url: output_json['webpage_url'], error: null, finished: false}));
+        const entry_url = getSubscriptionEntryURL(output_json);
+        if (!entry_url) {
+            logger.warn(`Skipping a discovered entry for subscription ${getSafeSubscriptionID(sub)} because it has no usable HTTP(S) URL.`);
+            continue;
+        }
+        output_json['webpage_url'] = entry_url;
+
+        const file_missing = !(await db_api.getRecord('files', {sub_id: sub.id, url: entry_url})) && !(await db_api.getRecord('download_queue', {sub_id: sub.id, url: entry_url, error: null, finished: false}));
         if (file_missing) {
-            const file_with_path_exists = await db_api.getRecord('files', {sub_id: sub.id, path: output_json['_filename']});
+            const file_with_path_exists = typeof output_json['_filename'] === 'string'
+                ? await db_api.getRecord('files', {sub_id: sub.id, path: output_json['_filename']})
+                : null;
             if (file_with_path_exists) {
                 // or maybe just overwrite???
                 logger.info(`Skipping a discovered file for subscription ${getSafeSubscriptionID(sub)} because a record with the same path already exists.`)
                 continue;
             }
-            const exists_in_archive = await archive_api.existsInArchive(output_json['extractor'], output_json['id'], sub.type, sub.user_uid, sub.id);
+            const exists_in_archive = output_json['extractor'] && output_json['id']
+                ? await archive_api.existsInArchive(output_json['extractor'], output_json['id'], sub.type, sub.user_uid, sub.id)
+                : false;
             if (exists_in_archive) continue;
 
             files_to_download.push(output_json);
         }
     }
     return files_to_download;
+}
+
+function getSubscriptionEntryURL(output_json) {
+    if (!output_json || typeof output_json !== 'object') return null;
+
+    const candidates = [output_json['webpage_url'], output_json['original_url'], output_json['url']];
+    return candidates.find(candidate => typeof candidate === 'string' && /^https?:\/\//i.test(candidate)) || null;
 }
 
 exports.cancelCheckSubscription = async (sub_id) => {

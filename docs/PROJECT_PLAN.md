@@ -423,9 +423,35 @@ Verification:
 Remaining risk:
 
 - yt-dlp output is still buffered and parsed after the enumeration process
-  exits, so the heartbeat proves liveness and duration but cannot yet report an
-  incremental item count. A timeout or streaming parser should be designed and
-  tested separately before changing behavior for legitimately large channels.
+  exits, so the heartbeat proves liveness and duration but cannot report an
+  incremental item count. The bounded flat-discovery follow-up below addresses
+  excessive duration without introducing a streaming parser.
+
+### Fast bounded discovery (2026-10-17)
+
+- Routine subscription enumeration now uses yt-dlp's flat and lazy playlist
+  modes. Discovery avoids fully extracting every remote video; each newly
+  queued item performs its normal full metadata collection before download.
+- Flat entries are accepted only when they contain a usable HTTP(S) URL. Missing
+  format and output-path metadata is treated as expected and is not persisted as
+  prefetched download metadata.
+- Network reads use a 30-second socket timeout. The overall subscription scan is
+  terminated after ten minutes, after which its timer, process reference, and
+  persisted `downloading` state are cleared.
+
+Verification:
+
+- Focused subscription scan and creation suites: 13 passing.
+- Full backend suite: 85 passing, 22 pending, and the same 10 host-environment
+  failures caused by unavailable network access, unsupported host Python,
+  missing FFmpeg, or missing TwitchDownloader.
+
+Remaining risk:
+
+- Flat discovery changes the extractor metadata available during enumeration.
+  Focused tests cover minimal-entry queueing and deferred full metadata lookup,
+  but the deployed validation container still needs a real subscription scan to
+  confirm the target extractor supplies an HTTP(S) entry URL.
 
 ## Delivery sequence
 
