@@ -1,8 +1,8 @@
 <h4 mat-dialog-title>
     {{file.title}}
     <div class="favorite-button">
-        <button [disabled]="!initialized || retrieving_file || !write_access" mat-icon-button (click)="editing = !editing"><mat-icon>edit</mat-icon></button>
-        <button [disabled]="!initialized || retrieving_file || !write_access" (click)="toggleFavorite()" mat-icon-button ><mat-icon>{{file.favorite ? 'favorite_filled' : 'favorite_outline'}}</mat-icon></button>
+        <button [disabled]="!initialized || retrieving_file || !write_access" mat-icon-button (click)="editing = !editing" [attr.aria-label]="editActionLabel"><mat-icon>edit</mat-icon></button>
+        <button [disabled]="!initialized || retrieving_file || !write_access" (click)="toggleFavorite()" mat-icon-button [attr.aria-label]="favoriteActionLabel"><mat-icon>{{file.favorite ? 'favorite_filled' : 'favorite_outline'}}</mat-icon></button>
     </div>
 </h4>
 
@@ -14,7 +14,7 @@
     <mat-form-field class="info-field">
         <mat-label i18n="URL">URL</mat-label>
         <input [(ngModel)]="new_file.url" matInput [disabled]="!editing">
-        <button mat-icon-button matSuffix (click)="window.open(new_file.url, '_blank')">
+        <button mat-icon-button matSuffix (click)="window.open(new_file.url, '_blank')" [attr.aria-label]="videoInfoActionLabels.openSource">
             <mat-icon>link</mat-icon>
         </button>
     </mat-form-field>

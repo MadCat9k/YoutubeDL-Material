@@ -4608,6 +4608,21 @@
       <trans-unit id="categoryAddRuleAction" datatype="html">
         <source>Add rule</source>
       </trans-unit>
+      <trans-unit id="videoInfoEditAction" datatype="html">
+        <source>Edit file information</source>
+      </trans-unit>
+      <trans-unit id="videoInfoStopEditingAction" datatype="html">
+        <source>Stop editing file information</source>
+      </trans-unit>
+      <trans-unit id="videoInfoAddFavoriteAction" datatype="html">
+        <source>Add to favorites</source>
+      </trans-unit>
+      <trans-unit id="videoInfoRemoveFavoriteAction" datatype="html">
+        <source>Remove from favorites</source>
+      </trans-unit>
+      <trans-unit id="videoInfoOpenSourceAction" datatype="html">
+        <source>Open source URL</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

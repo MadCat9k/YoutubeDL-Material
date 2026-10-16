@@ -209,6 +209,8 @@ Acceptance criteria:
   moving, removing, and adding rules.
 - Subscription custom-argument editing and RSS URL copying now expose localized
   accessible names by reusing existing translations.
+- Video-information editing, favorite toggling, and source-link actions now
+  expose localized accessible names that follow their current state.
 - Full download records are no longer written to the browser console when an
   error dialog is opened.
 - Focused Downloads tests cover the queued-state label in addition to the
@@ -420,6 +422,8 @@ Verification:
   Headless, including the localized custom-arguments action name;
 - focused Generate RSS URL component suite: 2 passing in Chrome Headless,
   including the localized copy-action name;
+- focused Video Info Dialog component suite: 2 passing in Chrome Headless,
+  including state-specific edit and favorite names plus the source-link name;
 - focused backend download-clearing suite: 2 passing, covering the new scoped
   completed filter and the existing detailed clear filters;
 - the OpenAPI source and generated `ClearDownloadsRequest` model include the
@@ -587,11 +591,15 @@ Verification:
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
+- validation image at commit `658b1e0` rebuilt and redeployed on port `18084`;
+  the container remained healthy with HTTP 200 and all five persistent volumes
+  attached after a deliberate restart, with a verified appdata/users archive
+  and the prior container retained for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section
   copy, category-action names, top-bar navigation names, and player action names
-  plus Home library action, sort-control, and category-rule names use safe
-  English fallbacks until translated.
+  plus Home library action, sort-control, category-rule, and video-information
+  action names use safe English fallbacks until translated.
 
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases

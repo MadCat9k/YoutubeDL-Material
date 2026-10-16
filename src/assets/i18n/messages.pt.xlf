@@ -3597,6 +3597,26 @@
         <source>Add rule</source>
         <target state="new">Add rule</target>
       </trans-unit>
+      <trans-unit id="videoInfoEditAction" datatype="html">
+        <source>Edit file information</source>
+        <target state="new">Edit file information</target>
+      </trans-unit>
+      <trans-unit id="videoInfoStopEditingAction" datatype="html">
+        <source>Stop editing file information</source>
+        <target state="new">Stop editing file information</target>
+      </trans-unit>
+      <trans-unit id="videoInfoAddFavoriteAction" datatype="html">
+        <source>Add to favorites</source>
+        <target state="new">Add to favorites</target>
+      </trans-unit>
+      <trans-unit id="videoInfoRemoveFavoriteAction" datatype="html">
+        <source>Remove from favorites</source>
+        <target state="new">Remove from favorites</target>
+      </trans-unit>
+      <trans-unit id="videoInfoOpenSourceAction" datatype="html">
+        <source>Open source URL</source>
+        <target state="new">Open source URL</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

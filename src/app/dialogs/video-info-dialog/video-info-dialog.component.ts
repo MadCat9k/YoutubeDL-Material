@@ -22,7 +22,23 @@ export class VideoInfoDialogComponent implements OnInit {
   retrieving_file = false;
   write_access = false;
 
+  videoInfoActionLabels = {
+    edit: $localize`:Edit file information action@@videoInfoEditAction:Edit file information`,
+    stopEditing: $localize`:Stop editing file information action@@videoInfoStopEditingAction:Stop editing file information`,
+    addFavorite: $localize`:Add file to favorites action@@videoInfoAddFavoriteAction:Add to favorites`,
+    removeFavorite: $localize`:Remove file from favorites action@@videoInfoRemoveFavoriteAction:Remove from favorites`,
+    openSource: $localize`:Open source URL action@@videoInfoOpenSourceAction:Open source URL`
+  };
+
   constructor(@Inject(MAT_DIALOG_DATA) public data: any, public postsService: PostsService, private datePipe: DatePipe) { }
+
+  get editActionLabel(): string {
+    return this.editing ? this.videoInfoActionLabels.stopEditing : this.videoInfoActionLabels.edit;
+  }
+
+  get favoriteActionLabel(): string {
+    return this.file?.favorite ? this.videoInfoActionLabels.removeFavorite : this.videoInfoActionLabels.addFavorite;
+  }
 
   ngOnInit(): void {
     this.filesize = filesize;
