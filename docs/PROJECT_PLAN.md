@@ -398,6 +398,35 @@ Verification:
   455 pixels, no horizontal overflow, progress labels visible, paginator
   centered, and all three bulk actions 439 pixels wide.
 
+## Subscription scan diagnostics (2026-10-16)
+
+- Subscription enumeration now writes an info-level start message, a heartbeat
+  every 60 seconds with elapsed time, and a completion message with discovered
+  and queued counts.
+- Scan messages identify the record by its sanitized internal ID. They do not
+  include the subscription URL, name, downloader arguments, media paths, or
+  captured stdout/stderr.
+- Failure messages expose only bounded operational details (exit code and Unix
+  signal when present). The previous raw downloader-error logging was removed
+  because an execution error can contain captured metadata and request headers.
+- The heartbeat timer is cleared on every completion path, and the persisted
+  `downloading` and child-process fields are reset in `finally` so a handled
+  startup or downloader failure does not leave the subscription marked active.
+
+Verification:
+
+- Focused subscription scan and creation suites: 11 passing.
+- Full backend suite: 83 passing, 22 pending, and the same 10 host-environment
+  failures caused by unavailable network access, unsupported host Python,
+  missing FFmpeg, or missing TwitchDownloader.
+
+Remaining risk:
+
+- yt-dlp output is still buffered and parsed after the enumeration process
+  exits, so the heartbeat proves liveness and duration but cannot yet report an
+  incremental item count. A timeout or streaming parser should be designed and
+  tested separately before changing behavior for legitimately large channels.
+
 ## Delivery sequence
 
 1. Baseline and startup hardening (included in this initial scaffold).

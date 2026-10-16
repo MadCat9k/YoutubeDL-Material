@@ -9,6 +9,7 @@ const logger = require('./logger');
 const CONSTS = require('./consts');
 
 const debugMode = process.env.YTDL_MODE === 'debug';
+const SUBSCRIPTION_SCAN_LOG_INTERVAL_MS = 60 * 1000;
 
 const db_api = require('./db');
 const downloader_api = require('./downloader');
@@ -281,7 +282,7 @@ async function checkSubscription(sub_id) {
 
     // don't check the sub if the last check for the same subscription has not completed
     if (sub.downloading) {
-        logger.verbose(`Subscription: skipped checking ${sub.name} as it's downloading videos.`);
+        logger.verbose(`Subscription: skipped check for ${getSafeSubscriptionID(sub)} because it is already running.`);
         return;
     }
 
@@ -318,43 +319,77 @@ exports.getVideosForSub = async (sub_id) => {
 
 async function _getVideosForSub(sub) {
     const user_uid = sub['user_uid'];
-    updateSubscriptionProperty(sub, {downloading: true}, user_uid);
+    const safe_sub_id = getSafeSubscriptionID(sub);
+    const started_at = Date.now();
+    let progress_interval = null;
 
-    // get basePath
-    let basePath = null;
-    if (user_uid)
-        basePath = path.join(config_api.getConfigItem('ytdl_users_base_path'), user_uid, 'subscriptions');
-    else
-        basePath = config_api.getConfigItem('ytdl_subscriptions_base_path');
+    await updateSubscriptionProperty(sub, {downloading: true}, user_uid);
+    logger.info(`Subscription scan started for ${safe_sub_id}.`);
+    progress_interval = setInterval(() => {
+        logger.info(`Subscription scan still running for ${safe_sub_id} after ${getElapsedSeconds(started_at)} seconds.`);
+    }, SUBSCRIPTION_SCAN_LOG_INTERVAL_MS);
+    if (progress_interval.unref) progress_interval.unref();
 
-    let appendedBasePath = getAppendedBasePath(sub, basePath);
-    fs.ensureDirSync(appendedBasePath);
+    try {
+        // get basePath
+        let basePath = null;
+        if (user_uid)
+            basePath = path.join(config_api.getConfigItem('ytdl_users_base_path'), user_uid, 'subscriptions');
+        else
+            basePath = config_api.getConfigItem('ytdl_subscriptions_base_path');
 
-    const downloadConfig = await generateArgsForSubscription(sub, user_uid);
+        let appendedBasePath = getAppendedBasePath(sub, basePath);
+        fs.ensureDirSync(appendedBasePath);
 
-    // get videos
-    logger.verbose(`Subscription: getting list of videos to download for ${sub.name} with args: ${downloadConfig.join(',')}`);
+        const downloadConfig = await generateArgsForSubscription(sub, user_uid);
+        const downloader = await youtubedl_api.runYoutubeDL(sub.url, downloadConfig);
+        if (!downloader || !downloader.callback) {
+            throw new Error('Downloader did not start.');
+        }
 
-    let {child_process, callback} = await youtubedl_api.runYoutubeDL(sub.url, downloadConfig);
-    updateSubscriptionProperty(sub, {child_process: child_process}, user_uid);
-    const {parsed_output, err} = await callback;
-    updateSubscriptionProperty(sub, {downloading: false, child_process: null}, user_uid);
-    if (!parsed_output) {
-        logger.error('Subscription check failed!');
-        if (err) logger.error(err);
+        const {child_process, callback} = downloader;
+        await updateSubscriptionProperty(sub, {child_process: child_process}, user_uid);
+        const {parsed_output, err} = await callback;
+        if (!parsed_output) {
+            logger.error(`Subscription scan failed for ${safe_sub_id} after ${getElapsedSeconds(started_at)} seconds${getSafeDownloaderStatus(err)}.`);
+            return null;
+        }
+
+        // remove temporary archive file if it exists
+        const archive_path = path.join(appendedBasePath, 'archive.txt');
+        const archive_exists = await fs.pathExists(archive_path);
+        if (archive_exists) {
+            await fs.unlink(archive_path);
+        }
+
+        const files_to_download = await handleOutputJSON(parsed_output, sub, user_uid);
+        logger.info(`Subscription scan completed for ${safe_sub_id} after ${getElapsedSeconds(started_at)} seconds; discovered ${parsed_output.length} entries and queued ${files_to_download.length}.`);
+        return files_to_download;
+    } catch (err) {
+        logger.error(`Subscription scan failed for ${safe_sub_id} after ${getElapsedSeconds(started_at)} seconds${getSafeDownloaderStatus(err)}.`);
         return null;
+    } finally {
+        if (progress_interval) clearInterval(progress_interval);
+        await updateSubscriptionProperty(sub, {downloading: false, child_process: null}, user_uid);
     }
+}
 
-    // remove temporary archive file if it exists
-    const archive_path = path.join(appendedBasePath, 'archive.txt');
-    const archive_exists = await fs.pathExists(archive_path);
-    if (archive_exists) {
-        await fs.unlink(archive_path);
-    }
+function getSafeSubscriptionID(sub) {
+    const safe_id = String(sub && sub.id || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+    return safe_id || 'unknown-subscription';
+}
 
-    logger.verbose('Subscription: finished check for ' + sub.name);
-    const files_to_download = await handleOutputJSON(parsed_output, sub, user_uid);
-    return files_to_download;
+function getElapsedSeconds(started_at) {
+    return Math.max(0, Math.floor((Date.now() - started_at) / 1000));
+}
+
+function getSafeDownloaderStatus(err) {
+    if (!err || typeof err !== 'object') return '';
+
+    const details = [];
+    if (Number.isInteger(err.exitCode)) details.push(`exit code ${err.exitCode}`);
+    if (typeof err.signal === 'string' && /^SIG[A-Z0-9]+$/.test(err.signal)) details.push(`signal ${err.signal}`);
+    return details.length > 0 ? ` (${details.join(', ')})` : '';
 }
 
 async function handleOutputJSON(output_jsons, sub, user_uid) {
@@ -364,7 +399,7 @@ async function handleOutputJSON(output_jsons, sub, user_uid) {
     }
 
     if (output_jsons.length === 0 || (output_jsons.length === 1 && output_jsons[0] === '')) {
-        logger.verbose('No additional videos to download for ' + sub.name);
+        logger.verbose(`No additional videos to download for ${getSafeSubscriptionID(sub)}.`);
         return [];
     }
 
@@ -437,7 +472,7 @@ async function generateArgsForSubscription(sub, user_uid, redownload = false, de
     const archive_text = await archive_api.generateArchive(sub.type, sub.user_uid, sub.id);
     const archive_count = archive_text.split('\n').length - 1;
     if (archive_count > 0) {
-        logger.verbose(`Generating temporary archive file for subscription ${sub.name} with ${archive_count} entries.`)
+        logger.verbose(`Generating temporary archive file for subscription ${getSafeSubscriptionID(sub)} with ${archive_count} entries.`)
         const archive_path = path.join(appendedBasePath, 'archive.txt');
         await fs.writeFile(archive_path, archive_text);
         downloadConfig.push('--download-archive', archive_path);
@@ -494,7 +529,7 @@ async function getFilesToDownload(sub, output_jsons) {
             const file_with_path_exists = await db_api.getRecord('files', {sub_id: sub.id, path: output_json['_filename']});
             if (file_with_path_exists) {
                 // or maybe just overwrite???
-                logger.info(`Skipping adding file ${output_json['_filename']} for subscription ${sub.name} as a file with that path already exists.`)
+                logger.info(`Skipping a discovered file for subscription ${getSafeSubscriptionID(sub)} because a record with the same path already exists.`)
                 continue;
             }
             const exists_in_archive = await archive_api.existsInArchive(output_json['extractor'], output_json['id'], sub.type, sub.user_uid, sub.id);
