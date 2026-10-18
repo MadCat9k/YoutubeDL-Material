@@ -12,7 +12,7 @@
         [style.top]="contextMenuPosition.y"
         [matMenuTriggerFor]="context_menu">
     </div>
-    <button *ngIf="!file_obj || !file_obj.auto" [disabled]="loading" [matMenuTriggerFor]="action_menu" class="menuButton" mat-icon-button><mat-icon>more_vert</mat-icon></button>
+    <button *ngIf="!file_obj || !file_obj.auto" [disabled]="loading" [matMenuTriggerFor]="action_menu" class="menuButton" mat-icon-button [attr.aria-label]="actionMenuLabel"><mat-icon>more_vert</mat-icon></button>
     <mat-menu #context_menu>
         <ng-container *ngIf="!loading">
             <button (click)="navigateToFile($event)" mat-menu-item><mat-icon>open_in_browser</mat-icon><ng-container i18n="Open file button">Open file</ng-container></button>

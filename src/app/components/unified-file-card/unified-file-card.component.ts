@@ -25,6 +25,8 @@ registerLocaleData(localeNB);
 })
 export class UnifiedFileCardComponent implements OnChanges, OnInit {
 
+  readonly actionMenuLabel = $localize`:|Actions:Actions`;
+
   // required info
   file_title = '';
   file_length = '';

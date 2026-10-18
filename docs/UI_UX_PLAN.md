@@ -238,6 +238,8 @@ announcements, broader accessibility testing, and actionable error messages.
 - The decorative theme switch inside the already interactive theme menu item is
   removed from the keyboard order and accessibility tree, avoiding a nested
   duplicate control.
+- File and playlist card overflow menus now expose the existing localized
+  `Actions` name instead of relying on the three-dot icon.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.

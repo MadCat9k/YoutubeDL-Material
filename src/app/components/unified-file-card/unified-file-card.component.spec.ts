@@ -1,6 +1,12 @@
 import { UnifiedFileCardComponent } from './unified-file-card.component';
 
 describe('UnifiedFileCardComponent', () => {
+  it('provides an accessible name for the file action menu', () => {
+    const component = new UnifiedFileCardComponent({} as any);
+
+    expect(component.actionMenuLabel).toBe('Actions');
+  });
+
   it('requests a local thumbnail and falls back to the remote URL and then the placeholder', () => {
     const component = new UnifiedFileCardComponent({} as any);
     component.baseStreamPath = 'http://localhost:17442/api/';
