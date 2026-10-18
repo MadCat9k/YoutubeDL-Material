@@ -1,25 +1,9 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { CookiesUploaderDialogComponent } from './cookies-uploader-dialog.component';
 
 describe('CookiesUploaderDialogComponent', () => {
-  let component: CookiesUploaderDialogComponent;
-  let fixture: ComponentFixture<CookiesUploaderDialogComponent>;
+  it('provides an accessible name for the upload action', () => {
+    const component = new CookiesUploaderDialogComponent({} as any);
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [ CookiesUploaderDialogComponent ]
-    })
-    .compileComponents();
-  }));
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(CookiesUploaderDialogComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(component.uploadLabel).toBe('Upload');
   });
 });

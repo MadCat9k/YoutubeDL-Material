@@ -8,6 +8,8 @@ import { PostsService } from 'app/posts.services';
   styleUrls: ['./cookies-uploader-dialog.component.scss']
 })
 export class CookiesUploaderDialogComponent implements OnInit {
+  readonly uploadLabel = $localize`:|Upload:Upload`;
+
   public files: NgxFileDropEntry[] = [];
 
   uploading = false;

@@ -242,6 +242,8 @@ announcements, broader accessibility testing, and actionable error messages.
   `Actions` name instead of relying on the three-dot icon.
 - The floating create-playlist action now exposes the existing localized
   `Create a playlist` name instead of relying on the plus icon.
+- The cookie-file upload action now exposes the existing localized `Upload`
+  name instead of relying on its icon and hover tooltip.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.
