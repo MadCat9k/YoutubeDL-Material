@@ -228,6 +228,20 @@ Verification:
 Remaining Phase 1 work includes visible keyboard-focus review, live-region
 announcements, broader accessibility testing, and actionable error messages.
 
+#### Keyboard focus follow-up (2026-10-18)
+
+- Shared keyboard-focus styling now provides a high-contrast visible outline for
+  links, buttons, form controls, and custom tab stops in both light and dark
+  themes, while leaving pointer focus unaffected through `:focus-visible`.
+- The media player's native focus outline and the Material switch focus state
+  are no longer suppressed.
+- The decorative theme switch inside the already interactive theme menu item is
+  removed from the keyboard order and accessibility tree, avoiding a nested
+  duplicate control.
+- Existing snackbars and asynchronous connection/progress states already use
+  Angular Material announcements or polite live regions; the remaining live
+  announcement work is limited to workflows that do not use either mechanism.
+
 ### Phase 2 started (2026-10-09)
 
 - Tasks use a compact card presentation below 650 pixels while retaining the

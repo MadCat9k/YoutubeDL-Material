@@ -3,10 +3,6 @@
     min-width: 300px;
 }
 
-.video-player:focus {
-    outline: none;
-}
-
 .audio-styles {
     height: 50px;
     width: 100%;

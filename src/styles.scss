@@ -57,8 +57,14 @@ $light-theme: mat-light-theme($light-primary, $light-accent, $light-warn);
   @include angular-material-theme($light-theme);
 }
 
-.no-outline {
-  outline: none;
+/* Keep keyboard focus visible even when component-specific theme styles change. */
+:where(a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 3px solid #0277bd;
+  outline-offset: 2px;
+}
+
+.dark-theme :where(a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline-color: #90caf9;
 }
 
 
