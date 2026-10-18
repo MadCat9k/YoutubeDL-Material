@@ -12,6 +12,8 @@ import { Playlist } from 'api-types';
 })
 export class CustomPlaylistsComponent implements OnInit {
 
+  readonly createPlaylistLabel = $localize`:|Create a playlist dialog title:Create a playlist`;
+
   playlists = null;
   playlists_received = false;
   downloading_content = {'video': {}, 'audio': {}};

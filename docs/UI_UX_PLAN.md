@@ -240,6 +240,8 @@ announcements, broader accessibility testing, and actionable error messages.
   duplicate control.
 - File and playlist card overflow menus now expose the existing localized
   `Actions` name instead of relying on the three-dot icon.
+- The floating create-playlist action now exposes the existing localized
+  `Create a playlist` name instead of relying on the plus icon.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.

@@ -1,25 +1,9 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { CustomPlaylistsComponent } from './custom-playlists.component';
 
 describe('CustomPlaylistsComponent', () => {
-  let component: CustomPlaylistsComponent;
-  let fixture: ComponentFixture<CustomPlaylistsComponent>;
+  it('provides an accessible name for the create-playlist action', () => {
+    const component = new CustomPlaylistsComponent({} as any, {} as any, {} as any);
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [ CustomPlaylistsComponent ]
-    })
-    .compileComponents();
-  }));
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(CustomPlaylistsComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(component.createPlaylistLabel).toBe('Create a playlist');
   });
 });

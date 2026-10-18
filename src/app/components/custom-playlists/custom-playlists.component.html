@@ -10,4 +10,4 @@
 <div *ngIf="playlists && playlists.length === 0" style="text-align: center;">
     No playlists available. Create one from your downloading files by clicking the blue plus button.
 </div>
-<div class="add-playlist-button"><button (click)="openCreatePlaylistDialog()" mat-fab><mat-icon>add</mat-icon></button></div>
+<div class="add-playlist-button"><button (click)="openCreatePlaylistDialog()" mat-fab [attr.aria-label]="createPlaylistLabel"><mat-icon>add</mat-icon></button></div>
