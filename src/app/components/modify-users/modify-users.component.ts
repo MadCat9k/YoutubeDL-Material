@@ -17,6 +17,14 @@ import { User } from 'api-types';
 })
 export class ModifyUsersComponent implements OnInit, AfterViewInit {
 
+  userActionLabels = {
+    save: $localize`:save user edit action button tooltip:Save`,
+    cancel: $localize`:cancel user edit action button tooltip:Cancel`,
+    edit: $localize`:edit user action button tooltip:Edit user`,
+    manage: $localize`:manage user action button tooltip:Manage user`,
+    delete: $localize`:delete user action button tooltip:Delete user`
+  };
+
   displayedColumns = ['name', 'role', 'actions'];
   dataSource = new MatTableDataSource();
 

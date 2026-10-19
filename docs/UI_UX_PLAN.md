@@ -246,6 +246,9 @@ announcements, broader accessibility testing, and actionable error messages.
   name instead of relying on its icon and hover tooltip.
 - The archive-import upload action now exposes the same localized `Upload`
   name instead of relying on its icon and hover tooltip.
+- User-management row actions for saving, cancelling, editing, managing, and
+  deleting users now expose their existing localized names instead of relying
+  on icons and hover tooltips.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.

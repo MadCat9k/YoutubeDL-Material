@@ -56,22 +56,22 @@
                 <mat-header-cell *matHeaderCellDef mat-sort-header><ng-container i18n="Actions users table header"> Actions </ng-container></mat-header-cell>
                 <mat-cell *matCellDef="let row">
                 <span *ngIf="editObject && editObject.uid === row.uid; else notediting">
-                    <button mat-icon-button color="primary" (click)="finishEditing(row.uid)" matTooltip="Save" i18n-matTooltip="save user edit action button tooltip">
+                    <button mat-icon-button color="primary" (click)="finishEditing(row.uid)" matTooltip="Save" i18n-matTooltip="save user edit action button tooltip" [attr.aria-label]="userActionLabels.save">
                     <mat-icon>done</mat-icon>
                     </button>
-                    <button mat-icon-button (click)="disableEditMode()" matTooltip="Cancel" i18n-matTooltip="cancel user edit action button tooltip">
+                    <button mat-icon-button (click)="disableEditMode()" matTooltip="Cancel" i18n-matTooltip="cancel user edit action button tooltip" [attr.aria-label]="userActionLabels.cancel">
                     <mat-icon>cancel</mat-icon>
                     </button>
                 </span>
                 <ng-template #notediting>
-                    <button mat-icon-button (click)="enableEditMode(row.uid)" matTooltip="Edit user" i18n-matTooltip="edit user action button tooltip">
+                    <button mat-icon-button (click)="enableEditMode(row.uid)" matTooltip="Edit user" i18n-matTooltip="edit user action button tooltip" [attr.aria-label]="userActionLabels.edit">
                     <mat-icon>edit</mat-icon>
                     </button>
                 </ng-template>
-                <button (click)="manageUser(row.uid)" mat-icon-button [disabled]="editObject && editObject.uid === row.uid" matTooltip="Manage user" i18n-matTooltip="manage user action button tooltip">
+                <button (click)="manageUser(row.uid)" mat-icon-button [disabled]="editObject && editObject.uid === row.uid" matTooltip="Manage user" i18n-matTooltip="manage user action button tooltip" [attr.aria-label]="userActionLabels.manage">
                     <mat-icon>settings</mat-icon>
                 </button>
-                <button mat-icon-button [disabled]="editObject && editObject.uid === row.uid || row.uid === postsService.user.uid" (click)="removeUser(row.uid)" matTooltip="Delete user" i18n-matTooltip="delete user action button tooltip">
+                <button mat-icon-button [disabled]="editObject && editObject.uid === row.uid || row.uid === postsService.user.uid" (click)="removeUser(row.uid)" matTooltip="Delete user" i18n-matTooltip="delete user action button tooltip" [attr.aria-label]="userActionLabels.delete">
                     <mat-icon>delete</mat-icon>
                 </button>
                 </mat-cell>
