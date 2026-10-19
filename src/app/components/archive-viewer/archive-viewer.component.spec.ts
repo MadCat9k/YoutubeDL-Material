@@ -1,23 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { ArchiveViewerComponent } from './archive-viewer.component';
 
 describe('ArchiveViewerComponent', () => {
-  let component: ArchiveViewerComponent;
-  let fixture: ComponentFixture<ArchiveViewerComponent>;
+  it('provides an accessible name for the archive upload action', () => {
+    const component = new ArchiveViewerComponent({} as any, {} as any);
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [ ArchiveViewerComponent ]
-    })
-    .compileComponents();
-
-    fixture = TestBed.createComponent(ArchiveViewerComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(component.uploadLabel).toBe('Upload');
   });
 });

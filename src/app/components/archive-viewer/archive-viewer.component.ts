@@ -15,6 +15,8 @@ import { NgxFileDropEntry } from 'ngx-file-drop';
   styleUrls: ['./archive-viewer.component.scss']
 })
 export class ArchiveViewerComponent {
+  readonly uploadLabel = $localize`:|Upload:Upload`;
+
   // table
   displayedColumns: string[] = ['select', 'timestamp', 'title', 'id', 'extractor'];
   dataSource = null;
