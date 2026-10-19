@@ -25,7 +25,7 @@
                         <mat-autocomplete #autochip="matAutocomplete">
                             <mat-option *ngFor="let arg of filteredChipOptions | async" [value]="arg.key">
                                 <span [innerHTML]="arg.key | highlight : chipCtrl.value"></span>
-                                <button class="info-autocomplete-icon" [matTooltip]="arg.description" mat-icon-button><mat-icon>info</mat-icon></button>
+                                <button class="info-autocomplete-icon" [matTooltip]="arg.description" mat-icon-button [attr.aria-label]="argumentInfoLabel"><mat-icon>info</mat-icon></button>
                             </mat-option>
                         </mat-autocomplete>
                     </mat-card-content>
@@ -44,7 +44,7 @@
                                 <mat-autocomplete #auto="matAutocomplete">
                                     <mat-option *ngFor="let arg of filteredOptions | async" [value]="arg.key">
                                         <span [innerHTML]="arg.key | highlight : stateCtrl.value"></span>
-                                        <button class="info-autocomplete-icon" [matTooltip]="arg.description" mat-icon-button><mat-icon>info</mat-icon></button>
+                                        <button class="info-autocomplete-icon" [matTooltip]="arg.description" mat-icon-button [attr.aria-label]="argumentInfoLabel"><mat-icon>info</mat-icon></button>
                                     </mat-option>
                                 </mat-autocomplete>
 

@@ -249,6 +249,8 @@ announcements, broader accessibility testing, and actionable error messages.
 - User-management row actions for saving, cancelling, editing, managing, and
   deleting users now expose their existing localized names instead of relying
   on icons and hover tooltips.
+- Custom-argument autocomplete information actions now expose the existing
+  localized `Info` name instead of relying on the icon and hover tooltip.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.

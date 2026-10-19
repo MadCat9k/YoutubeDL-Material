@@ -30,6 +30,8 @@ export class HighlightPipe implements PipeTransform {
   styleUrls: ['./arg-modifier-dialog.component.scss'],
 })
 export class ArgModifierDialogComponent implements OnInit, AfterViewInit {
+  argumentInfoLabel = $localize`:Video info button:Info`;
+
   myGroup = new UntypedFormControl();
   firstArg = '';
   secondArg = '';
