@@ -4,4 +4,15 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     word-wrap: break-word;
- }
+}
+
+.see-more-toggle {
+    appearance: none;
+    background: none;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+    text-decoration: underline;
+}
