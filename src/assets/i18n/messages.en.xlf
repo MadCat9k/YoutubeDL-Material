@@ -4632,6 +4632,12 @@
       <trans-unit id="settings-save-failed" datatype="html">
         <source>Failed to save settings. Try again.</source>
       </trans-unit>
+      <trans-unit id="subscription-update-success" datatype="html">
+        <source>Subscription updated.</source>
+      </trans-unit>
+      <trans-unit id="subscription-update-failed" datatype="html">
+        <source>Failed to update subscription. Try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -3679,6 +3679,14 @@
         <source>Failed to save settings. Try again.</source>
         <target state="new">Failed to save settings. Try again.</target>
       </trans-unit>
+      <trans-unit id="subscription-update-success" datatype="html">
+        <source>Subscription updated.</source>
+        <target state="new">Subscription updated.</target>
+      </trans-unit>
+      <trans-unit id="subscription-update-failed" datatype="html">
+        <source>Failed to update subscription. Try again.</source>
+        <target state="new">Failed to update subscription. Try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

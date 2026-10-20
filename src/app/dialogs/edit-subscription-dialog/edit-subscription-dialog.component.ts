@@ -1,14 +1,16 @@
-import { Component, OnInit, Inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, Inject, ChangeDetectorRef } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { PostsService } from 'app/posts.services';
 import { ArgModifierDialogComponent } from '../arg-modifier-dialog/arg-modifier-dialog.component';
+import { Subject } from 'rxjs';
+import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-edit-subscription-dialog',
   templateUrl: './edit-subscription-dialog.component.html',
   styleUrls: ['./edit-subscription-dialog.component.scss']
 })
-export class EditSubscriptionDialogComponent implements OnInit {
+export class EditSubscriptionDialogComponent implements OnInit, OnDestroy {
 
   updating = false;
 
@@ -20,6 +22,7 @@ export class EditSubscriptionDialogComponent implements OnInit {
   new_sub = null;
 
   editor_initialized = false;
+  private destroyed = new Subject<void>();
 
   timerange_amount: number;
   timerange_unit = 'days';
@@ -95,6 +98,11 @@ export class EditSubscriptionDialogComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  ngOnDestroy(): void {
+    this.destroyed.next();
+    this.destroyed.complete();
+  }
+
   downloadAllToggled() {
     if (this.download_all) {
       this.new_sub.timerange = null;
@@ -105,15 +113,37 @@ export class EditSubscriptionDialogComponent implements OnInit {
   }
 
   saveSubscription() {
-    this.postsService.updateSubscription(this.new_sub).subscribe(res => {
-      this.sub = this.new_sub;
-      this.new_sub = JSON.parse(JSON.stringify(this.sub));
-      this.postsService.reloadSubscriptions();
-    })
+    if (this.updating || !this.subChanged()) return;
+
+    const savedSubscription = JSON.parse(JSON.stringify(this.new_sub));
+    this.updating = true;
+    this.postsService.updateSubscription(savedSubscription).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.updating = false)
+    ).subscribe({
+      next: res => {
+        if (!res.success) {
+          this.showUpdateFailure();
+          return;
+        }
+
+        this.sub = savedSubscription;
+        this.postsService.reloadSubscriptions();
+        this.postsService.openSnackBar($localize`:@@subscription-update-success:Subscription updated.`);
+      },
+      error: () => this.showUpdateFailure()
+    });
+  }
+
+  private showUpdateFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@subscription-update-failed:Failed to update subscription. Try again.`,
+      'Dismiss'
+    );
   }
 
   getSubscription() {
-    this.postsService.getSubscription(this.sub.id).subscribe(res => {
+    this.postsService.getSubscription(this.sub.id).pipe(takeUntil(this.destroyed)).subscribe(res => {
       this.sub = res['subscription'];
       this.new_sub = JSON.parse(JSON.stringify(this.sub));
     });
@@ -149,7 +179,7 @@ export class EditSubscriptionDialogComponent implements OnInit {
        initial_args: this.new_sub.custom_args
       }
     });
-    dialogRef.afterClosed().subscribe(new_args => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroyed)).subscribe(new_args => {
       if (new_args !== null && new_args !== undefined) {
         this.new_sub.custom_args = new_args;
       }

@@ -1208,7 +1208,7 @@ app.post('/api/downloadVideosForSubscription', optionalJwt, async (req, res) => 
 app.post('/api/updateSubscription', optionalJwt, async (req, res) => {
     const updated_sub = req.body.subscription;
 
-    const success = subscriptions_api.updateSubscription(updated_sub);
+    const success = await subscriptions_api.updateSubscription(updated_sub);
     res.send({
         success: success
     });

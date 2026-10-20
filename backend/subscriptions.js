@@ -652,9 +652,17 @@ exports.getSubscriptionByName = async (subName, user_uid = null) => {
 }
 
 exports.updateSubscription = async (sub) => {
-    await db_api.updateRecord('subscriptions', {id: sub.id}, sub);
-    exports.writeSubscriptionMetadata(sub);
-    return true;
+    try {
+        await db_api.updateRecord('subscriptions', {id: sub.id}, sub);
+        if (!exports.writeSubscriptionMetadata(sub)) {
+            logger.error('Failed to update subscription metadata.');
+            return false;
+        }
+        return true;
+    } catch (error) {
+        logger.error('Failed to update subscription.');
+        return false;
+    }
 }
 
 exports.updateSubscriptionPropertyMultiple = async (subs, assignment_obj) => {

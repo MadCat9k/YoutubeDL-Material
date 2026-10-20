@@ -269,6 +269,30 @@ Verification:
   save paths;
 - all 31 tracked XLF files passed XML validation;
 - production frontend build passed with the inherited `file-saver` CommonJS
+  warning;
+- validation image at commit `5055606` rebuilt and redeployed on port `18084`;
+  the container returned HTTP 200 and remained healthy with restart count zero
+  after a deliberate restart, with a verified appdata/users archive and the
+  previous container retained for rollback.
+
+#### Subscription update feedback (2026-10-21)
+
+- The update endpoint now waits for persistence and returns a real boolean
+  result instead of serializing an unresolved Promise as a false success.
+- The subscription editor reports successful, rejected, and failed updates,
+  keeps rejected edits available for retry, and blocks duplicate saves.
+- Successful updates record the exact submitted snapshot, so edits made while
+  the request is pending remain visibly unsaved.
+
+Verification:
+
+- focused backend subscription-update suite: 3 passing;
+- focused subscription-editor suite: 7 passing in Chrome Headless;
+- full backend suite: 92 passing and 22 pending, with the same 10
+  host-environment failures caused by unavailable network access, unsupported
+  host Python, missing FFmpeg, or missing TwitchDownloader;
+- all 31 tracked XLF files passed XML validation;
+- production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
 #### Keyboard focus follow-up (2026-10-18)

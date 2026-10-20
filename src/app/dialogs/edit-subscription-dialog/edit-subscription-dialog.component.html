@@ -61,7 +61,7 @@
 </mat-dialog-content>
 
 <mat-dialog-actions>
-    <button mat-button mat-dialog-close><ng-container i18n="Subscribe cancel button">Cancel</ng-container></button>
+    <button mat-button mat-dialog-close [disabled]="updating"><ng-container i18n="Subscribe cancel button">Cancel</ng-container></button>
     <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
     <button mat-button [disabled]="updating || !subChanged()" type="submit" (click)="saveClicked()"><ng-container i18n="Save button">Save</ng-container></button>
     <div class="mat-spinner" *ngIf="updating">
