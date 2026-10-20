@@ -686,10 +686,10 @@
 </mat-tab-group>
 
 <div class="action-buttons" [style.background]="postsService.theme ? postsService.theme.background_color : null">
-    <button class="settings-action" color="accent" (click)="saveSettings()" [disabled]="settingsSame() || !settingsValid()" mat-raised-button><mat-icon>done</mat-icon>&nbsp;&nbsp;
+    <button class="settings-action" color="accent" (click)="saveSettings()" [disabled]="savingSettings || settingsSame() || !settingsValid()" mat-raised-button><mat-icon>done</mat-icon>&nbsp;&nbsp;
         <ng-container i18n="Settings save button">Save</ng-container>
     </button>
-    <button class="settings-action" mat-flat-button (click)="cancelSettings()" [disabled]="settingsSame()"><mat-icon>cancel</mat-icon>&nbsp;&nbsp;
+    <button class="settings-action" mat-flat-button (click)="cancelSettings()" [disabled]="savingSettings || settingsSame()"><mat-icon>cancel</mat-icon>&nbsp;&nbsp;
         <span i18n="Settings cancel button">Cancel</span>
     </button>
 </div>

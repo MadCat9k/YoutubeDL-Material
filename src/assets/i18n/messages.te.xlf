@@ -3507,6 +3507,14 @@
         <source>Subscription removal failed. Try again.</source>
         <target state="new">Subscription removal failed. Try again.</target>
       </trans-unit>
+      <trans-unit id="settings-save-success" datatype="html">
+        <source>Settings saved.</source>
+        <target state="new">Settings saved.</target>
+      </trans-unit>
+      <trans-unit id="settings-save-failed" datatype="html">
+        <source>Failed to save settings. Try again.</source>
+        <target state="new">Failed to save settings. Try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

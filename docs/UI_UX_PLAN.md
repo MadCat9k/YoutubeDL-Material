@@ -246,6 +246,29 @@ Verification:
 - all 31 tracked XLF files passed XML validation, and localization extraction
   confirmed the new stable message identifier;
 - production frontend build passed with the inherited `file-saver` CommonJS
+  warning;
+- validation image at commit `de94b86` rebuilt and redeployed on port `18084`;
+  the container returned HTTP 200 and remained healthy with restart count zero
+  after a deliberate restart, with a verified appdata/users archive and the
+  previous container retained for rollback.
+
+#### Settings save feedback (2026-10-21)
+
+- Settings saves now report both success and failure through announced
+  snackbars instead of failing silently or writing only to the browser console.
+- A rejected or failed save leaves the edited values intact for retry, while a
+  successful response records the exact submitted snapshot so edits made during
+  the request are not incorrectly treated as saved.
+- Save and Cancel are disabled while a request is pending, and duplicate save
+  requests are ignored.
+
+Verification:
+
+- focused Settings component suite: 22 passing in Chrome Headless, including
+  successful, rejected, failed, duplicate, stale-edit, and destroyed-component
+  save paths;
+- all 31 tracked XLF files passed XML validation;
+- production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
 #### Keyboard focus follow-up (2026-10-18)

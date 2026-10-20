@@ -1,4 +1,4 @@
-import { Component, OnInit, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnDestroy, OnInit, EventEmitter, HostListener } from '@angular/core';
 import { PostsService } from 'app/posts.services';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {DomSanitizer} from '@angular/platform-browser';
@@ -14,16 +14,19 @@ import { EditCategoryDialogComponent } from 'app/dialogs/edit-category-dialog/ed
 import { ActivatedRoute, Router } from '@angular/router';
 import { Category, DBInfoResponse } from 'api-types';
 import { GenerateRssUrlComponent } from 'app/dialogs/generate-rss-url/generate-rss-url.component';
+import { Subject } from 'rxjs';
+import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
-export class SettingsComponent implements OnInit {
+export class SettingsComponent implements OnInit, OnDestroy {
   initial_config = null;
   new_config = null
   loading_config = false;
+  savingSettings = false;
   generated_bookmarklet_code = null;
   bookmarkletAudioOnly = false;
 
@@ -137,6 +140,7 @@ export class SettingsComponent implements OnInit {
   dangerZoneLabel = $localize`:Settings danger zone heading@@settingsDangerZone:Danger zone`;
   killAllDownloadsWarning = $localize`:Kill all downloads warning@@settingsKillAllDownloadsWarning:Stops every active download immediately. Subscription and manual downloads are both affected.`;
   restartServerWarning = $localize`:Restart server warning@@settingsRestartServerWarning:The application will be unavailable briefly while the server restarts.`;
+  private destroyed = new Subject<void>();
 
   get settingsAreTheSame(): boolean {
     this._settingsSame = this.settingsSame()
@@ -175,6 +179,11 @@ export class SettingsComponent implements OnInit {
     this.tabIndex = tab && this.TAB_TO_INDEX[tab] ? Number(this.TAB_TO_INDEX[tab]) : 0;
   }
 
+  ngOnDestroy(): void {
+    this.destroyed.next();
+    this.destroyed.complete();
+  }
+
   @HostListener('window:resize')
   updateNavigationMode(width = window.innerWidth): void {
     this.compactNavigation = width < 650;
@@ -195,21 +204,39 @@ export class SettingsComponent implements OnInit {
   }
 
   saveSettings(): void {
-    if (!this.settingsValid()) return;
-    const settingsToSave = {'YoutubeDLMaterial': this.new_config};
-    this.postsService.setConfig(settingsToSave).subscribe(res => {
-      if (res['success']) {
-        if (!this.initial_config['Advanced']['multi_user_mode'] && this.new_config['Advanced']['multi_user_mode']) {
+    if (!this.settingsValid() || this.savingSettings) return;
+
+    const savedConfig = JSON.parse(JSON.stringify(this.new_config));
+    const settingsToSave = {'YoutubeDLMaterial': savedConfig};
+    this.savingSettings = true;
+    this.postsService.setConfig(settingsToSave).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.savingSettings = false)
+    ).subscribe({
+      next: res => {
+        if (!res['success']) {
+          this.showSettingsSaveFailure();
+          return;
+        }
+
+        if (!this.initial_config['Advanced']['multi_user_mode'] && savedConfig['Advanced']['multi_user_mode']) {
           // multi user mode was enabled, let's check if default admin account exists
           this.postsService.checkAdminCreationStatus(true);
         }
-        // sets new config as old config
-        this.initial_config = JSON.parse(JSON.stringify(this.new_config));
+        // sets the submitted snapshot as the saved config
+        this.initial_config = savedConfig;
         this.postsService.reload_config.next(true);
-      }
-    }, () => {
-      console.error('Failed to save config!');
-    })
+        this.postsService.openSnackBar($localize`:@@settings-save-success:Settings saved.`);
+      },
+      error: () => this.showSettingsSaveFailure()
+    });
+  }
+
+  private showSettingsSaveFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@settings-save-failed:Failed to save settings. Try again.`,
+      'Dismiss'
+    );
   }
 
   cancelSettings(): void {

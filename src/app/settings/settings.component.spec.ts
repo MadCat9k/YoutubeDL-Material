@@ -6,7 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TestBed, waitForAsync } from '@angular/core/testing';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 
 import { PostsService } from 'app/posts.services';
 import { SettingsComponent } from './settings.component';
@@ -24,6 +24,9 @@ describe('SettingsComponent', () => {
       service_initialized: new Subject<boolean>(),
       getLatestGithubRelease: () => of(null),
       restartServer: jasmine.createSpy('restartServer').and.returnValue(of({success: true})),
+      setConfig: jasmine.createSpy('setConfig'),
+      checkAdminCreationStatus: jasmine.createSpy('checkAdminCreationStatus'),
+      reload_config: {next: jasmine.createSpy('reloadConfig')},
       openSnackBar: jasmine.createSpy('openSnackBar')
     };
     router = jasmine.createSpyObj('Router', ['navigate']);
@@ -170,6 +173,80 @@ describe('SettingsComponent', () => {
 
     component.new_config.Host.port = '';
     expect(component.settingsValid()).toBe(false);
+  });
+
+  it('announces a successful settings save', () => {
+    component.initial_config = {Host: {port: '17442'}, Advanced: {multi_user_mode: false}, label: 'old'};
+    component.new_config = {Host: {port: '17442'}, Advanced: {multi_user_mode: false}, label: 'new'};
+    postsService.setConfig.and.returnValue(of({success: true}));
+
+    component.saveSettings();
+
+    expect(postsService.setConfig).toHaveBeenCalledWith({YoutubeDLMaterial: component.new_config});
+    expect(component.initial_config.label).toBe('new');
+    expect(postsService.reload_config.next).toHaveBeenCalledWith(true);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Settings saved.');
+    expect(component.savingSettings).toBeFalse();
+  });
+
+  it('preserves edits and reports a rejected settings save', () => {
+    component.initial_config = {Host: {port: '17442'}, Advanced: {multi_user_mode: false}, label: 'old'};
+    component.new_config = {Host: {port: '17442'}, Advanced: {multi_user_mode: false}, label: 'new'};
+    postsService.setConfig.and.returnValue(of({success: false}));
+
+    component.saveSettings();
+
+    expect(component.initial_config.label).toBe('old');
+    expect(component.new_config.label).toBe('new');
+    expect(postsService.reload_config.next).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Failed to save settings. Try again.', 'Dismiss');
+    expect(component.savingSettings).toBeFalse();
+  });
+
+  it('preserves edits and reports a settings request failure', () => {
+    component.initial_config = {Host: {port: '17442'}, Advanced: {multi_user_mode: false}, label: 'old'};
+    component.new_config = {Host: {port: '17442'}, Advanced: {multi_user_mode: false}, label: 'new'};
+    postsService.setConfig.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.saveSettings();
+
+    expect(component.initial_config.label).toBe('old');
+    expect(component.new_config.label).toBe('new');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Failed to save settings. Try again.', 'Dismiss');
+    expect(component.savingSettings).toBeFalse();
+  });
+
+  it('submits once and records the submitted snapshot', () => {
+    const response = new Subject<any>();
+    component.initial_config = {Host: {port: '17442'}, Advanced: {multi_user_mode: false}, label: 'old'};
+    component.new_config = {Host: {port: '17442'}, Advanced: {multi_user_mode: false}, label: 'submitted'};
+    postsService.setConfig.and.returnValue(response);
+
+    component.saveSettings();
+    component.saveSettings();
+    component.new_config.label = 'edited while saving';
+    response.next({success: true});
+    response.complete();
+
+    expect(postsService.setConfig).toHaveBeenCalledTimes(1);
+    expect(component.initial_config.label).toBe('submitted');
+    expect(component.new_config.label).toBe('edited while saving');
+    expect(component.settingsSame()).toBeFalse();
+    expect(component.savingSettings).toBeFalse();
+  });
+
+  it('ignores a pending settings result after destruction', () => {
+    const response = new Subject<any>();
+    component.initial_config = {Host: {port: '17442'}, Advanced: {multi_user_mode: false}, label: 'old'};
+    component.new_config = {Host: {port: '17442'}, Advanced: {multi_user_mode: false}, label: 'new'};
+    postsService.setConfig.and.returnValue(response);
+
+    component.saveSettings();
+    component.ngOnDestroy();
+    response.next({success: true});
+
+    expect(component.initial_config.label).toBe('old');
+    expect(postsService.reload_config.next).not.toHaveBeenCalled();
   });
 
   it('does not restart the server when confirmation is cancelled', () => {

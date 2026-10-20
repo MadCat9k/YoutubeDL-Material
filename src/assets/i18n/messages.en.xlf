@@ -4626,6 +4626,12 @@
       <trans-unit id="subscription-remove-failed" datatype="html">
         <source>Subscription removal failed. Try again.</source>
       </trans-unit>
+      <trans-unit id="settings-save-success" datatype="html">
+        <source>Settings saved.</source>
+      </trans-unit>
+      <trans-unit id="settings-save-failed" datatype="html">
+        <source>Failed to save settings. Try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>
