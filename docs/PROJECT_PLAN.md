@@ -453,6 +453,28 @@ Remaining risk:
   but the deployed validation container still needs a real subscription scan to
   confirm the target extractor supplies an HTTP(S) entry URL.
 
+## Subscription deletion completion (2026-10-21)
+
+- The unsubscribe API now waits for the asynchronous removal workflow and
+  reports its completed result instead of responding while deletion continues
+  in the background.
+- When media deletion is requested, the subscription directory is removed
+  before its database records. A filesystem failure therefore leaves the
+  subscription record available for a safe retry instead of creating a large
+  orphan directory.
+- Successful removal now returns an explicit success result, including legacy
+  nameless records, while failures return a sanitized message without exposing
+  media paths or subscription details.
+
+Verification:
+
+- focused subscription-deletion tests: 4 passing, covering completed media
+  removal, retained database records after filesystem failure, and
+  unsubscribe-without-delete, plus legacy nameless-record cleanup;
+- full backend suite: 88 passing and 22 pending, with the same 10
+  host-environment failures caused by unavailable network access, unsupported
+  host Python, missing FFmpeg, or missing TwitchDownloader.
+
 ## Delivery sequence
 
 1. Baseline and startup hardening (included in this initial scaffold).

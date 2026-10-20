@@ -142,44 +142,50 @@ async function getSubscriptionInfo(sub) {
 }
 
 exports.unsubscribe = async (sub_id, deleteMode, user_uid = null) => {
-    const sub = await exports.getSubscription(sub_id);
-    let basePath = null;
-    if (user_uid)
-        basePath = path.join(config_api.getConfigItem('ytdl_users_base_path'), user_uid, 'subscriptions');
-    else
-        basePath = config_api.getConfigItem('ytdl_subscriptions_base_path');
+    try {
+        const sub = await exports.getSubscription(sub_id);
+        let basePath = null;
+        if (user_uid)
+            basePath = path.join(config_api.getConfigItem('ytdl_users_base_path'), user_uid, 'subscriptions');
+        else
+            basePath = config_api.getConfigItem('ytdl_subscriptions_base_path');
 
-    let id = sub.id;
-
-    const sub_files = await db_api.getRecords('files', {sub_id: id});
-    for (let i = 0; i < sub_files.length; i++) {
-        const sub_file = sub_files[i];
-        if (config_api.descriptors[sub_file['uid']]) {
-            try {
-                for (let i = 0; i < config_api.descriptors[sub_file['uid']].length; i++) {
-                    config_api.descriptors[sub_file['uid']][i].destroy();
+        const id = sub.id;
+        const sub_files = await db_api.getRecords('files', {sub_id: id});
+        for (let i = 0; i < sub_files.length; i++) {
+            const sub_file = sub_files[i];
+            if (config_api.descriptors[sub_file['uid']]) {
+                try {
+                    for (let i = 0; i < config_api.descriptors[sub_file['uid']].length; i++) {
+                        config_api.descriptors[sub_file['uid']][i].destroy();
+                    }
+                } catch(e) {
+                    continue;
                 }
-            } catch(e) {
-                continue;
             }
         }
+
+        await killSubDownloads(sub_id, true);
+
+        // Remove media before its database record so a filesystem failure remains retryable.
+        if (sub.name) {
+            const appendedBasePath = getAppendedBasePath(sub, basePath);
+            if (deleteMode && (await fs.pathExists(appendedBasePath))) {
+                await fs.remove(appendedBasePath);
+            }
+        }
+
+        await db_api.removeRecord('subscriptions', {id: id});
+        await db_api.removeAllRecords('files', {sub_id: id});
+        await db_api.removeAllRecords('archives', {sub_id: id});
+        return {success: true};
+    } catch (error) {
+        logger.error('Unsubscribe: Failed to remove subscription.');
+        return {
+            success: false,
+            error: 'Failed to remove subscription.'
+        };
     }
-
-    await killSubDownloads(sub_id, true);
-    await db_api.removeRecord('subscriptions', {id: id});
-    await db_api.removeAllRecords('files', {sub_id: id});
-
-    // failed subs have no name, on unsubscribe they shouldn't error
-    if (!sub.name) {
-        return;
-    }
-
-    const appendedBasePath = getAppendedBasePath(sub, basePath);
-    if (deleteMode && (await fs.pathExists(appendedBasePath))) {
-        await fs.remove(appendedBasePath);
-    }
-
-    await db_api.removeAllRecords('archives', {sub_id: sub.id});
 }
 
 exports.deleteSubscriptionFile = async (sub, file, deleteForever, file_uid = null, user_uid = null) => {

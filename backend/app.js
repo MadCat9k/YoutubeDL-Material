@@ -1126,7 +1126,7 @@ app.post('/api/unsubscribe', optionalJwt, async (req, res) => {
     let sub_id = req.body.sub_id;
     let user_uid = req.isAuthenticated() ? req.user.uid : null;
 
-    let result_obj = subscriptions_api.unsubscribe(sub_id, deleteMode, user_uid);
+    let result_obj = await subscriptions_api.unsubscribe(sub_id, deleteMode, user_uid);
     if (result_obj.success) {
         res.send({
             success: result_obj.success
