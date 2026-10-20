@@ -273,6 +273,9 @@ announcements, broader accessibility testing, and actionable error messages.
 - Log-retrieval failures now clear the loading state and preserve the existing
   localized failure message without exposing the raw request error in the
   browser console.
+- Playlist-update failures now keep the dialog retryable, avoid marking the
+  playlist as updated, and show an existing localized failure message instead
+  of a false success message or raw browser-console error.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.

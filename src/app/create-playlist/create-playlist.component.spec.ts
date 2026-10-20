@@ -1,4 +1,4 @@
-import { throwError } from 'rxjs';
+import { Subject, throwError } from 'rxjs';
 
 import { CreatePlaylistComponent } from './create-playlist.component';
 
@@ -9,7 +9,8 @@ describe('CreatePlaylistComponent', () => {
 
   beforeEach(() => {
     dialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
-    postsService = jasmine.createSpyObj('PostsService', ['createPlaylist', 'openSnackBar']);
+    postsService = jasmine.createSpyObj('PostsService', ['createPlaylist', 'updatePlaylist', 'getPlaylist', 'openSnackBar']);
+    postsService.playlists_changed = new Subject<boolean>();
     component = new CreatePlaylistComponent({create_mode: true}, postsService, dialogRef);
   });
 
@@ -27,5 +28,19 @@ describe('CreatePlaylistComponent', () => {
     expect(component.create_in_progress).toBe(false);
     expect(postsService.openSnackBar).toHaveBeenCalledWith('ERROR: failed to create playlist!');
     expect(dialogRef.close).not.toHaveBeenCalled();
+  });
+
+  it('shows a safe failure and does not mark the playlist updated when saving fails', () => {
+    postsService.updatePlaylist.and.returnValue(throwError(() => new Error('private upstream diagnostic')));
+    component.playlist = {name: 'Old name', uids: ['old-file']} as any;
+    component.name = 'New name';
+    component.filesSelect.setValue(['new-file']);
+
+    component.updatePlaylist();
+
+    expect(component.create_in_progress).toBeFalse();
+    expect(component.playlist_updated).toBeFalse();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Failed to load playlist!');
+    expect(postsService.getPlaylist).not.toHaveBeenCalled();
   });
 });
