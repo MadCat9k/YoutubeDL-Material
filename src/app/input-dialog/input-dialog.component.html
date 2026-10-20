@@ -2,7 +2,8 @@
 <mat-dialog-content>
   <div>
     <mat-form-field color="accent">
-      <input matInput (keyup.enter)="enterPressed()" [(ngModel)]="inputText" [placeholder]="inputPlaceholder">
+      <mat-label>{{inputPlaceholder}}</mat-label>
+      <input matInput (keyup.enter)="enterPressed()" [(ngModel)]="inputText">
     </mat-form-field>
   </div>
 </mat-dialog-content>

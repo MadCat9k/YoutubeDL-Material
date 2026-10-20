@@ -254,6 +254,8 @@ announcements, broader accessibility testing, and actionable error messages.
 - The player description's `See more` disclosure now uses a native button with
   expanded-state semantics instead of a fake router link, preserving keyboard
   activation without triggering navigation.
+- The reusable text-entry dialog now renders its prompt as a persistent form
+  label instead of relying on disappearing placeholder text.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.
