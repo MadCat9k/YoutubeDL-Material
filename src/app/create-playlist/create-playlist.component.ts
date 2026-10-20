@@ -53,9 +53,9 @@ export class CreatePlaylistComponent implements OnInit {
       } else {
         this.dialogRef.close(false);
       }
-    }, err => {
+    }, () => {
       this.create_in_progress = false;
-      console.error(err);
+      this.postsService.openSnackBar($localize`ERROR: failed to create playlist!`);
     });
   }
 

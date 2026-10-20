@@ -264,6 +264,9 @@ announcements, broader accessibility testing, and actionable error messages.
   removing ambiguity between Tuesday and Thursday or Saturday and Sunday.
 - One-time task schedules with a time but no date now show the existing localized
   `Choose a date` guidance instead of failing on a null date.
+- Playlist-creation request failures now show the existing localized failure
+  message and leave the dialog open for retry instead of exposing the raw error
+  only in the browser console.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.
@@ -443,7 +446,6 @@ Verification:
 - Home library search, sorting, media filters, and filter clearing now share one
   responsive toolbar. Changing discovery criteria returns to the first page,
   while Clear filters removes search and media filters without changing sort.
-
 Verification:
 
 - focused Downloads component suite: 15 passing in Chrome Headless, including
