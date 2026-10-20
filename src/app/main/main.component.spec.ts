@@ -33,6 +33,10 @@ describe('MainComponent', () => {
     expect(component.mainActionLabels.customArgs).toBe('Custom arguments');
   });
 
+  it('provides persistent labels for the primary URL and search input', () => {
+    expect(component.mainInputLabels).toEqual({url: 'URL', search: 'Search'});
+  });
+
   it('does not overlap active download progress requests', () => {
     const response = new Subject<any>();
     postsService.getCurrentDownload.and.returnValue(response.asObservable());

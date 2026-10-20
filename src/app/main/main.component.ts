@@ -24,6 +24,11 @@ export class MainComponent implements OnInit, OnDestroy {
     customArgs: $localize`:Custom args action@@mainCustomArgsAction:Custom arguments`
   };
 
+  readonly mainInputLabels = {
+    url: $localize`:|URL:URL`,
+    search: $localize`:|Search:Search`
+  };
+
   iOS = false;
 
   // local settings

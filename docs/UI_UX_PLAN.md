@@ -256,6 +256,9 @@ announcements, broader accessibility testing, and actionable error messages.
   activation without triggering navigation.
 - The reusable text-entry dialog now renders its prompt as a persistent form
   label instead of relying on disappearing placeholder text.
+- The primary Home URL/search field now uses a persistent Material form label,
+  reusing the existing localized `URL` and `Search` strings instead of relying
+  on placeholder text that disappears after input.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.
