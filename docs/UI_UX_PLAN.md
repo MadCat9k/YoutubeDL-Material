@@ -267,6 +267,9 @@ announcements, broader accessibility testing, and actionable error messages.
 - Playlist-creation request failures now show the existing localized failure
   message and leave the dialog open for retry instead of exposing the raw error
   only in the browser console.
+- Video-information refresh failures now clear the loading state and show the
+  existing localized failure message instead of exposing the raw error only in
+  the browser console.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.

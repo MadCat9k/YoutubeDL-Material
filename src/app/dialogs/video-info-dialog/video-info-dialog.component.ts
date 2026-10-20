@@ -82,9 +82,9 @@ export class VideoInfoDialogComponent implements OnInit {
       this.retrieving_file = false;
       this.file = res['file'];
       this.initializeFile(this.file);
-    }, err => {
+    }, () => {
       this.retrieving_file = false;
-      console.error(err);
+      this.postsService.openSnackBar($localize`Failed to get file information from the server.`, 'Dismiss');
     });
   }
 
