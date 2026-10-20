@@ -18,6 +18,14 @@ export class UpdateTaskScheduleDialogComponent implements OnInit {
   date: Date = null;
   today = new Date();
   Intl = Intl;
+  readonly weekdayOptions = Array.from({length: 7}, (_, value) => {
+    const date = new Date(Date.UTC(2021, 10, value + 1));
+    return {
+      value,
+      shortLabel: new Intl.DateTimeFormat(undefined, {weekday: 'narrow', timeZone: 'UTC'}).format(date),
+      label: new Intl.DateTimeFormat(undefined, {weekday: 'long', timeZone: 'UTC'}).format(date)
+    };
+  });
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: {task: Task}, private dialogRef: MatDialogRef<UpdateTaskScheduleDialogComponent>, private postsService: PostsService) {
     this.processTask(this.data.task);

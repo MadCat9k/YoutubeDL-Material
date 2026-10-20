@@ -27,14 +27,9 @@
             </div>
             <div *ngIf="recurring && interval === 'weekly'" class="col-12 mt-2">
                 <mat-button-toggle-group [(ngModel)]="days_of_week" [multiple]="true" [disabled]="!enabled" aria-label="Week day">
-                    <!-- TODO: support translation -->
-                    <mat-button-toggle [value]="0">M</mat-button-toggle>
-                    <mat-button-toggle [value]="1">T</mat-button-toggle>
-                    <mat-button-toggle [value]="2">W</mat-button-toggle>
-                    <mat-button-toggle [value]="3">T</mat-button-toggle>
-                    <mat-button-toggle [value]="4">F</mat-button-toggle>
-                    <mat-button-toggle [value]="5">S</mat-button-toggle>
-                    <mat-button-toggle [value]="6">S</mat-button-toggle>
+                    <mat-button-toggle *ngFor="let weekday of weekdayOptions" [value]="weekday.value" [attr.aria-label]="weekday.label">
+                        {{weekday.shortLabel}}
+                    </mat-button-toggle>
                 </mat-button-toggle-group>
             </div>
             <div class="col-12 mt-2">

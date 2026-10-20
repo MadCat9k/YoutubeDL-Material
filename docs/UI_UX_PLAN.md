@@ -259,6 +259,9 @@ announcements, broader accessibility testing, and actionable error messages.
 - The primary Home URL/search field now uses a persistent Material form label,
   reusing the existing localized `URL` and `Search` strings instead of relying
   on placeholder text that disappears after input.
+- Weekly task-schedule toggles retain their compact locale-aware weekday letters
+  while exposing the full locale-aware weekday names to assistive technology,
+  removing ambiguity between Tuesday and Thursday or Saturday and Sunday.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.
