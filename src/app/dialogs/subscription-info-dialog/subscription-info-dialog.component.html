@@ -20,8 +20,8 @@
 </mat-dialog-content>
 
 <mat-dialog-actions>
-    <button mat-button mat-dialog-close><ng-container i18n="Close subscription info button">Close</ng-container></button>
-    <button mat-stroked-button (click)="downloadArchive()" color="accent"><ng-container i18n="Export Archive button">Export Archive</ng-container></button>
+    <button mat-button mat-dialog-close [disabled]="isUnsubscribing"><ng-container i18n="Close subscription info button">Close</ng-container></button>
+    <button mat-stroked-button (click)="downloadArchive()" color="accent" [disabled]="isUnsubscribing"><ng-container i18n="Export Archive button">Export Archive</ng-container></button>
     <span class="spacer"></span>
-    <button mat-button (click)="confirmUnsubscribe()" color="warn"><ng-container i18n="Unsubscribe button">Unsubscribe</ng-container></button>
+    <button mat-button (click)="confirmUnsubscribe()" color="warn" [disabled]="isUnsubscribing"><ng-container i18n="Unsubscribe button">Unsubscribe</ng-container></button>
 </mat-dialog-actions>

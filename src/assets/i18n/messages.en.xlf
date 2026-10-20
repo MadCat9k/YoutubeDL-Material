@@ -4623,6 +4623,9 @@
       <trans-unit id="videoInfoOpenSourceAction" datatype="html">
         <source>Open source URL</source>
       </trans-unit>
+      <trans-unit id="subscription-remove-failed" datatype="html">
+        <source>Subscription removal failed. Try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

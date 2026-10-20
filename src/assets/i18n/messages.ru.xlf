@@ -5607,6 +5607,10 @@
         <source>Open source URL</source>
         <target state="new">Open source URL</target>
       </trans-unit>
+      <trans-unit id="subscription-remove-failed" datatype="html">
+        <source>Subscription removal failed. Try again.</source>
+        <target state="new">Subscription removal failed. Try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

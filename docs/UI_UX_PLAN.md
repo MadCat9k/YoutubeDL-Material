@@ -228,6 +228,26 @@ Verification:
 Remaining Phase 1 work includes visible keyboard-focus review, live-region
 announcements, broader accessibility testing, and actionable error messages.
 
+#### Subscription removal feedback (2026-10-21)
+
+- Subscription removal now waits for an explicit successful API result before
+  closing the information dialog or removing the subscription from the view.
+- A rejected or failed request leaves the dialog open, restores the removal
+  action for retry, and announces a localized failure message in a snackbar.
+- Repeated activation while a removal request is pending is ignored and the
+  dialog actions are disabled, preventing duplicate deletion requests or a
+  dismissal that would hide the eventual result.
+- Focused component tests cover success, rejected responses, transport errors,
+  duplicate activation, and destruction while a request is pending.
+
+Verification:
+
+- focused subscription-information dialog suite: 5 passing in Chrome Headless;
+- all 31 tracked XLF files passed XML validation, and localization extraction
+  confirmed the new stable message identifier;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for

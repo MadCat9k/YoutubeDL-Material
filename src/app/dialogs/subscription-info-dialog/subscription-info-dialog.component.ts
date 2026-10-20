@@ -1,18 +1,22 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, Inject } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PostsService } from 'app/posts.services';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { Subscription } from 'api-types';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-subscription-info-dialog',
   templateUrl: './subscription-info-dialog.component.html',
   styleUrls: ['./subscription-info-dialog.component.scss']
 })
-export class SubscriptionInfoDialogComponent implements OnInit {
+export class SubscriptionInfoDialogComponent implements OnInit, OnDestroy {
 
   sub: Subscription = null;
   unsubbedEmitter = null;
+  isUnsubscribing = false;
+  private destroyed = new Subject<void>();
 
   constructor(public dialogRef: MatDialogRef<SubscriptionInfoDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any, private postsService: PostsService,
@@ -25,6 +29,11 @@ export class SubscriptionInfoDialogComponent implements OnInit {
     }
   }
 
+  ngOnDestroy() {
+    this.destroyed.next();
+    this.destroyed.complete();
+  }
+
   confirmUnsubscribe() {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
@@ -34,7 +43,7 @@ export class SubscriptionInfoDialogComponent implements OnInit {
         warnSubmitColor: true
       }
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroyed)).subscribe(confirmed => {
       if (confirmed) {
         this.unsubscribe();
       }
@@ -42,14 +51,35 @@ export class SubscriptionInfoDialogComponent implements OnInit {
   }
 
   unsubscribe() {
-    this.postsService.unsubscribe(this.sub.id, true).subscribe(res => {
-      this.unsubbedEmitter.emit(true);
-      this.dialogRef.close();
+    if (this.isUnsubscribing) return;
+
+    this.isUnsubscribing = true;
+    this.dialogRef.disableClose = true;
+    this.postsService.unsubscribe(this.sub.id, true).pipe(takeUntil(this.destroyed)).subscribe({
+      next: res => {
+        if (res.success) {
+          this.unsubbedEmitter.emit(true);
+          this.dialogRef.close();
+          return;
+        }
+
+        this.handleUnsubscribeFailure();
+      },
+      error: () => this.handleUnsubscribeFailure()
     });
   }
 
+  private handleUnsubscribeFailure() {
+    this.isUnsubscribing = false;
+    this.dialogRef.disableClose = false;
+    this.postsService.openSnackBar(
+      $localize`:@@subscription-remove-failed:Subscription removal failed. Try again.`,
+      'Dismiss'
+    );
+  }
+
   downloadArchive() {
-    this.postsService.downloadArchive(null, this.sub.id).subscribe(res => {
+    this.postsService.downloadArchive(null, this.sub.id).pipe(takeUntil(this.destroyed)).subscribe(res => {
       const blob: Blob = res;
       saveAs(blob, 'archive.txt');
     });
