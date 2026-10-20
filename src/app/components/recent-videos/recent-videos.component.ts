@@ -34,6 +34,8 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   @Output() fileSelectionEmitter = new EventEmitter<{new_selection: string[], thumbnailURL: string}>();
 
   pageSize = 10;
+  readonly pageSizeStorageKey = 'recent_videos_page_size';
+  readonly supportedPageSizes = [5, 10, 25, 100, 250];
   paged_data: DatabaseFile[] = null;
 
   selected_data: string[] = [];
@@ -106,6 +108,11 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
 
     if (sort_order) {
       this.descendingMode = sort_order === 'descending';
+    }
+
+    const cachedPageSize = Number(localStorage.getItem(this.pageSizeStorageKey));
+    if (this.supportedPageSizes.includes(cachedPageSize)) {
+      this.pageSize = cachedPageSize;
     }
   }
 
@@ -484,6 +491,9 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
 
   pageChangeEvent(event) {
     this.pageSize = event.pageSize;
+    if (this.supportedPageSizes.includes(this.pageSize)) {
+      localStorage.setItem(this.pageSizeStorageKey, String(this.pageSize));
+    }
     this.loading_files = Array(this.pageSize).fill(0);
     this.getAllFiles();
   }

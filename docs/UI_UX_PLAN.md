@@ -446,6 +446,10 @@ Verification:
 - Home library search, sorting, media filters, and filter clearing now share one
   responsive toolbar. Changing discovery criteria returns to the first page,
   while Clear filters removes search and media filters without changing sort.
+- The Home and subscription library paginator now remembers a supported
+  Items-per-page selection across refreshes and reloads, while invalid saved
+  values fall back to the existing default.
+
 Verification:
 
 - focused Downloads component suite: 15 passing in Chrome Headless, including

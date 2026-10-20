@@ -72,6 +72,30 @@ describe('RecentVideosComponent', () => {
     });
   });
 
+  it('persists and restores the selected library page size', () => {
+    postsService.getAllFiles.and.returnValue(of({file_count: 0, files: [], playlists: []}));
+
+    component.pageChangeEvent({pageSize: 25});
+
+    expect(localStorage.getItem('recent_videos_page_size')).toBe('25');
+
+    fixture.destroy();
+    fixture = TestBed.createComponent(RecentVideosComponent);
+    component = fixture.componentInstance;
+
+    expect(component.pageSize).toBe(25);
+  });
+
+  it('ignores an unsupported saved library page size', () => {
+    localStorage.setItem('recent_videos_page_size', '999');
+
+    fixture.destroy();
+    fixture = TestBed.createComponent(RecentVideosComponent);
+    component = fixture.componentInstance;
+
+    expect(component.pageSize).toBe(10);
+  });
+
   it('reloads and resets subscription state when sub_id changes on the same instance', () => {
     localStorage.setItem('cached_file_count_subscriptionA', '7');
     localStorage.setItem('cached_file_count_subscriptionB', '2');
