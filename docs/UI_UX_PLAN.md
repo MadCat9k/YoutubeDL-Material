@@ -293,6 +293,30 @@ Verification:
   host Python, missing FFmpeg, or missing TwitchDownloader;
 - all 31 tracked XLF files passed XML validation;
 - production frontend build passed with the inherited `file-saver` CommonJS
+  warning;
+- validation image at commit `168bda7` rebuilt and redeployed on port `18084`;
+  the container returned HTTP 200 and remained healthy with restart count zero
+  after a deliberate restart, with a verified appdata/users archive and the
+  previous container retained for rollback.
+
+#### Download action feedback (2026-10-21)
+
+- Pause, resume, restart, cancel, and clear actions now announce both completion
+  and failure instead of silently ignoring transport errors or directing users
+  to server logs.
+- Failure messages identify the attempted action and offer a direct retry cue;
+  the incorrect pause message previously shown for a failed clear is removed.
+- Dialog, bulk-action, clipboard, and per-download action streams now stop when
+  the Downloads component is destroyed.
+
+Verification:
+
+- focused Downloads component suite: 19 passing in Chrome Headless, covering
+  successful, rejected, transport-failed, restart-replacement, and destroyed
+  action requests alongside existing polling and responsive behavior;
+- all 31 tracked XLF files passed XML validation, including the shared action
+  placeholder in both new messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
 #### Keyboard focus follow-up (2026-10-18)

@@ -4638,6 +4638,12 @@
       <trans-unit id="subscription-update-failed" datatype="html">
         <source>Failed to update subscription. Try again.</source>
       </trans-unit>
+      <trans-unit id="downloads-action-success" datatype="html">
+        <source><x id="download action" equiv-text="action"/> succeeded.</source>
+      </trans-unit>
+      <trans-unit id="downloads-action-failed" datatype="html">
+        <source><x id="download action" equiv-text="action"/> failed. Try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

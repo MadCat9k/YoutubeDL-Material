@@ -9,8 +9,8 @@ import { ConfirmDialogComponent } from 'app/dialogs/confirm-dialog/confirm-dialo
 import { MatSort } from '@angular/material/sort';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { Download } from 'api-types';
-import { forkJoin, of, Subscription } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin, Observable, of, Subject, Subscription } from 'rxjs';
+import { catchError, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-downloads',
@@ -67,6 +67,7 @@ export class DownloadsComponent implements OnInit, OnDestroy {
   ];
   selectedDownloadUids = new Set<string>();
   bulkActionInProgress = false;
+  private destroyed = new Subject<void>();
 
   // The purpose of this is to reduce code reuse for displaying these actions as icons or in a menu
   downloadActions: DownloadAction[] = [
@@ -167,6 +168,8 @@ export class DownloadsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.polling_stopped = true;
+    this.destroyed.next();
+    this.destroyed.complete();
     this.initialization_subscription?.unsubscribe();
     this.downloads_request_subscription?.unsubscribe();
     this.downloads_request_subscription = null;
@@ -353,13 +356,13 @@ export class DownloadsComponent implements OnInit, OnDestroy {
         warnSubmitColor: true
       }
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroyed)).subscribe(confirmed => {
       if (!confirmed) return;
       this.bulkActionInProgress = true;
       const requests = selectedDownloads.map(download =>
         this.postsService.clearDownload(download.uid).pipe(catchError(() => of({success: false})))
       );
-      forkJoin(requests).subscribe(results => {
+      forkJoin(requests).pipe(takeUntil(this.destroyed)).subscribe(results => {
         const clearedUids = selectedDownloads
           .filter((_, index) => results[index]['success'])
           .map(download => download.uid);
@@ -419,10 +422,10 @@ export class DownloadsComponent implements OnInit, OnDestroy {
         ]
       }
     });
-    clearEmitter.subscribe((done: boolean) => {
+    clearEmitter.pipe(takeUntil(this.destroyed)).subscribe((done: boolean) => {
       if (done) {
         const selected_items = dialogRef.componentInstance.selected_items;
-        this.postsService.clearDownloads(selected_items.includes('clear_finished'), selected_items.includes('clear_paused'), selected_items.includes('clear_errors')).subscribe(res => {
+        this.postsService.clearDownloads(selected_items.includes('clear_finished'), selected_items.includes('clear_paused'), selected_items.includes('clear_errors')).pipe(takeUntil(this.destroyed)).subscribe(res => {
           if (!res['success']) {
             this.postsService.openSnackBar($localize`Failed to clear finished downloads!`);
           } else {
@@ -443,9 +446,9 @@ export class DownloadsComponent implements OnInit, OnDestroy {
         warnSubmitColor: true
       }
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroyed)).subscribe(confirmed => {
       if (!confirmed) return;
-      this.postsService.clearCompletedDownloads().subscribe(res => {
+      this.postsService.clearCompletedDownloads().pipe(takeUntil(this.destroyed)).subscribe(res => {
         if (res['success']) {
           this.postsService.openSnackBar($localize`:Clear completed downloads success@@downloads-clear-completed-success:Completed downloads cleared.`);
           this.getCurrentDownloads();
@@ -459,63 +462,57 @@ export class DownloadsComponent implements OnInit, OnDestroy {
   }
 
   pauseDownload(download: Download): void {
-    this.postsService.pauseDownload(download['uid']).subscribe(res => {
-      if (!res['success']) {
-        this.postsService.openSnackBar($localize`Failed to pause download! See server logs for more info.`);
-      }
-    });
+    this.runDownloadAction(this.postsService.pauseDownload(download['uid']), $localize`Pause`);
   }
 
   pauseAllDownloads(): void {
-    this.postsService.pauseAllDownloads().subscribe(res => {
-      if (!res['success']) {
-        this.postsService.openSnackBar($localize`Failed to pause all downloads! See server logs for more info.`);
-      }
-    });
+    this.runDownloadAction(this.postsService.pauseAllDownloads(), $localize`Pause all downloads`);
   }
 
   resumeDownload(download: Download): void {
-    this.postsService.resumeDownload(download['uid']).subscribe(res => {
-      if (!res['success']) {
-        this.postsService.openSnackBar($localize`Failed to resume download! See server logs for more info.`);
-      }
-    });
+    this.runDownloadAction(this.postsService.resumeDownload(download['uid']), $localize`Resume`);
   }
 
   resumeAllDownloads(): void {
-    this.postsService.resumeAllDownloads().subscribe(res => {
-      if (!res['success']) {
-        this.postsService.openSnackBar($localize`Failed to resume all downloads! See server logs for more info.`);
-      }
-    });
+    this.runDownloadAction(this.postsService.resumeAllDownloads(), $localize`Resume all downloads`);
   }
 
   restartDownload(download: Download): void {
-    this.postsService.restartDownload(download['uid']).subscribe(res => {
-      if (!res['success']) {
-        this.postsService.openSnackBar($localize`Failed to restart download! See server logs for more info.`);
-      } else {
-        if (this.uids && res['new_download_uid']) {
-          this.uids.push(res['new_download_uid']);
-        }
+    this.runDownloadAction(this.postsService.restartDownload(download['uid']), $localize`Restart`, res => {
+      if (this.uids && res['new_download_uid']) {
+        this.uids.push(res['new_download_uid']);
       }
     });
   }
 
   cancelDownload(download: Download): void {
-    this.postsService.cancelDownload(download['uid']).subscribe(res => {
-      if (!res['success']) {
-        this.postsService.openSnackBar($localize`Failed to cancel download! See server logs for more info.`);
-      }
-    });
+    this.runDownloadAction(this.postsService.cancelDownload(download['uid']), $localize`Cancel`);
   }
 
   clearDownload(download: Download): void {
-    this.postsService.clearDownload(download['uid']).subscribe(res => {
-      if (!res['success']) {
-        this.postsService.openSnackBar($localize`Failed to pause download! See server logs for more info.`);
-      }
+    this.runDownloadAction(this.postsService.clearDownload(download['uid']), $localize`Clear`);
+  }
+
+  private runDownloadAction(request: Observable<any>, action: string, onSuccess?: (response: any) => void): void {
+    request.pipe(takeUntil(this.destroyed)).subscribe({
+      next: response => {
+        if (!response['success']) {
+          this.showDownloadActionResult(action, false);
+          return;
+        }
+
+        if (onSuccess) onSuccess(response);
+        this.showDownloadActionResult(action, true);
+      },
+      error: () => this.showDownloadActionResult(action, false)
     });
+  }
+
+  private showDownloadActionResult(action: string, success: boolean): void {
+    const message = success
+      ? $localize`:@@downloads-action-success:${action}:download action: succeeded.`
+      : $localize`:@@downloads-action-failed:${action}:download action: failed. Try again.`;
+    this.postsService.openSnackBar(message);
   }
 
   watchContent(download: Download): void {
@@ -563,7 +560,7 @@ export class DownloadsComponent implements OnInit, OnDestroy {
         doneEmitter: copyToClipboardEmitter
       }
     });
-    copyToClipboardEmitter.subscribe(done => {
+    copyToClipboardEmitter.pipe(takeUntil(this.destroyed)).subscribe(done => {
       if (done) {
         this.postsService.openSnackBar($localize`Copied to clipboard!`);
         this.clipboard.copy(download['error']);

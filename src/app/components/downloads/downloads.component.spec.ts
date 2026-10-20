@@ -13,7 +13,18 @@ describe('DownloadsComponent', () => {
   let dialog: jasmine.SpyObj<MatDialog>;
 
   beforeEach(() => {
-    postsService = jasmine.createSpyObj<PostsService>('PostsService', ['getCurrentDownloads', 'clearCompletedDownloads', 'clearDownload', 'openSnackBar']);
+    postsService = jasmine.createSpyObj<PostsService>('PostsService', [
+      'getCurrentDownloads',
+      'clearCompletedDownloads',
+      'clearDownload',
+      'pauseDownload',
+      'pauseAllDownloads',
+      'resumeDownload',
+      'resumeAllDownloads',
+      'restartDownload',
+      'cancelDownload',
+      'openSnackBar'
+    ]);
     dialog = jasmine.createSpyObj<MatDialog>('MatDialog', ['open']);
     component = new DownloadsComponent(
       postsService,
@@ -239,5 +250,49 @@ describe('DownloadsComponent', () => {
 
     expect(response.observers.length).toBe(0);
     expect(component.downloads_request_in_flight).toBe(false);
+  });
+
+  it('announces successful download actions', () => {
+    postsService.pauseDownload.and.returnValue(of({success: true}));
+
+    component.pauseDownload({uid: 'synthetic-download'} as Download);
+
+    expect(postsService.pauseDownload).toHaveBeenCalledWith('synthetic-download');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Pause succeeded.');
+  });
+
+  it('announces rejected and failed download actions with a retry cue', () => {
+    postsService.clearDownload.and.returnValue(of({success: false}));
+    postsService.resumeDownload.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.clearDownload({uid: 'clear-download'} as Download);
+    component.resumeDownload({uid: 'resume-download'} as Download);
+
+    expect(postsService.openSnackBar.calls.allArgs()).toEqual([
+      ['Clear failed. Try again.'],
+      ['Resume failed. Try again.']
+    ]);
+  });
+
+  it('preserves the replacement uid after a successful restart', () => {
+    component.uids = ['synthetic-download'];
+    postsService.restartDownload.and.returnValue(of({success: true, new_download_uid: 'replacement-download'}));
+
+    component.restartDownload({uid: 'synthetic-download'} as Download);
+
+    expect(component.uids).toEqual(['synthetic-download', 'replacement-download']);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Restart succeeded.');
+  });
+
+  it('cancels an in-flight download action when destroyed', () => {
+    const response = new Subject<any>();
+    postsService.cancelDownload.and.returnValue(response);
+
+    component.cancelDownload({uid: 'synthetic-download'} as Download);
+    component.ngOnDestroy();
+    response.next({success: true});
+
+    expect(response.observers.length).toBe(0);
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
   });
 });

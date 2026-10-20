@@ -3849,6 +3849,14 @@
         <source>Failed to update subscription. Try again.</source>
         <target state="new">Failed to update subscription. Try again.</target>
       </trans-unit>
+      <trans-unit id="downloads-action-success" datatype="html">
+        <source><x id="download action" equiv-text="action"/> succeeded.</source>
+        <target state="new"><x id="download action" equiv-text="action"/> succeeded.</target>
+      </trans-unit>
+      <trans-unit id="downloads-action-failed" datatype="html">
+        <source><x id="download action" equiv-text="action"/> failed. Try again.</source>
+        <target state="new"><x id="download action" equiv-text="action"/> failed. Try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
