@@ -262,6 +262,8 @@ announcements, broader accessibility testing, and actionable error messages.
 - Weekly task-schedule toggles retain their compact locale-aware weekday letters
   while exposing the full locale-aware weekday names to assistive technology,
   removing ambiguity between Tuesday and Thursday or Saturday and Sunday.
+- One-time task schedules with a time but no date now show the existing localized
+  `Choose a date` guidance instead of failing on a null date.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.

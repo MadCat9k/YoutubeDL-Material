@@ -79,6 +79,11 @@ export class UpdateTaskScheduleDialogComponent implements OnInit {
       return;
     }
 
+    if (!this.recurring && !this.date) {
+      this.postsService.openSnackBar($localize`:|Choose a date:Choose a date`);
+      return;
+    }
+
     const hours = parseInt(this.time.split(':')[0]);
     const minutes = parseInt(this.time.split(':')[1]);
 
