@@ -270,6 +270,9 @@ announcements, broader accessibility testing, and actionable error messages.
 - Video-information refresh failures now clear the loading state and show the
   existing localized failure message instead of exposing the raw error only in
   the browser console.
+- Log-retrieval failures now clear the loading state and preserve the existing
+  localized failure message without exposing the raw request error in the
+  browser console.
 - Existing snackbars and asynchronous connection/progress states already use
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.

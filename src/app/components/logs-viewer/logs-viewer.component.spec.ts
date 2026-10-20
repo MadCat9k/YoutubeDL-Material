@@ -6,7 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { PostsService } from '../../posts.services';
 import { LogsViewerComponent } from './logs-viewer.component';
@@ -53,5 +53,16 @@ describe('LogsViewerComponent', () => {
     expect(element.querySelector('.logs-toolbar')).not.toBeNull();
     expect(element.querySelector('.logs-actions')).not.toBeNull();
     expect(element.querySelector('.logs-actions button').getAttribute('aria-label')).toBe('Copy to clipboard');
+  });
+
+  it('shows a sanitized failure and clears the loading state when logs cannot be retrieved', () => {
+    postsService.getLogs.and.returnValue(throwError(() => new Error('private server diagnostic')));
+    postsService.openSnackBar.calls.reset();
+
+    component.logs = null;
+    component.getLogs();
+
+    expect(component.logs_loading).toBeFalse();
+    expect(postsService.openSnackBar).toHaveBeenCalledOnceWith('Failed to retrieve logs!');
   });
 });

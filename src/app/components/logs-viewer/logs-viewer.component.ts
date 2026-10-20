@@ -46,9 +46,8 @@ export class LogsViewerComponent implements OnInit {
       } else {
         this.postsService.openSnackBar($localize`Failed to retrieve logs!`);
       }
-    }, err => {
+    }, () => {
       this.logs_loading = false;
-      console.error(err);
       this.postsService.openSnackBar($localize`Failed to retrieve logs!`);
     });
   }
