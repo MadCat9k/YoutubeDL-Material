@@ -23,6 +23,7 @@ describe('SettingsComponent', () => {
       initialized: false,
       service_initialized: new Subject<boolean>(),
       getLatestGithubRelease: () => of(null),
+      killAllDownloads: jasmine.createSpy('killAllDownloads'),
       restartServer: jasmine.createSpy('restartServer').and.returnValue(of({success: true})),
       setConfig: jasmine.createSpy('setConfig'),
       checkAdminCreationStatus: jasmine.createSpy('checkAdminCreationStatus'),
@@ -247,6 +248,69 @@ describe('SettingsComponent', () => {
 
     expect(component.initial_config.label).toBe('old');
     expect(postsService.reload_config.next).not.toHaveBeenCalled();
+  });
+
+  it('does not kill downloads when confirmation is cancelled', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(false)});
+
+    component.killAllDownloads();
+
+    expect(postsService.killAllDownloads).not.toHaveBeenCalled();
+  });
+
+  it('announces when all downloads are stopped', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.killAllDownloads.and.returnValue(of({success: true}));
+
+    component.killAllDownloads();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Successfully killed all downloads!');
+    expect(component.killingAllDownloads).toBeFalse();
+  });
+
+  it('allows retry after a rejected kill-all request', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.killAllDownloads.and.returnValue(of({success: false}));
+
+    component.killAllDownloads();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Failed to stop all downloads. Try again.', 'Dismiss');
+    expect(component.killingAllDownloads).toBeFalse();
+  });
+
+  it('allows retry after a failed kill-all request', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.killAllDownloads.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.killAllDownloads();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Failed to stop all downloads. Try again.', 'Dismiss');
+    expect(component.killingAllDownloads).toBeFalse();
+  });
+
+  it('does not start a second kill-all request while one is pending', () => {
+    const response = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.killAllDownloads.and.returnValue(response);
+
+    component.killAllDownloads();
+    component.killAllDownloads();
+
+    expect(dialog.open).toHaveBeenCalledTimes(1);
+    expect(postsService.killAllDownloads).toHaveBeenCalledTimes(1);
+    expect(component.killingAllDownloads).toBeTrue();
+  });
+
+  it('ignores a pending kill-all result after destruction', () => {
+    const response = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.killAllDownloads.and.returnValue(response);
+
+    component.killAllDownloads();
+    component.ngOnDestroy();
+    response.next({success: true});
+
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
   });
 
   it('does not restart the server when confirmation is cancelled', () => {

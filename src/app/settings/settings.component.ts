@@ -33,6 +33,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   db_info: DBInfoResponse = null;
   db_transferring = false;
   testing_connection_string = false;
+  killingAllDownloads = false;
 
   _settingsSame = true;
 
@@ -413,32 +414,42 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   killAllDownloads(): void {
-    const done = new EventEmitter<boolean>();
+    if (this.killingAllDownloads) return;
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         dialogTitle: $localize`:Kill all downloads button:Kill all downloads`,
         dialogText: this.killAllDownloadsWarning,
         submitText: $localize`:Kill all downloads button:Kill all downloads`,
-        doneEmitter: done,
         warnSubmitColor: true
       }
     });
-    done.subscribe(confirmed => {
-      if (confirmed) {
-        this.postsService.killAllDownloads().subscribe(res => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroyed)).subscribe(confirmed => {
+      if (!confirmed) return;
+
+      this.killingAllDownloads = true;
+      this.postsService.killAllDownloads().pipe(
+        takeUntil(this.destroyed),
+        finalize(() => this.killingAllDownloads = false)
+      ).subscribe({
+        next: res => {
           if (res['success']) {
-            dialogRef.close();
             this.postsService.openSnackBar($localize`Successfully killed all downloads!`);
-          } else {
-            dialogRef.close();
-            this.postsService.openSnackBar($localize`Failed to kill all downloads! Check logs for details.`);
+            return;
           }
-        }, () => {
-          dialogRef.close();
-          this.postsService.openSnackBar($localize`Failed to kill all downloads! Check logs for details.`);
-        });
-      }
+
+          this.showKillAllDownloadsFailure();
+        },
+        error: () => this.showKillAllDownloadsFailure()
+      });
     });
+  }
+
+  private showKillAllDownloadsFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@kill-downloads-failed:Failed to stop all downloads. Try again.`,
+      'Dismiss'
+    );
   }
 
   restartServer(): void {

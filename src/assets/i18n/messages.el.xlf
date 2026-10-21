@@ -3877,6 +3877,10 @@
         <source>Database restore failed. Try again.</source>
         <target state="new">Database restore failed. Try again.</target>
       </trans-unit>
+      <trans-unit id="kill-downloads-failed" datatype="html">
+        <source>Failed to stop all downloads. Try again.</source>
+        <target state="new">Failed to stop all downloads. Try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

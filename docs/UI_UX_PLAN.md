@@ -343,6 +343,30 @@ Verification:
 - all 31 tracked XLF files passed XML validation and contain the stable database
   restore failure message;
 - production frontend build passed with the inherited `file-saver` CommonJS
+  warning;
+- validation image at commit `bf902f1` rebuilt and redeployed on port `18084`;
+  the container returned HTTP 200 and remained healthy with restart count zero
+  after a deliberate restart, with a verified appdata/users archive and the
+  previous container retained for rollback.
+
+#### Stop-all-downloads feedback (2026-10-21)
+
+- The destructive stop-all-downloads action now waits for confirmation through
+  the dialog result and prevents another request while the first is pending.
+- Successful requests retain the existing completion message, while rejected or
+  failed requests show a localized retry cue instead of directing users to
+  server logs.
+- Confirmation and request subscriptions stop when Settings is destroyed, and
+  the action is re-enabled after every completed request.
+
+Verification:
+
+- focused Settings component suite: 28 passing in Chrome Headless, including
+  cancelled, successful, rejected, transport-failed, duplicate, and destroyed
+  stop-all-downloads paths;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  stop-all-downloads failure message;
+- production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
 #### Keyboard focus follow-up (2026-10-18)

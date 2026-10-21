@@ -235,7 +235,7 @@
                         <section class="settings-danger-zone">
                             <h6>{{dangerZoneLabel}}</h6>
                             <p>{{killAllDownloadsWarning}}</p>
-                            <button (click)="killAllDownloads()" mat-stroked-button color="warn"><ng-container i18n="Kill all downloads button">Kill all downloads</ng-container></button>
+                            <button (click)="killAllDownloads()" [disabled]="killingAllDownloads" mat-stroked-button color="warn"><ng-container i18n="Kill all downloads button">Kill all downloads</ng-container></button>
                         </section>
                     </div>
                 </div>

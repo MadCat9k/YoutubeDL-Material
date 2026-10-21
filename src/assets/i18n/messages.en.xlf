@@ -4647,6 +4647,9 @@
       <trans-unit id="database-restore-failed" datatype="html">
         <source>Database restore failed. Try again.</source>
       </trans-unit>
+      <trans-unit id="kill-downloads-failed" datatype="html">
+        <source>Failed to stop all downloads. Try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>
