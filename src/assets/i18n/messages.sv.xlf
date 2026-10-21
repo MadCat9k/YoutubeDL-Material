@@ -3732,6 +3732,10 @@
         <source><x id="download action" equiv-text="action"/> failed. Try again.</source>
         <target state="new"><x id="download action" equiv-text="action"/> failed. Try again.</target>
       </trans-unit>
+      <trans-unit id="database-restore-failed" datatype="html">
+        <source>Database restore failed. Try again.</source>
+        <target state="new">Database restore failed. Try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

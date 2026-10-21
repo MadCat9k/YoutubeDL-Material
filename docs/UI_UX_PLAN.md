@@ -317,6 +317,32 @@ Verification:
 - all 31 tracked XLF files passed XML validation, including the shared action
   placeholder in both new messages;
 - production frontend build passed with the inherited `file-saver` CommonJS
+  warning;
+- validation image at commit `9641b17` rebuilt and redeployed on port `18084`;
+  the container returned HTTP 200 and remained healthy with restart count zero
+  after a deliberate restart, with a verified appdata/users archive and the
+  previous container retained for rollback.
+
+#### Database restore feedback (2026-10-21)
+
+- Database restore no longer enters a stuck loading state when no backup is
+  selected, and repeated activation while a restore is pending is ignored.
+- The backup selection, Cancel action, and Restore action remain disabled while
+  the request is pending so the result cannot be hidden or changed mid-request.
+- A rejected or failed restore keeps the dialog open, restores its actions for
+  retry, and announces a localized failure message without exposing the raw
+  request error in the browser console.
+- Backup-list and restore requests stop updating the dialog after it is
+  destroyed.
+
+Verification:
+
+- focused Restore DB Dialog component suite: 7 passing in Chrome Headless,
+  covering missing selection, success, rejected and transport-failed restores,
+  duplicate activation, and backup-list and restore teardown;
+- all 31 tracked XLF files passed XML validation and contain the stable database
+  restore failure message;
+- production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
 #### Keyboard focus follow-up (2026-10-18)

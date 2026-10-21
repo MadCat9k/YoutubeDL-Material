@@ -4644,6 +4644,9 @@
       <trans-unit id="downloads-action-failed" datatype="html">
         <source><x id="download action" equiv-text="action"/> failed. Try again.</source>
       </trans-unit>
+      <trans-unit id="database-restore-failed" datatype="html">
+        <source>Database restore failed. Try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>
