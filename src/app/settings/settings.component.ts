@@ -523,18 +523,30 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   testConnectionString(connection_string: string): void {
+    if (this.testing_connection_string || !connection_string?.trim()) return;
+
     this.testing_connection_string = true;
-    this.postsService.testConnectionString(connection_string).subscribe(res => {
-      this.testing_connection_string = false;
-      if (res['success']) {
-        this.postsService.openSnackBar($localize`Connection successful!`);
-      } else {
-        this.postsService.openSnackBar($localize`Connection failed! Error: ` + res['error']);
-      }
-    }, () => {
-      this.testing_connection_string = false;
-      this.postsService.openSnackBar($localize`Connection failed! Error: Server error. See logs for more info.`);
+    this.postsService.testConnectionString(connection_string).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.testing_connection_string = false)
+    ).subscribe({
+      next: res => {
+        if (res['success']) {
+          this.postsService.openSnackBar($localize`Connection successful!`);
+          return;
+        }
+
+        this.showConnectionTestFailure();
+      },
+      error: () => this.showConnectionTestFailure()
     });
+  }
+
+  private showConnectionTestFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@database-connection-test-failed:Connection test failed. Check the address and try again.`,
+      'Dismiss'
+    );
   }
 
   openGenerateRSSURLDialog(): void {

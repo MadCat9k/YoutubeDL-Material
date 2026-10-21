@@ -4653,6 +4653,9 @@
       <trans-unit id="database-transfer-failed" datatype="html">
         <source>Database transfer failed. Try again.</source>
       </trans-unit>
+      <trans-unit id="database-connection-test-failed" datatype="html">
+        <source>Connection test failed. Check the address and try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

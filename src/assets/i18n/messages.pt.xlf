@@ -3657,6 +3657,10 @@
         <source>Database transfer failed. Try again.</source>
         <target state="new">Database transfer failed. Try again.</target>
       </trans-unit>
+      <trans-unit id="database-connection-test-failed" datatype="html">
+        <source>Connection test failed. Check the address and try again.</source>
+        <target state="new">Connection test failed. Check the address and try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -27,6 +27,7 @@ describe('SettingsComponent', () => {
       killAllDownloads: jasmine.createSpy('killAllDownloads'),
       restartServer: jasmine.createSpy('restartServer').and.returnValue(of({success: true})),
       setConfig: jasmine.createSpy('setConfig'),
+      testConnectionString: jasmine.createSpy('testConnectionString'),
       transferDB: jasmine.createSpy('transferDB'),
       checkAdminCreationStatus: jasmine.createSpy('checkAdminCreationStatus'),
       reload_config: {next: jasmine.createSpy('reloadConfig')},
@@ -379,6 +380,68 @@ describe('SettingsComponent', () => {
 
     expect(postsService.openSnackBar).not.toHaveBeenCalled();
     expect(postsService.getDBInfo).not.toHaveBeenCalled();
+  });
+
+  it('does not test an empty database connection string', () => {
+    component.testConnectionString('   ');
+
+    expect(postsService.testConnectionString).not.toHaveBeenCalled();
+  });
+
+  it('announces a successful database connection test', () => {
+    postsService.testConnectionString.and.returnValue(of({success: true}));
+
+    component.testConnectionString('mongodb://synthetic.invalid');
+
+    expect(postsService.testConnectionString).toHaveBeenCalledWith('mongodb://synthetic.invalid');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Connection successful!');
+    expect(component.testing_connection_string).toBeFalse();
+  });
+
+  it('sanitizes a rejected database connection test', () => {
+    postsService.testConnectionString.and.returnValue(of({success: false, error: 'sensitive connection detail'}));
+
+    component.testConnectionString('mongodb://synthetic.invalid');
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Connection test failed. Check the address and try again.',
+      'Dismiss'
+    );
+    expect(component.testing_connection_string).toBeFalse();
+  });
+
+  it('allows retry after a failed database connection request', () => {
+    postsService.testConnectionString.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.testConnectionString('mongodb://synthetic.invalid');
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Connection test failed. Check the address and try again.',
+      'Dismiss'
+    );
+    expect(component.testing_connection_string).toBeFalse();
+  });
+
+  it('does not start a second database connection test while one is pending', () => {
+    const response = new Subject<any>();
+    postsService.testConnectionString.and.returnValue(response);
+
+    component.testConnectionString('mongodb://synthetic.invalid');
+    component.testConnectionString('mongodb://synthetic.invalid');
+
+    expect(postsService.testConnectionString).toHaveBeenCalledTimes(1);
+    expect(component.testing_connection_string).toBeTrue();
+  });
+
+  it('ignores a pending database connection result after destruction', () => {
+    const response = new Subject<any>();
+    postsService.testConnectionString.and.returnValue(response);
+
+    component.testConnectionString('mongodb://synthetic.invalid');
+    component.ngOnDestroy();
+    response.next({success: true});
+
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
   });
 
   it('does not restart the server when confirmation is cancelled', () => {

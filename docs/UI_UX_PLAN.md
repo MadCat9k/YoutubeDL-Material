@@ -392,6 +392,31 @@ Verification:
 - all 31 tracked XLF files passed XML validation and contain the stable database
   transfer failure message;
 - production frontend build passed with the inherited `file-saver` CommonJS
+  warning;
+- validation image at commit `8608d04` rebuilt and redeployed on port `18084`;
+  the container returned HTTP 200 and remained healthy with restart count zero
+  after a deliberate restart, with a verified appdata/users archive and the
+  previous container retained for rollback.
+
+#### Database connection-test feedback (2026-10-21)
+
+- Empty MongoDB connection strings no longer start a test, and the action stays
+  disabled while a request is pending so duplicate tests cannot overlap.
+- Successful tests retain their existing confirmation, while rejected and
+  failed tests restore the action for retry and show a localized corrective
+  message.
+- Raw backend errors are no longer displayed, preventing connection details from
+  leaking through feedback, and pending results are ignored after Settings is
+  destroyed.
+
+Verification:
+
+- focused Settings component suite: 40 passing in Chrome Headless, including
+  empty, successful, rejected, transport-failed, duplicate, and destroyed
+  database connection-test paths;
+- all 31 tracked XLF files passed XML validation and contain the stable database
+  connection-test failure message;
+- production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
 #### Keyboard focus follow-up (2026-10-18)
