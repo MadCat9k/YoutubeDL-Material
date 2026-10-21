@@ -4650,6 +4650,9 @@
       <trans-unit id="kill-downloads-failed" datatype="html">
         <source>Failed to stop all downloads. Try again.</source>
       </trans-unit>
+      <trans-unit id="database-transfer-failed" datatype="html">
+        <source>Database transfer failed. Try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

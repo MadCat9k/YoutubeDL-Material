@@ -4780,6 +4780,10 @@
         <source>Failed to stop all downloads. Try again.</source>
         <target state="new">Failed to stop all downloads. Try again.</target>
       </trans-unit>
+      <trans-unit id="database-transfer-failed" datatype="html">
+        <source>Database transfer failed. Try again.</source>
+        <target state="new">Database transfer failed. Try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

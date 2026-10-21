@@ -478,6 +478,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   transferDB(): void {
+    if (this.db_transferring) return;
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         dialogTitle: 'Transfer DB',
@@ -485,7 +487,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         submitText: 'Transfer',
       }
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroyed)).subscribe(confirmed => {
       if (confirmed) {
         this._transferDB();
       }
@@ -493,21 +495,31 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   _transferDB(): void {
+    if (this.db_transferring) return;
+
     this.db_transferring = true;
-    this.postsService.transferDB(this.db_info['using_local_db']).subscribe(res => {
-      this.db_transferring = false;
-      const success = res['success'];
-      if (success) {
-        this.postsService.openSnackBar($localize`Successfully transfered DB! Reloading info...`);
-        this.getDBInfo();
-      } else {
-        this.postsService.openSnackBar($localize`Failed to transfer DB -- transfer was aborted. Error: ` + res['error']);
-      }
-    }, err => {
-      this.db_transferring = false;
-      this.postsService.openSnackBar($localize`Failed to transfer DB -- API call failed. See browser logs for details.`);
-      console.error(err);
+    this.postsService.transferDB(this.db_info['using_local_db']).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.db_transferring = false)
+    ).subscribe({
+      next: res => {
+        if (res['success']) {
+          this.postsService.openSnackBar($localize`Successfully transfered DB! Reloading info...`);
+          this.getDBInfo();
+          return;
+        }
+
+        this.showDatabaseTransferFailure();
+      },
+      error: () => this.showDatabaseTransferFailure()
     });
+  }
+
+  private showDatabaseTransferFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@database-transfer-failed:Database transfer failed. Try again.`,
+      'Dismiss'
+    );
   }
 
   testConnectionString(connection_string: string): void {

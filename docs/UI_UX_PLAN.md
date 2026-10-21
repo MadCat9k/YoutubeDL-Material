@@ -367,6 +367,31 @@ Verification:
 - all 31 tracked XLF files passed XML validation and contain the stable
   stop-all-downloads failure message;
 - production frontend build passed with the inherited `file-saver` CommonJS
+  warning;
+- validation image at commit `0439068` rebuilt and redeployed on port `18084`;
+  the container returned HTTP 200 and remained healthy with restart count zero
+  after a deliberate restart, with a verified appdata/users archive and the
+  previous container retained for rollback.
+
+#### Database transfer feedback (2026-10-21)
+
+- Database transfer now ignores repeated activation while a request is pending
+  and releases both confirmation and request subscriptions when Settings is
+  destroyed.
+- Successful transfers still refresh database status, while rejected and failed
+  transfers restore the action for retry and announce a localized failure
+  message.
+- Raw server errors and request objects are no longer exposed in the snackbar or
+  browser console.
+
+Verification:
+
+- focused Settings component suite: 34 passing in Chrome Headless, including
+  cancelled, successful, rejected, transport-failed, duplicate, and destroyed
+  database-transfer paths;
+- all 31 tracked XLF files passed XML validation and contain the stable database
+  transfer failure message;
+- production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
 #### Keyboard focus follow-up (2026-10-18)

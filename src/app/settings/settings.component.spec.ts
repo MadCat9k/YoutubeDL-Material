@@ -23,9 +23,11 @@ describe('SettingsComponent', () => {
       initialized: false,
       service_initialized: new Subject<boolean>(),
       getLatestGithubRelease: () => of(null),
+      getDBInfo: jasmine.createSpy('getDBInfo').and.returnValue(of({using_local_db: true})),
       killAllDownloads: jasmine.createSpy('killAllDownloads'),
       restartServer: jasmine.createSpy('restartServer').and.returnValue(of({success: true})),
       setConfig: jasmine.createSpy('setConfig'),
+      transferDB: jasmine.createSpy('transferDB'),
       checkAdminCreationStatus: jasmine.createSpy('checkAdminCreationStatus'),
       reload_config: {next: jasmine.createSpy('reloadConfig')},
       openSnackBar: jasmine.createSpy('openSnackBar')
@@ -311,6 +313,72 @@ describe('SettingsComponent', () => {
     response.next({success: true});
 
     expect(postsService.openSnackBar).not.toHaveBeenCalled();
+  });
+
+  it('does not transfer the database when confirmation is cancelled', () => {
+    component.db_info = {using_local_db: true} as any;
+    dialog.open.and.returnValue({afterClosed: () => of(false)});
+
+    component.transferDB();
+
+    expect(postsService.transferDB).not.toHaveBeenCalled();
+  });
+
+  it('announces a successful database transfer and refreshes its status', () => {
+    component.db_info = {using_local_db: true} as any;
+    postsService.transferDB.and.returnValue(of({success: true}));
+
+    component._transferDB();
+
+    expect(postsService.transferDB).toHaveBeenCalledWith(true);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Successfully transfered DB! Reloading info...');
+    expect(postsService.getDBInfo).toHaveBeenCalled();
+    expect(component.db_transferring).toBeFalse();
+  });
+
+  it('allows retry after a rejected database transfer', () => {
+    component.db_info = {using_local_db: true} as any;
+    postsService.transferDB.and.returnValue(of({success: false, error: 'sensitive server detail'}));
+
+    component._transferDB();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Database transfer failed. Try again.', 'Dismiss');
+    expect(component.db_transferring).toBeFalse();
+  });
+
+  it('allows retry after a failed database transfer request', () => {
+    component.db_info = {using_local_db: true} as any;
+    postsService.transferDB.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component._transferDB();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Database transfer failed. Try again.', 'Dismiss');
+    expect(component.db_transferring).toBeFalse();
+  });
+
+  it('does not start a second database transfer while one is pending', () => {
+    const response = new Subject<any>();
+    component.db_info = {using_local_db: true} as any;
+    postsService.transferDB.and.returnValue(response);
+
+    component._transferDB();
+    component._transferDB();
+
+    expect(postsService.transferDB).toHaveBeenCalledTimes(1);
+    expect(component.db_transferring).toBeTrue();
+  });
+
+  it('ignores a pending database transfer result after destruction', () => {
+    const response = new Subject<any>();
+    component.db_info = {using_local_db: true} as any;
+    postsService.transferDB.and.returnValue(response);
+
+    component._transferDB();
+    component.ngOnDestroy();
+    response.next({success: true});
+
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(postsService.getDBInfo).not.toHaveBeenCalled();
   });
 
   it('does not restart the server when confirmation is cancelled', () => {
