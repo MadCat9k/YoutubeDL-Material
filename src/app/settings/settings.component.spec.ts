@@ -459,6 +459,52 @@ describe('SettingsComponent', () => {
 
     expect(postsService.restartServer).toHaveBeenCalled();
     expect(postsService.openSnackBar).toHaveBeenCalledWith('Restarting!');
+    expect(component.restartingServer).toBeFalse();
+  });
+
+  it('allows retry after a rejected server restart', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.restartServer.and.returnValue(of({success: false}));
+
+    component.restartServer();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Server restart failed. Try again.', 'Dismiss');
+    expect(component.restartingServer).toBeFalse();
+  });
+
+  it('allows retry after a failed server restart request', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.restartServer.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.restartServer();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Server restart failed. Try again.', 'Dismiss');
+    expect(component.restartingServer).toBeFalse();
+  });
+
+  it('does not start a second server restart while one is pending', () => {
+    const response = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.restartServer.and.returnValue(response);
+
+    component.restartServer();
+    component.restartServer();
+
+    expect(dialog.open).toHaveBeenCalledTimes(1);
+    expect(postsService.restartServer).toHaveBeenCalledTimes(1);
+    expect(component.restartingServer).toBeTrue();
+  });
+
+  it('ignores a pending server restart result after destruction', () => {
+    const response = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.restartServer.and.returnValue(response);
+
+    component.restartServer();
+    component.ngOnDestroy();
+    response.next({success: true});
+
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
   });
 });
 

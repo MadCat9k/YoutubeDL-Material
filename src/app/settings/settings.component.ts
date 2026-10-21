@@ -34,6 +34,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   db_transferring = false;
   testing_connection_string = false;
   killingAllDownloads = false;
+  restartingServer = false;
 
   _settingsSame = true;
 
@@ -453,6 +454,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   restartServer(): void {
+    if (this.restartingServer) return;
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         dialogTitle: $localize`:Restart server button:Restart server`,
@@ -461,14 +464,32 @@ export class SettingsComponent implements OnInit, OnDestroy {
         warnSubmitColor: true
       }
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroyed)).subscribe(confirmed => {
       if (!confirmed) return;
-      this.postsService.restartServer().subscribe(() => {
-        this.postsService.openSnackBar($localize`Restarting!`);
-      }, () => {
-        this.postsService.openSnackBar($localize`Failed to restart the server.`);
+
+      this.restartingServer = true;
+      this.postsService.restartServer().pipe(
+        takeUntil(this.destroyed),
+        finalize(() => this.restartingServer = false)
+      ).subscribe({
+        next: res => {
+          if (res['success']) {
+            this.postsService.openSnackBar($localize`Restarting!`);
+            return;
+          }
+
+          this.showRestartServerFailure();
+        },
+        error: () => this.showRestartServerFailure()
       });
     });
+  }
+
+  private showRestartServerFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@server-restart-failed:Server restart failed. Try again.`,
+      'Dismiss'
+    );
   }
 
   getDBInfo(): void {

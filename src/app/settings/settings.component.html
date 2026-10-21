@@ -599,7 +599,7 @@
                         <section class="settings-danger-zone">
                             <h6>{{dangerZoneLabel}}</h6>
                             <p>{{restartServerWarning}}</p>
-                            <button (click)="restartServer()" mat-stroked-button color="warn"><ng-container i18n="Restart server button">Restart server</ng-container></button>
+                            <button (click)="restartServer()" [disabled]="restartingServer" mat-stroked-button color="warn"><ng-container i18n="Restart server button">Restart server</ng-container></button>
                         </section>
                     </div>
                 </div>

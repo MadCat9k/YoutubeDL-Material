@@ -417,6 +417,30 @@ Verification:
 - all 31 tracked XLF files passed XML validation and contain the stable database
   connection-test failure message;
 - production frontend build passed with the inherited `file-saver` CommonJS
+  warning;
+- validation image at commit `37688e8` rebuilt and redeployed on port `18084`;
+  the container returned HTTP 200 and remained healthy with restart count zero
+  after a deliberate restart, with a verified appdata/users archive and the
+  previous container retained for rollback.
+
+#### Server restart feedback (2026-10-21)
+
+- Server restart now ignores repeated activation while a request is pending and
+  disables its danger-zone action until the request completes.
+- Successful responses retain the existing restart notice, while rejected and
+  failed responses restore the action for retry and announce a localized
+  failure message.
+- Confirmation and restart request subscriptions stop when Settings is
+  destroyed, preventing late feedback after navigation.
+
+Verification:
+
+- focused Settings component suite: 44 passing in Chrome Headless, including
+  cancelled, successful, rejected, transport-failed, duplicate, and destroyed
+  server-restart paths;
+- all 31 tracked XLF files passed XML validation and contain the stable server
+  restart failure message;
+- production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
 #### Keyboard focus follow-up (2026-10-18)

@@ -3711,6 +3711,10 @@
         <source>Connection test failed. Check the address and try again.</source>
         <target state="new">Connection test failed. Check the address and try again.</target>
       </trans-unit>
+      <trans-unit id="server-restart-failed" datatype="html">
+        <source>Server restart failed. Try again.</source>
+        <target state="new">Server restart failed. Try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
