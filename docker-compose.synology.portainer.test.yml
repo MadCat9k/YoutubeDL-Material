@@ -1,0 +1,40 @@
+services:
+  youtubedownloader-test:
+    container_name: YouTube-Downloader-Test
+    image: ghcr.io/madcat9k/youtubedl-material:sha-e603edc
+    user: "0:0"
+    init: true
+
+    mem_limit: 6g
+    cpu_shares: 768
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent --show-error http://localhost:17442/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+    security_opt:
+      - no-new-privileges:true
+
+    restart: on-failure:5
+
+    environment:
+      UID: "${YTDLM_UID:-1026}"
+      GID: "${YTDLM_GID:-101}"
+      ytdl_default_downloader: yt-dlp
+      ytdl_use_local_db: "true"
+      ytdl_port: "17442"
+      write_ytdl_config: "true"
+      YTDLP_IMPERSONATE: chrome
+
+    ports:
+      - "${YTDLM_TEST_PORT:-18084}:17442"
+
+    volumes:
+      - "${YTDLM_TEST_DOCKER_ROOT:-/volume1/docker/youtubedl-test}/appdata:/app/appdata:rw"
+      - "${YTDLM_TEST_DOCKER_ROOT:-/volume1/docker/youtubedl-test}/users:/app/users:rw"
+      - "${YTDLM_TEST_DOWNLOAD_ROOT:-/volume1/downloads/youtubedl-test}/subscriptions:/app/subscriptions:rw"
+      - "${YTDLM_TEST_DOWNLOAD_ROOT:-/volume1/downloads/youtubedl-test}/video:/app/video:rw"
+      - "${YTDLM_TEST_DOWNLOAD_ROOT:-/volume1/downloads/youtubedl-test}/audio:/app/audio:rw"

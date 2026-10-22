@@ -46,6 +46,30 @@ The original Compose and startup script review is in
    permissions, persistence, and any configured reverse-proxy subpath against
    the test instance. Stop the test container when validation is complete.
 
+### Portainer test Stack
+
+[`docker-compose.synology.portainer.test.yml`](docker-compose.synology.portainer.test.yml)
+provides the same isolated test layout without a local image build. It pulls the
+public, immutable GHCR image `ghcr.io/madcat9k/youtubedl-material:sha-e603edc`
+and defaults to port `18084` and the dedicated test roots listed above.
+
+Before deploying the Stack, populate those roots with independent copies of the
+production data and verify the copies are not symlinks or bind mounts back to
+production. In Portainer, upload the Compose file under **Stacks**, or paste its
+contents into the web editor. No registry credentials are required.
+
+If the restored NAS account IDs or paths differ, define these Stack environment
+variables before deployment:
+
+- `YTDLM_UID` and `YTDLM_GID` for the account that owns the copied data;
+- `YTDLM_TEST_PORT` if `18084` is unavailable;
+- `YTDLM_TEST_DOCKER_ROOT` for the copied `appdata` and `users` parent;
+- `YTDLM_TEST_DOWNLOAD_ROOT` for the copied media parent.
+
+The application checks subscriptions after startup. Because the Stack uses
+copied writable data, any resulting database updates or downloads remain in the
+test roots rather than production.
+
 ## Production migration
 
 Only after the test deployment passes and a fresh production backup is verified,
