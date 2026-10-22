@@ -70,6 +70,12 @@ The application checks subscriptions after startup. Because the Stack uses
 copied writable data, any resulting database updates or downloads remain in the
 test roots rather than production.
 
+For the complete low-space backup, deployment, isolation, and acceptance
+procedure, follow the
+[Portainer test runbook](docs/PORTAINER_TEST.md). It keeps automatic subscription
+checks disabled while a copied database is tested without a duplicate media
+library.
+
 ## Production migration
 
 Only after the test deployment passes and a fresh production backup is verified,
