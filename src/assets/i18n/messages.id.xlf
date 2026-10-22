@@ -2539,6 +2539,14 @@
         </context-group>
         <note priority="1" from="description">Restart server button</note>
       </trans-unit>
+      <trans-unit id="api-key-generation-success" datatype="html">
+        <source>New API key generated.</source>
+        <target state="new">New API key generated.</target>
+      </trans-unit>
+      <trans-unit id="api-key-generation-failed" datatype="html">
+        <source>API key generation failed. Try again.</source>
+        <target state="new">API key generation failed. Try again.</target>
+      </trans-unit>
       <trans-unit id="database-info-loading" datatype="html">
         <source>Loading database information...</source>
         <target state="new">Loading database information...</target>

@@ -292,7 +292,7 @@
                             </mat-form-field>
                         </div>
                         <div class="api-key-div">
-                            <button matTooltip="This will delete your old API key!" i18n-matTooltip="delete api key tooltip" mat-stroked-button (click)="generateAPIKey()"><ng-container i18n="Generate key button">Generate</ng-container></button>
+                            <button matTooltip="This will delete your old API key!" i18n-matTooltip="delete api key tooltip" mat-stroked-button [disabled]="generatingAPIKey" (click)="generateAPIKey()"><ng-container i18n="Generate key button">Generate</ng-container></button>
                         </div>
                     </div>
                 </div>

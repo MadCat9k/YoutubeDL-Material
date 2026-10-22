@@ -35,6 +35,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   dbInfoLoadFailed = false;
   db_transferring = false;
   testing_connection_string = false;
+  generatingAPIKey = false;
   killingAllDownloads = false;
   restartingServer = false;
 
@@ -344,12 +345,32 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   generateAPIKey(): void {
-    this.postsService.generateNewAPIKey().subscribe(res => {
-      if (res['new_api_key']) {
+    if (this.generatingAPIKey) return;
+
+    this.generatingAPIKey = true;
+    this.postsService.generateNewAPIKey().pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.generatingAPIKey = false)
+    ).subscribe({
+      next: res => {
+        if (!res['new_api_key']) {
+          this.showAPIKeyGenerationFailure();
+          return;
+        }
+
         this.initial_config.API.API_key = res['new_api_key'];
         this.new_config.API.API_key = res['new_api_key'];
-      }
+        this.postsService.openSnackBar($localize`:@@api-key-generation-success:New API key generated.`);
+      },
+      error: () => this.showAPIKeyGenerationFailure()
     });
+  }
+
+  private showAPIKeyGenerationFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@api-key-generation-failed:API key generation failed. Try again.`,
+      'Dismiss'
+    );
   }
 
   generateBookmarklet(): void {

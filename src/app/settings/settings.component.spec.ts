@@ -24,6 +24,7 @@ describe('SettingsComponent', () => {
       service_initialized: new Subject<boolean>(),
       getLatestGithubRelease: () => of(null),
       getDBInfo: jasmine.createSpy('getDBInfo').and.returnValue(of({using_local_db: true})),
+      generateNewAPIKey: jasmine.createSpy('generateNewAPIKey'),
       killAllDownloads: jasmine.createSpy('killAllDownloads'),
       restartServer: jasmine.createSpy('restartServer').and.returnValue(of({success: true})),
       setConfig: jasmine.createSpy('setConfig'),
@@ -325,6 +326,70 @@ describe('SettingsComponent', () => {
 
     expect(component.getConfig).not.toHaveBeenCalled();
     expect(component.getDBInfo).not.toHaveBeenCalled();
+  });
+
+  it('updates the settings and announces a generated API key', () => {
+    component.initial_config = {API: {API_key: 'old'}};
+    component.new_config = {API: {API_key: 'old'}};
+    postsService.generateNewAPIKey.and.returnValue(of({new_api_key: 'synthetic-new-key'}));
+
+    component.generateAPIKey();
+
+    expect(component.initial_config.API.API_key).toBe('synthetic-new-key');
+    expect(component.new_config.API.API_key).toBe('synthetic-new-key');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('New API key generated.');
+    expect(component.generatingAPIKey).toBeFalse();
+  });
+
+  it('allows retry after a rejected API key response', () => {
+    component.initial_config = {API: {API_key: 'old'}};
+    component.new_config = {API: {API_key: 'old'}};
+    postsService.generateNewAPIKey.and.returnValue(of({}));
+
+    component.generateAPIKey();
+
+    expect(component.initial_config.API.API_key).toBe('old');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('API key generation failed. Try again.', 'Dismiss');
+    expect(component.generatingAPIKey).toBeFalse();
+  });
+
+  it('allows retry after a failed API key request', () => {
+    component.initial_config = {API: {API_key: 'old'}};
+    component.new_config = {API: {API_key: 'old'}};
+    postsService.generateNewAPIKey.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.generateAPIKey();
+
+    expect(component.initial_config.API.API_key).toBe('old');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('API key generation failed. Try again.', 'Dismiss');
+    expect(component.generatingAPIKey).toBeFalse();
+  });
+
+  it('does not start a second API key request while one is pending', () => {
+    const response = new Subject<any>();
+    component.initial_config = {API: {API_key: 'old'}};
+    component.new_config = {API: {API_key: 'old'}};
+    postsService.generateNewAPIKey.and.returnValue(response);
+
+    component.generateAPIKey();
+    component.generateAPIKey();
+
+    expect(postsService.generateNewAPIKey).toHaveBeenCalledTimes(1);
+    expect(component.generatingAPIKey).toBeTrue();
+  });
+
+  it('ignores a pending API key result after destruction', () => {
+    const response = new Subject<any>();
+    component.initial_config = {API: {API_key: 'old'}};
+    component.new_config = {API: {API_key: 'old'}};
+    postsService.generateNewAPIKey.and.returnValue(response);
+
+    component.generateAPIKey();
+    component.ngOnDestroy();
+    response.next({new_api_key: 'synthetic-new-key'});
+
+    expect(component.initial_config.API.API_key).toBe('old');
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
   });
 
   it('does not kill downloads when confirmation is cancelled', () => {

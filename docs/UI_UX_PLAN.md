@@ -460,6 +460,28 @@ Verification:
 - all 31 tracked XLF files passed XML validation and contain the stable loading
   and failure messages;
 - production frontend build passed with the inherited `file-saver` CommonJS
+  warning;
+- validation image at commit `41619a2` rebuilt and redeployed on port `18084`;
+  the container returned HTTP 200 and remained healthy with restart count zero
+  after a deliberate restart, with a verified appdata/users archive and the
+  previous container retained for rollback.
+
+#### Public API key feedback (2026-10-22)
+
+- Public API key generation now disables its action while the request is
+  pending and ignores repeated activation.
+- Successful generation announces completion without exposing the key, while a
+  rejected or failed request leaves the previous key intact and shows a
+  localized retry cue.
+- Pending key-generation work is released when Settings is destroyed.
+
+Verification:
+
+- focused Settings component suite: 55 passing in Chrome Headless, including
+  successful, rejected, failed, duplicate, and destroyed key-generation paths;
+- all 31 tracked XLF files passed XML validation and contain the stable success
+  and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
 #### Keyboard focus follow-up (2026-10-18)
