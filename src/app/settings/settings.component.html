@@ -396,8 +396,13 @@
                                 <button [disabled]="db_transferring" color="accent" (click)="transferDB()" mat-raised-button><ng-container i18n="Transfer DB button">Transfer DB to </ng-container>{{db_info['using_local_db'] ? 'MongoDB' : 'Local'}}</button>
                             </div>
                         </div>
-                        <div *ngIf="!db_info">
-                            <ng-container i18n="Database info not retrieved error message">Database information could not be retrieved. Check the server logs for more information.</ng-container>
+                        <div *ngIf="loadingDBInfo" class="database-info-state" role="status" aria-live="polite">
+                            <mat-spinner [diameter]="24"></mat-spinner>
+                            <span i18n="Database info loading message@@database-info-loading">Loading database information...</span>
+                        </div>
+                        <div *ngIf="dbInfoLoadFailed && !loadingDBInfo" class="database-info-state" role="alert">
+                            <span i18n="Database info failure message@@database-info-load-failed">Database information could not be loaded. Check the connection and try again.</span>
+                            <button mat-stroked-button color="accent" (click)="getDBInfo()" i18n="Retry action@@retry-action">Retry</button>
                         </div>
                     </div>
                 </div>

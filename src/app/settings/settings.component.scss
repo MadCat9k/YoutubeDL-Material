@@ -152,6 +152,14 @@
     margin-bottom: 10px;
 }
 
+.database-info-state {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 12px 0;
+}
+
 .settings-danger-zone {
     max-width: 500px;
     padding: 16px;

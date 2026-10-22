@@ -3697,13 +3697,11 @@
         </context-group>
         <note priority="1" from="description">Transfer DB button</note>
       </trans-unit>
-      <trans-unit id="b1c08387975e6feada407c9b5f5f564261b8192b" datatype="html">
-        <source>Database information could not be retrieved. Check the server logs for more information.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/settings/settings.component.html</context>
-          <context context-type="linenumber">335</context>
-        </context-group>
-        <note priority="1" from="description">Database info not retrieved error message</note>
+      <trans-unit id="database-info-loading" datatype="html">
+        <source>Loading database information...</source>
+      </trans-unit>
+      <trans-unit id="database-info-load-failed" datatype="html">
+        <source>Database information could not be loaded. Check the connection and try again.</source>
       </trans-unit>
       <trans-unit id="8bcabdf6b16cad0313a86c7e940c5e3ad7f9f8ab" datatype="html">
         <source>Notifications</source>

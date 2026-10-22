@@ -2748,6 +2748,14 @@
         <source>Retry</source>
         <target state="new">Retry</target>
       </trans-unit>
+      <trans-unit id="database-info-loading" datatype="html">
+        <source>Loading database information...</source>
+        <target state="new">Loading database information...</target>
+      </trans-unit>
+      <trans-unit id="database-info-load-failed" datatype="html">
+        <source>Database information could not be loaded. Check the connection and try again.</source>
+        <target state="new">Database information could not be loaded. Check the connection and try again.</target>
+      </trans-unit>
       <trans-unit id="settingsDangerZone" datatype="html">
         <source>Danger zone</source>
         <target state="new">Danger zone</target>

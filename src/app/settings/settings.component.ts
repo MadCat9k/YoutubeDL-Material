@@ -31,6 +31,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   bookmarkletAudioOnly = false;
 
   db_info: DBInfoResponse = null;
+  loadingDBInfo = false;
+  dbInfoLoadFailed = false;
   db_transferring = false;
   testing_connection_string = false;
   killingAllDownloads = false;
@@ -165,7 +167,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       this.getConfig();
       this.getDBInfo();
     } else {
-      this.postsService.service_initialized.subscribe(init => {
+      this.postsService.service_initialized.pipe(takeUntil(this.destroyed)).subscribe(init => {
         if (init) {
           this.getConfig();
           this.getDBInfo();
@@ -493,8 +495,24 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   getDBInfo(): void {
-    this.postsService.getDBInfo().subscribe(res => {
-      this.db_info = res;
+    if (this.loadingDBInfo) return;
+
+    this.loadingDBInfo = true;
+    this.dbInfoLoadFailed = false;
+    this.db_info = null;
+    this.postsService.getDBInfo().pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.loadingDBInfo = false)
+    ).subscribe({
+      next: res => {
+        if (res) {
+          this.db_info = res;
+          return;
+        }
+
+        this.dbInfoLoadFailed = true;
+      },
+      error: () => this.dbInfoLoadFailed = true
     });
   }
 

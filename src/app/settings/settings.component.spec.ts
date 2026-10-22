@@ -253,6 +253,80 @@ describe('SettingsComponent', () => {
     expect(postsService.reload_config.next).not.toHaveBeenCalled();
   });
 
+  it('loads database information and clears the loading state', () => {
+    postsService.getDBInfo.and.returnValue(of({using_local_db: true}));
+
+    component.getDBInfo();
+
+    expect(component.db_info).toEqual({using_local_db: true} as any);
+    expect(component.dbInfoLoadFailed).toBeFalse();
+    expect(component.loadingDBInfo).toBeFalse();
+  });
+
+  it('prevents overlapping database information requests', () => {
+    const response = new Subject<any>();
+    postsService.getDBInfo.and.returnValue(response);
+
+    component.getDBInfo();
+    component.getDBInfo();
+
+    expect(postsService.getDBInfo).toHaveBeenCalledTimes(1);
+    expect(component.loadingDBInfo).toBeTrue();
+  });
+
+  it('shows a retryable state after database information fails to load', () => {
+    postsService.getDBInfo.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.getDBInfo();
+
+    expect(component.db_info).toBeNull();
+    expect(component.dbInfoLoadFailed).toBeTrue();
+    expect(component.loadingDBInfo).toBeFalse();
+  });
+
+  it('clears the database information error when retrying', () => {
+    const retryResponse = new Subject<any>();
+    postsService.getDBInfo.and.returnValues(
+      throwError(() => new Error('synthetic failure')),
+      retryResponse
+    );
+
+    component.getDBInfo();
+    component.getDBInfo();
+
+    expect(component.dbInfoLoadFailed).toBeFalse();
+    expect(component.loadingDBInfo).toBeTrue();
+
+    retryResponse.next({using_local_db: false});
+    retryResponse.complete();
+
+    expect(component.db_info).toEqual({using_local_db: false} as any);
+    expect(component.loadingDBInfo).toBeFalse();
+  });
+
+  it('ignores a pending database information result after destruction', () => {
+    const response = new Subject<any>();
+    postsService.getDBInfo.and.returnValue(response);
+
+    component.getDBInfo();
+    component.ngOnDestroy();
+    response.next({using_local_db: true});
+
+    expect(component.db_info).toBeNull();
+  });
+
+  it('does not initialize settings after destruction', () => {
+    spyOn(component, 'getConfig');
+    spyOn(component, 'getDBInfo');
+
+    component.ngOnInit();
+    component.ngOnDestroy();
+    postsService.service_initialized.next(true);
+
+    expect(component.getConfig).not.toHaveBeenCalled();
+    expect(component.getDBInfo).not.toHaveBeenCalled();
+  });
+
   it('does not kill downloads when confirmation is cancelled', () => {
     dialog.open.and.returnValue({afterClosed: () => of(false)});
 

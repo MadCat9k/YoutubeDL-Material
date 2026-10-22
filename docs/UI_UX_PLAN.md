@@ -443,6 +443,25 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Database status feedback (2026-10-22)
+
+- Database status now distinguishes loading from failure instead of immediately
+  directing users to server logs while the request is still in progress.
+- Failed status requests show sanitized connection guidance and a direct Retry
+  action. Retrying clears the stale error while the request is pending.
+- Overlapping status requests are prevented, and pending initialization and
+  status work is released when Settings is destroyed.
+
+Verification:
+
+- focused Settings component suite: 50 passing in Chrome Headless, including
+  successful, failed, overlapping, retried, and destroyed database-status
+  request paths;
+- all 31 tracked XLF files passed XML validation and contain the stable loading
+  and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
