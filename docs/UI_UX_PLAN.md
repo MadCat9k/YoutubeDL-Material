@@ -247,7 +247,7 @@ Verification:
   confirmed the new stable message identifier;
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning;
-- validation image at commit `de94b86` rebuilt and redeployed on port `18084`;
+- validation image at commit `771017e` rebuilt and redeployed on port `18084`;
   the container returned HTTP 200 and remained healthy with restart count zero
   after a deliberate restart, with a verified appdata/users archive and the
   previous container retained for rollback.
@@ -270,7 +270,7 @@ Verification:
 - all 31 tracked XLF files passed XML validation;
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning;
-- validation image at commit `5055606` rebuilt and redeployed on port `18084`;
+- validation image at commit `1f7e238` rebuilt and redeployed on port `18084`;
   the container returned HTTP 200 and remained healthy with restart count zero
   after a deliberate restart, with a verified appdata/users archive and the
   previous container retained for rollback.
@@ -294,7 +294,7 @@ Verification:
 - all 31 tracked XLF files passed XML validation;
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning;
-- validation image at commit `168bda7` rebuilt and redeployed on port `18084`;
+- validation image at commit `bb24620` rebuilt and redeployed on port `18084`;
   the container returned HTTP 200 and remained healthy with restart count zero
   after a deliberate restart, with a verified appdata/users archive and the
   previous container retained for rollback.
@@ -318,7 +318,7 @@ Verification:
   placeholder in both new messages;
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning;
-- validation image at commit `9641b17` rebuilt and redeployed on port `18084`;
+- validation image at commit `6000824` rebuilt and redeployed on port `18084`;
   the container returned HTTP 200 and remained healthy with restart count zero
   after a deliberate restart, with a verified appdata/users archive and the
   previous container retained for rollback.
@@ -344,7 +344,7 @@ Verification:
   restore failure message;
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning;
-- validation image at commit `bf902f1` rebuilt and redeployed on port `18084`;
+- validation image at commit `f39bb4e` rebuilt and redeployed on port `18084`;
   the container returned HTTP 200 and remained healthy with restart count zero
   after a deliberate restart, with a verified appdata/users archive and the
   previous container retained for rollback.
@@ -368,7 +368,7 @@ Verification:
   stop-all-downloads failure message;
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning;
-- validation image at commit `0439068` rebuilt and redeployed on port `18084`;
+- validation image at commit `43aadb7` rebuilt and redeployed on port `18084`;
   the container returned HTTP 200 and remained healthy with restart count zero
   after a deliberate restart, with a verified appdata/users archive and the
   previous container retained for rollback.
@@ -393,7 +393,7 @@ Verification:
   transfer failure message;
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning;
-- validation image at commit `8608d04` rebuilt and redeployed on port `18084`;
+- validation image at commit `059a39a` rebuilt and redeployed on port `18084`;
   the container returned HTTP 200 and remained healthy with restart count zero
   after a deliberate restart, with a verified appdata/users archive and the
   previous container retained for rollback.
@@ -418,7 +418,7 @@ Verification:
   connection-test failure message;
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning;
-- validation image at commit `37688e8` rebuilt and redeployed on port `18084`;
+- validation image at commit `5e3ac15` rebuilt and redeployed on port `18084`;
   the container returned HTTP 200 and remained healthy with restart count zero
   after a deliberate restart, with a verified appdata/users archive and the
   previous container retained for rollback.
@@ -461,7 +461,7 @@ Verification:
   and failure messages;
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning;
-- validation image at commit `41619a2` rebuilt and redeployed on port `18084`;
+- validation image at commit `2e6bbf0` rebuilt and redeployed on port `18084`;
   the container returned HTTP 200 and remained healthy with restart count zero
   after a deliberate restart, with a verified appdata/users archive and the
   previous container retained for rollback.
@@ -834,75 +834,75 @@ Verification:
   delete-all state;
 - production frontend build: passed with the inherited `file-saver` CommonJS
   warning;
-- validation image at commit `e366231` rebuilt and redeployed on port `18084`;
+- validation image at commit `5eabc79` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, while the previous container and a
   verified appdata/users archive remain available for rollback;
-- validation image at commit `7d561ca` rebuilt and redeployed on port `18084`;
+- validation image at commit `64040c1` rebuilt and redeployed on port `18084`;
   the container again remained healthy with HTTP 200 and all five persistent
   volumes attached after a deliberate restart, with its prior container and
   verified appdata/users archive retained for rollback;
-- validation image at commit `d4db6c9` rebuilt and redeployed on port `18084`;
+- validation image at commit `218d4b0` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `3f9bc41` rebuilt and redeployed on port `18084`;
+- validation image at commit `35c7631` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `1c00010` rebuilt and redeployed on port `18084`;
+- validation image at commit `a1d5ebf` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `a2ccd6c` rebuilt and redeployed on port `18084`;
+- validation image at commit `8da2fe8` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `025328e` rebuilt and redeployed on port `18084`;
+- validation image at commit `eca2ca5` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `99999fc` rebuilt and redeployed on port `18084`;
+- validation image at commit `554a552` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `8bc8acf` rebuilt and redeployed on port `18084`;
+- validation image at commit `c96a587` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `38d78cd` rebuilt and redeployed on port `18084`;
+- validation image at commit `c01aa71` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `e51750c` rebuilt and redeployed on port `18084`;
+- validation image at commit `e81c67c` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `2368d90` rebuilt and redeployed on port `18084`;
+- validation image at commit `d46bed8` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `f4641e4` rebuilt and redeployed on port `18084`;
+- validation image at commit `6ff8df0` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `ffbdce5` rebuilt and redeployed on port `18084`;
+- validation image at commit `d923af1` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `aa33d4a` rebuilt and redeployed on port `18084`;
+- validation image at commit `a8e235a` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `15a8cf6` rebuilt and redeployed on port `18084`;
+- validation image at commit `c711bde` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `e3373de` rebuilt and redeployed on port `18084`;
+- validation image at commit `ea78eed` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
-- validation image at commit `658b1e0` rebuilt and redeployed on port `18084`;
+- validation image at commit `57f998d` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;

@@ -474,7 +474,7 @@ Verification:
 - full backend suite: 88 passing and 22 pending, with the same 10
   host-environment failures caused by unavailable network access, unsupported
   host Python, missing FFmpeg, or missing TwitchDownloader.
-- validation image at commit `c556691` rebuilt and redeployed on port `18084`;
+- validation image at commit `c0a3ab6` rebuilt and redeployed on port `18084`;
   the container remained healthy with HTTP 200 and restart count zero after a
   deliberate restart, with a verified appdata/users archive and the previous
   container retained for rollback.
