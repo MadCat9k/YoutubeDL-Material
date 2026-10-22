@@ -1,86 +1,74 @@
-name: docker
+name: Publish container image
 
 on:
   push:
     branches: [master]
     paths-ignore:
-      - '.github/**'
       - '.vscode/**'
       - 'chrome-extension/**'
       - 'releases/**'
-      - '**/**.md'
-      - '**.crx'
-      - '**.pem'
-      - '.dockerignore'
-      - '.gitignore'
-  schedule:
-    - cron:  '34 4 * * 2'
+      - '**/*.md'
+      - '**/*.crx'
+      - '**/*.pem'
   workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-container-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: ghcr.io/madcat9k/youtubedl-material
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
     steps:
-      - name: checkout code
+      - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Set hash
-        id: vars
-        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - name: Record image version
+        shell: bash
+        run: |
+          short_sha="${GITHUB_SHA:0:7}"
+          build_date="$(date -u +'%Y-%m-%d')"
+          printf '{"type":"docker","tag":"latest","commit":"%s","date":"%s"}\n' \
+            "$short_sha" "$build_date" > backend/version.json
 
-      - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
-
-      - name: create-json
-        id: create-json
-        uses: jsdaniell/create-json@v1.2.2
-        with:
-          name: "version.json"
-          json: '{"type": "docker", "tag": "${{secrets.DOCKERHUB_MASTER_TAG}}", "commit": "${{ steps.vars.outputs.sha_short }}", "date": "${{ steps.date.outputs.date }}"}'
-          dir: 'backend/'
-
-      - name: setup platform emulator
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: setup multi-arch docker build
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Generate Docker image metadata
-        id: docker-meta
-        uses: docker/metadata-action@v5
-        # Defaults:
-        #     DOCKERHUB_USERNAME  : tzahi12345
-        #     DOCKERHUB_REPO      : youtubedl-material
-        #     DOCKERHUB_MASTER_TAG: nightly
-        with:
-          images: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO }}
-            ghcr.io/${{ github.repository_owner }}/${{ secrets.DOCKERHUB_REPO }}
-          tags: |
-            type=raw,${{secrets.DOCKERHUB_MASTER_TAG}}-{{ date 'YYYY-MM-DD' }}
-            type=raw,${{secrets.DOCKERHUB_MASTER_TAG}}
-            type=sha,prefix=sha-,format=short
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login to GitHub Container Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: build & push images
-        uses: docker/build-push-action@v5
+      - name: Generate image metadata
+        id: metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-,format=short
+
+      - name: Build and publish image
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
+          platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.docker-meta.outputs.tags }}
-          labels: ${{ steps.docker-meta.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
