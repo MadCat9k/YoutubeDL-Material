@@ -27,6 +27,8 @@ describe('SettingsComponent', () => {
       generateNewAPIKey: jasmine.createSpy('generateNewAPIKey'),
       categories: [],
       updateCategories: jasmine.createSpy('updateCategories'),
+      deleteCategory: jasmine.createSpy('deleteCategory'),
+      reloadCategories: jasmine.createSpy('reloadCategories'),
       killAllDownloads: jasmine.createSpy('killAllDownloads'),
       restartServer: jasmine.createSpy('restartServer').and.returnValue(of({success: true})),
       setConfig: jasmine.createSpy('setConfig'),
@@ -457,6 +459,83 @@ describe('SettingsComponent', () => {
     expect(postsService.categories.map(category => category.uid)).toEqual(['a', 'b']);
     expect(postsService.openSnackBar).not.toHaveBeenCalled();
     expect(component.updatingCategories).toBeFalse();
+  });
+
+  it('does not delete a category when confirmation is cancelled', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(false)});
+
+    component.deleteCategory({uid: 'category-a', name: 'Synthetic category'} as any);
+
+    expect(postsService.deleteCategory).not.toHaveBeenCalled();
+  });
+
+  it('announces and reloads categories after a successful deletion', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.deleteCategory.and.returnValue(of({success: true}));
+
+    component.deleteCategory({uid: 'category-a', name: 'Synthetic category'} as any);
+
+    expect(postsService.deleteCategory).toHaveBeenCalledOnceWith('category-a');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Successfully deleted Synthetic category!');
+    expect(postsService.reloadCategories).toHaveBeenCalled();
+    expect(component.deletingCategoryId).toBeNull();
+  });
+
+  it('allows retry after a rejected category deletion', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.deleteCategory.and.returnValue(of({success: false}));
+
+    component.deleteCategory({uid: 'category-a', name: 'Synthetic category'} as any);
+
+    expect(postsService.reloadCategories).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not delete category. Try again.',
+      'Dismiss'
+    );
+    expect(component.deletingCategoryId).toBeNull();
+  });
+
+  it('allows retry after a failed category deletion request', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.deleteCategory.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.deleteCategory({uid: 'category-a', name: 'Synthetic category'} as any);
+
+    expect(postsService.reloadCategories).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not delete category. Try again.',
+      'Dismiss'
+    );
+    expect(component.deletingCategoryId).toBeNull();
+  });
+
+  it('does not start another category action while deletion is pending', () => {
+    const response = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.deleteCategory.and.returnValue(response);
+    const category = {uid: 'category-a', name: 'Synthetic category'} as any;
+
+    component.deleteCategory(category);
+    component.deleteCategory(category);
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+
+    expect(postsService.deleteCategory).toHaveBeenCalledTimes(1);
+    expect(postsService.updateCategories).not.toHaveBeenCalled();
+    expect(component.categoryActionPending).toBeTrue();
+  });
+
+  it('ignores a pending category deletion result after destruction', () => {
+    const response = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.deleteCategory.and.returnValue(response);
+
+    component.deleteCategory({uid: 'category-a', name: 'Synthetic category'} as any);
+    component.ngOnDestroy();
+    response.next({success: true});
+
+    expect(postsService.reloadCategories).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.deletingCategoryId).toBeNull();
   });
 
   it('does not kill downloads when confirmation is cancelled', () => {

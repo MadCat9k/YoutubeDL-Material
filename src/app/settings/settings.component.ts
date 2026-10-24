@@ -37,6 +37,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   testing_connection_string = false;
   generatingAPIKey = false;
   updatingCategories = false;
+  deletingCategoryId: string = null;
   killingAllDownloads = false;
   restartingServer = false;
 
@@ -278,7 +279,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   dropCategory(event: CdkDragDrop<Category[]>): void {
-    if (this.updatingCategories || event.previousIndex === event.currentIndex) return;
+    if (this.categoryActionPending || event.previousIndex === event.currentIndex) return;
 
     const previousCategories = [...this.postsService.categories];
     moveItemInArray(this.postsService.categories, event.previousIndex, event.currentIndex);
@@ -316,6 +317,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
     );
   }
 
+  get categoryActionPending(): boolean {
+    return this.updatingCategories || this.deletingCategoryId !== null;
+  }
+
   openAddCategoryDialog(): void {
     const done = new EventEmitter<boolean>();
     const dialogRef = this.dialog.open(InputDialogComponent, {
@@ -345,6 +350,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   deleteCategory(category: Category): void {
+    if (this.categoryActionPending) return;
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         dialogTitle: $localize`Delete category`,
@@ -353,18 +360,33 @@ export class SettingsComponent implements OnInit, OnDestroy {
         warnSubmitColor: true
       }
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.postsService.deleteCategory(category['uid']).subscribe(res => {
-          if (res['success']) {
-            this.postsService.openSnackBar($localize`Successfully deleted ${category['name']}:category name:!`);
-            this.postsService.reloadCategories();
+    dialogRef.afterClosed().pipe(takeUntil(this.destroyed)).subscribe(confirmed => {
+      if (!confirmed || this.categoryActionPending) return;
+
+      this.deletingCategoryId = category['uid'];
+      this.postsService.deleteCategory(category['uid']).pipe(
+        takeUntil(this.destroyed),
+        finalize(() => this.deletingCategoryId = null)
+      ).subscribe({
+        next: res => {
+          if (!res['success']) {
+            this.showCategoryDeleteFailure();
+            return;
           }
-        }, () => {
-          this.postsService.openSnackBar($localize`Failed to delete ${category['name']}:category name:!`);
-        });
-      }
+
+          this.postsService.openSnackBar($localize`Successfully deleted ${category['name']}:category name:!`);
+          this.postsService.reloadCategories();
+        },
+        error: () => this.showCategoryDeleteFailure()
+      });
     });
+  }
+
+  private showCategoryDeleteFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@category-delete-failed:Could not delete category. Try again.`,
+      'Dismiss'
+    );
   }
 
   openEditCategoryDialog(category: Category): void {

@@ -502,6 +502,27 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Category-deletion feedback (2026-10-24)
+
+- Category deletion now distinguishes cancellation, successful deletion,
+  rejected responses, and failed requests instead of silently ignoring a
+  rejected response.
+- A pending deletion disables category creation, editing, deletion, and
+  reordering so conflicting category changes cannot overlap.
+- Failed deletions restore the controls for retry and show a localized,
+  actionable message. Confirmation and request subscriptions stop when
+  Settings is destroyed.
+
+Verification:
+
+- focused Settings component suite: 66 passing in Chrome Headless, including
+  cancelled, successful, rejected, transport-failed, duplicate, and destroyed
+  category-deletion paths;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  category-deletion failure message;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for

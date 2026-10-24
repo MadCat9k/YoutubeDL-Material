@@ -3845,6 +3845,10 @@
         <source>Could not save category order. Previous order restored. Try again.</source>
         <target state="new">Could not save category order. Previous order restored. Try again.</target>
       </trans-unit>
+      <trans-unit id="category-delete-failed" datatype="html">
+        <source>Could not delete category. Try again.</source>
+        <target state="new">Could not delete category. Try again.</target>
+      </trans-unit>
       <trans-unit id="api-key-generation-success" datatype="html">
         <source>New API key generated.</source>
         <target state="new">New API key generated.</target>

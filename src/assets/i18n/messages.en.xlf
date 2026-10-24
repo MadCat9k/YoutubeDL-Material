@@ -3703,6 +3703,9 @@
       <trans-unit id="category-order-save-failed" datatype="html">
         <source>Could not save category order. Previous order restored. Try again.</source>
       </trans-unit>
+      <trans-unit id="category-delete-failed" datatype="html">
+        <source>Could not delete category. Try again.</source>
+      </trans-unit>
       <trans-unit id="api-key-generation-success" datatype="html">
         <source>New API key generated.</source>
       </trans-unit>
