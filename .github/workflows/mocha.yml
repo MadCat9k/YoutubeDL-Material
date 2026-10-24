@@ -12,25 +12,27 @@ name: Tests
 jobs:
   test:
     name: 'Backend - mocha'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    env:
+      # Live media-service checks are opt-in and must not gate deterministic CI.
+      YTDLM_RUN_NETWORK_TESTS: 'false'
     strategy:
       matrix:
         node:
           - 16
     steps:
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '${{ matrix.node }}'
-      - uses: actions/checkout@v4
-      - name: 'Cache node_modules'
-        uses: actions/cache@v4
+      - name: 'Cache npm downloads'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-v${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-v${{ matrix.node }}-
-          working-directory: ./backend
-      - uses: FedericoCarboni/setup-ffmpeg@v2
+      - uses: FedericoCarboni/setup-ffmpeg@37062fbf7149fc5578d6c57e08aed62458b375d6 # v3.1
         id: setup-ffmpeg
       - name: Install Dependencies
         run: npm install

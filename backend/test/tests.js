@@ -9,6 +9,10 @@ const { v4: uuid } = require('uuid');
 const NodeID3 = require('node-id3');
 const exec = util.promisify(require('child_process').exec);
 
+const runNetworkTests = process.env.YTDLM_RUN_NETWORK_TESTS === 'true';
+const networkIt = runNetworkTests ? it : it.skip;
+const networkDescribe = runNetworkTests ? describe : describe.skip;
+
 const FileSync = require('lowdb/adapters/FileSync');
 
 const adapter = new FileSync('./appdata/db.json');
@@ -471,8 +475,10 @@ describe('Downloader', function() {
     }
 
     before(async function() {
-        const update_available = await youtubedl_api.checkForYoutubeDLUpdate();
-        if (update_available) await youtubedl_api.updateYoutubeDL(update_available);
+        if (runNetworkTests) {
+            const update_available = await youtubedl_api.checkForYoutubeDLUpdate();
+            if (update_available) await youtubedl_api.updateYoutubeDL(update_available);
+        }
         config_api.setConfigItem('ytdl_max_concurrent_downloads', 0);
     });
 
@@ -482,13 +488,13 @@ describe('Downloader', function() {
         config_api.setConfigItem('ytdl_allow_playlist_categorization', true);
     });
 
-    it('Get file info', async function() {
+    networkIt('Get file info', async function() {
         this.timeout(300000);
         const info = await downloader_api.getVideoInfoByURL(url);
         assert(!!info && info.length > 0);
     });
 
-    it('Download file', async function() {
+    networkIt('Download file', async function() {
         this.timeout(300000);
         await downloader_api.setupDownloads();
         const args = await downloader_api.generateArgs(url, 'video', options, null, true);
@@ -505,7 +511,7 @@ describe('Downloader', function() {
         assert(success);
     });
 
-    it('Downloader - categorize', async function() {
+    networkIt('Downloader - categorize', async function() {
         this.timeout(300000);
         await createCategory(url);
         // collect info
@@ -515,7 +521,7 @@ describe('Downloader', function() {
         assert(returned_download['category']['name'] === 'test_category');
     });
 
-    it('Downloader - categorize playlist', async function() {
+    networkIt('Downloader - categorize playlist', async function() {
         this.timeout(300000);
         await createCategory(playlist_url);
         // collect info
@@ -604,7 +610,7 @@ describe('Downloader', function() {
     describe('Twitch', async function () {
         const twitch_api = require('../twitch');
         const example_vod = '1790315420';
-        it('Download VOD chat', async function() {
+        networkIt('Download VOD chat', async function() {
             this.timeout(300000);
             if (!fs.existsSync('TwitchDownloaderCLI')) {
                 try {
@@ -625,7 +631,7 @@ describe('Downloader', function() {
     });
 });
 
-describe('youtube-dl', async function() {
+networkDescribe('youtube-dl', async function() {
     beforeEach(async function () {
         if (fs.existsSync(CONSTS.DETAILS_BIN_PATH)) fs.unlinkSync(CONSTS.DETAILS_BIN_PATH);
         await youtubedl_api.checkForYoutubeDLUpdate();
