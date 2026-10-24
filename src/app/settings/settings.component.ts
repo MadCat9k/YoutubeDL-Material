@@ -36,6 +36,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   db_transferring = false;
   testing_connection_string = false;
   generatingAPIKey = false;
+  updatingCategories = false;
   killingAllDownloads = false;
   restartingServer = false;
 
@@ -276,13 +277,43 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.selectSettingsSection(index);
   }
 
-  dropCategory(event: CdkDragDrop<string[]>): void {
-    moveItemInArray(this.postsService.categories, event.previousIndex, event.currentIndex);
-    this.postsService.updateCategories(this.postsService.categories).subscribe(res => {
+  dropCategory(event: CdkDragDrop<Category[]>): void {
+    if (this.updatingCategories || event.previousIndex === event.currentIndex) return;
 
-    }, () => {
-      this.postsService.openSnackBar($localize`Failed to update categories!`);
+    const previousCategories = [...this.postsService.categories];
+    moveItemInArray(this.postsService.categories, event.previousIndex, event.currentIndex);
+    const submittedCategories = [...this.postsService.categories];
+    let requestSettled = false;
+    this.updatingCategories = true;
+    this.postsService.updateCategories(submittedCategories).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => {
+        if (!requestSettled) this.postsService.categories = previousCategories;
+        this.updatingCategories = false;
+      })
+    ).subscribe({
+      next: res => {
+        requestSettled = true;
+        if (res['success']) {
+          this.postsService.openSnackBar($localize`:@@category-order-save-success:Category order saved.`);
+          return;
+        }
+
+        this.restoreCategoryOrder(previousCategories);
+      },
+      error: () => {
+        requestSettled = true;
+        this.restoreCategoryOrder(previousCategories);
+      }
     });
+  }
+
+  private restoreCategoryOrder(previousCategories: Category[]): void {
+    this.postsService.categories = previousCategories;
+    this.postsService.openSnackBar(
+      $localize`:@@category-order-save-failed:Could not save category order. Previous order restored. Try again.`,
+      'Dismiss'
+    );
   }
 
   openAddCategoryDialog(): void {

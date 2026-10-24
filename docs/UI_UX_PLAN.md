@@ -484,6 +484,24 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Category-order feedback (2026-10-24)
+
+- Category reordering now submits one immutable order snapshot and disables
+  other category actions until the request settles.
+- Successful updates announce completion. Rejected and failed updates restore
+  the previous visible order and show a localized retry cue instead of leaving
+  unsaved ordering on screen.
+- A pending reorder is cancelled and rolled back when Settings is destroyed.
+
+Verification:
+
+- focused Settings component suite: 60 passing in Chrome Headless, including
+  successful, rejected, failed, duplicate, and destroyed category-order paths;
+- all 31 tracked XLF files passed XML validation and contain the stable success
+  and rollback messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for

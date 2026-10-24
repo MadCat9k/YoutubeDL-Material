@@ -25,6 +25,8 @@ describe('SettingsComponent', () => {
       getLatestGithubRelease: () => of(null),
       getDBInfo: jasmine.createSpy('getDBInfo').and.returnValue(of({using_local_db: true})),
       generateNewAPIKey: jasmine.createSpy('generateNewAPIKey'),
+      categories: [],
+      updateCategories: jasmine.createSpy('updateCategories'),
       killAllDownloads: jasmine.createSpy('killAllDownloads'),
       restartServer: jasmine.createSpy('restartServer').and.returnValue(of({success: true})),
       setConfig: jasmine.createSpy('setConfig'),
@@ -390,6 +392,71 @@ describe('SettingsComponent', () => {
 
     expect(component.initial_config.API.API_key).toBe('old');
     expect(postsService.openSnackBar).not.toHaveBeenCalled();
+  });
+
+  it('persists and announces a reordered category list', () => {
+    postsService.categories = [{uid: 'a'}, {uid: 'b'}];
+    postsService.updateCategories.and.returnValue(of({success: true}));
+
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+
+    expect(postsService.categories.map(category => category.uid)).toEqual(['b', 'a']);
+    expect(postsService.updateCategories).toHaveBeenCalledWith(postsService.categories);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Category order saved.');
+    expect(component.updatingCategories).toBeFalse();
+  });
+
+  it('restores the previous category order after a rejected update', () => {
+    postsService.categories = [{uid: 'a'}, {uid: 'b'}];
+    postsService.updateCategories.and.returnValue(of({success: false}));
+
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+
+    expect(postsService.categories.map(category => category.uid)).toEqual(['a', 'b']);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not save category order. Previous order restored. Try again.',
+      'Dismiss'
+    );
+    expect(component.updatingCategories).toBeFalse();
+  });
+
+  it('restores the previous category order after a failed update request', () => {
+    postsService.categories = [{uid: 'a'}, {uid: 'b'}];
+    postsService.updateCategories.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+
+    expect(postsService.categories.map(category => category.uid)).toEqual(['a', 'b']);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not save category order. Previous order restored. Try again.',
+      'Dismiss'
+    );
+    expect(component.updatingCategories).toBeFalse();
+  });
+
+  it('does not start a second category-order request while one is pending', () => {
+    const response = new Subject<any>();
+    postsService.categories = [{uid: 'a'}, {uid: 'b'}];
+    postsService.updateCategories.and.returnValue(response);
+
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+
+    expect(postsService.updateCategories).toHaveBeenCalledTimes(1);
+    expect(component.updatingCategories).toBeTrue();
+  });
+
+  it('restores category order when a pending update is destroyed', () => {
+    const response = new Subject<any>();
+    postsService.categories = [{uid: 'a'}, {uid: 'b'}];
+    postsService.updateCategories.and.returnValue(response);
+
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+    component.ngOnDestroy();
+
+    expect(postsService.categories.map(category => category.uid)).toEqual(['a', 'b']);
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.updatingCategories).toBeFalse();
   });
 
   it('does not kill downloads when confirmation is cancelled', () => {
