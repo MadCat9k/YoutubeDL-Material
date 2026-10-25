@@ -4122,6 +4122,14 @@
         <source>Could not delete category. Try again.</source>
         <target state="new">Could not delete category. Try again.</target>
       </trans-unit>
+      <trans-unit id="category-create-success" datatype="html">
+        <source>Category created.</source>
+        <target state="new">Category created.</target>
+      </trans-unit>
+      <trans-unit id="category-create-failed" datatype="html">
+        <source>Could not create category. Try again.</source>
+        <target state="new">Could not create category. Try again.</target>
+      </trans-unit>
       <trans-unit id="api-key-generation-success" datatype="html">
         <source>New API key generated.</source>
         <target state="new">New API key generated.</target>

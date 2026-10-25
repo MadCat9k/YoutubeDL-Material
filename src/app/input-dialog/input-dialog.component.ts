@@ -36,15 +36,19 @@ export class InputDialogComponent implements OnInit {
 
   enterPressed() {
     // validates input -- TODO: add custom validator
-    if (this.inputText) {
+    if (this.inputText && !this.inputSubmitted) {
       // only emit if emitter is passed
       if (this.onlyEmitOnDone) {
+        this.setPending(true);
         this.doneEmitter.emit(this.inputText);
-        this.inputSubmitted = true;
       } else {
         this.dialogRef.close(this.inputText);
       }
     }
+  }
+
+  setPending(pending: boolean): void {
+    this.inputSubmitted = pending;
   }
 
 }

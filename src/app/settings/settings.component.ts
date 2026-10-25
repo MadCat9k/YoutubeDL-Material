@@ -37,6 +37,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   testing_connection_string = false;
   generatingAPIKey = false;
   updatingCategories = false;
+  creatingCategory = false;
   deletingCategoryId: string = null;
   killingAllDownloads = false;
   restartingServer = false;
@@ -318,11 +319,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   get categoryActionPending(): boolean {
-    return this.updatingCategories || this.deletingCategoryId !== null;
+    return this.updatingCategories || this.creatingCategory || this.deletingCategoryId !== null;
   }
 
   openAddCategoryDialog(): void {
-    const done = new EventEmitter<boolean>();
+    if (this.categoryActionPending) return;
+
+    const done = new EventEmitter<string>();
     const dialogRef = this.dialog.open(InputDialogComponent, {
       width: '300px',
       data: {
@@ -333,20 +336,40 @@ export class SettingsComponent implements OnInit, OnDestroy {
       }
     });
 
-    done.subscribe(name => {
+    done.pipe(takeUntil(this.destroyed)).subscribe(name => {
 
       // Eventually do additional checks on name
-      if (name) {
-        this.postsService.createCategory(name).subscribe(res => {
-          if (res['success']) {
+      if (name && !this.creatingCategory) {
+        this.creatingCategory = true;
+        this.postsService.createCategory(name).pipe(
+          takeUntil(this.destroyed),
+          finalize(() => {
+            this.creatingCategory = false;
+            dialogRef.componentInstance?.setPending(false);
+          })
+        ).subscribe({
+          next: res => {
+            if (!res['success'] || !res['new_category']) {
+              this.showCategoryCreationFailure();
+              return;
+            }
+
             this.postsService.reloadCategories();
             dialogRef.close();
-            const new_category = res['new_category'];
-            this.openEditCategoryDialog(new_category);
-          }
+            this.postsService.openSnackBar($localize`:@@category-create-success:Category created.`);
+            this.openEditCategoryDialog(res['new_category']);
+          },
+          error: () => this.showCategoryCreationFailure()
         });
       }
     });
+  }
+
+  private showCategoryCreationFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@category-create-failed:Could not create category. Try again.`,
+      'Dismiss'
+    );
   }
 
   deleteCategory(category: Category): void {

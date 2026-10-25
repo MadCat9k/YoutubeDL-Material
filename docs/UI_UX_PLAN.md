@@ -523,6 +523,28 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Category-creation feedback (2026-10-24)
+
+- Category creation now keeps the entered name available after rejected and
+  failed requests, restores the submission controls for retry, and announces
+  both successful creation and actionable failure states.
+- The shared input dialog now locks its input, Cancel, and submit controls while
+  an emitted request is pending, preventing duplicate submissions. Its caller
+  can explicitly restore the populated form after a recoverable failure.
+- Category creation and its dialog emitter stop updating Settings after the
+  component is destroyed, and other category actions remain disabled while the
+  request is pending.
+
+Verification:
+
+- focused Settings and Input Dialog component suites: 75 passing in Chrome
+  Headless, including successful, rejected, transport-failed, duplicate, and
+  destroyed category-creation paths plus dialog pending-state behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  category-creation success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for

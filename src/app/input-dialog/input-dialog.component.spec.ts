@@ -1,3 +1,4 @@
+import { EventEmitter } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -43,5 +44,35 @@ describe('InputDialogComponent', () => {
 
     expect(label.textContent.trim()).toBe('Name');
     expect(input.hasAttribute('placeholder')).toBe(false);
+  });
+
+  it('prevents duplicate emitter submissions while pending', () => {
+    component.doneEmitter = new EventEmitter<string>();
+    component.onlyEmitOnDone = true;
+    component.inputText = 'Synthetic name';
+    spyOn(component.doneEmitter, 'emit');
+
+    component.enterPressed();
+    component.enterPressed();
+
+    expect(component.doneEmitter.emit).toHaveBeenCalledOnceWith('Synthetic name');
+    expect(component.inputSubmitted).toBeTrue();
+  });
+
+  it('re-enables submission when pending state is cleared', () => {
+    component.setPending(true);
+    component.inputText = 'Synthetic name';
+    fixture.detectChanges();
+
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
+    const buttons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
+    expect(input.readOnly).toBeTrue();
+    expect(buttons.every(button => button.disabled)).toBeTrue();
+
+    component.setPending(false);
+    fixture.detectChanges();
+
+    expect(input.readOnly).toBeFalse();
+    expect(buttons.every(button => !button.disabled)).toBeTrue();
   });
 });

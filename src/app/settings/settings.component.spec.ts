@@ -27,6 +27,7 @@ describe('SettingsComponent', () => {
       generateNewAPIKey: jasmine.createSpy('generateNewAPIKey'),
       categories: [],
       updateCategories: jasmine.createSpy('updateCategories'),
+      createCategory: jasmine.createSpy('createCategory'),
       deleteCategory: jasmine.createSpy('deleteCategory'),
       reloadCategories: jasmine.createSpy('reloadCategories'),
       killAllDownloads: jasmine.createSpy('killAllDownloads'),
@@ -459,6 +460,110 @@ describe('SettingsComponent', () => {
     expect(postsService.categories.map(category => category.uid)).toEqual(['a', 'b']);
     expect(postsService.openSnackBar).not.toHaveBeenCalled();
     expect(component.updatingCategories).toBeFalse();
+  });
+
+  it('creates a category, closes the input, and opens its editor', () => {
+    const dialogRef = {
+      componentInstance: {setPending: jasmine.createSpy('setPending')},
+      close: jasmine.createSpy('close')
+    };
+    dialog.open.and.returnValue(dialogRef);
+    postsService.createCategory.and.returnValue(of({
+      success: true,
+      new_category: {uid: 'category-a', name: 'Synthetic category'}
+    }));
+
+    component.openAddCategoryDialog();
+    const done = dialog.open.calls.mostRecent().args[1].data.doneEmitter;
+    done.emit('Synthetic category');
+
+    expect(postsService.createCategory).toHaveBeenCalledOnceWith('Synthetic category');
+    expect(postsService.reloadCategories).toHaveBeenCalled();
+    expect(dialogRef.close).toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Category created.');
+    expect(dialog.open).toHaveBeenCalledTimes(2);
+    expect(component.creatingCategory).toBeFalse();
+  });
+
+  it('keeps category input available after a rejected creation', () => {
+    const dialogRef = {
+      componentInstance: {setPending: jasmine.createSpy('setPending')},
+      close: jasmine.createSpy('close')
+    };
+    dialog.open.and.returnValue(dialogRef);
+    postsService.createCategory.and.returnValue(of({success: false}));
+
+    component.openAddCategoryDialog();
+    const done = dialog.open.calls.mostRecent().args[1].data.doneEmitter;
+    done.emit('Synthetic category');
+
+    expect(dialogRef.close).not.toHaveBeenCalled();
+    expect(dialogRef.componentInstance.setPending).toHaveBeenCalledWith(false);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not create category. Try again.',
+      'Dismiss'
+    );
+    expect(component.creatingCategory).toBeFalse();
+  });
+
+  it('keeps category input available after a failed creation request', () => {
+    const dialogRef = {
+      componentInstance: {setPending: jasmine.createSpy('setPending')},
+      close: jasmine.createSpy('close')
+    };
+    dialog.open.and.returnValue(dialogRef);
+    postsService.createCategory.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.openAddCategoryDialog();
+    const done = dialog.open.calls.mostRecent().args[1].data.doneEmitter;
+    done.emit('Synthetic category');
+
+    expect(dialogRef.close).not.toHaveBeenCalled();
+    expect(dialogRef.componentInstance.setPending).toHaveBeenCalledWith(false);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not create category. Try again.',
+      'Dismiss'
+    );
+    expect(component.creatingCategory).toBeFalse();
+  });
+
+  it('does not submit category creation twice while pending', () => {
+    const response = new Subject<any>();
+    const dialogRef = {
+      componentInstance: {setPending: jasmine.createSpy('setPending')},
+      close: jasmine.createSpy('close')
+    };
+    dialog.open.and.returnValue(dialogRef);
+    postsService.createCategory.and.returnValue(response);
+
+    component.openAddCategoryDialog();
+    const done = dialog.open.calls.mostRecent().args[1].data.doneEmitter;
+    done.emit('Synthetic category');
+    done.emit('Synthetic category');
+
+    expect(postsService.createCategory).toHaveBeenCalledTimes(1);
+    expect(component.categoryActionPending).toBeTrue();
+  });
+
+  it('ignores a pending category creation result after destruction', () => {
+    const response = new Subject<any>();
+    const dialogRef = {
+      componentInstance: {setPending: jasmine.createSpy('setPending')},
+      close: jasmine.createSpy('close')
+    };
+    dialog.open.and.returnValue(dialogRef);
+    postsService.createCategory.and.returnValue(response);
+
+    component.openAddCategoryDialog();
+    const done = dialog.open.calls.mostRecent().args[1].data.doneEmitter;
+    done.emit('Synthetic category');
+    component.ngOnDestroy();
+    response.next({success: true, new_category: {uid: 'category-a'}});
+
+    expect(postsService.reloadCategories).not.toHaveBeenCalled();
+    expect(dialogRef.close).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.creatingCategory).toBeFalse();
   });
 
   it('does not delete a category when confirmation is cancelled', () => {
