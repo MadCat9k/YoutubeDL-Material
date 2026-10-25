@@ -1392,9 +1392,16 @@ app.post('/api/downloadFileFromServer', optionalJwt, async (req, res) => {
         file_path_to_download = await utils.createContainerZipFile(sub['name'], sub_files_to_download);
     } else {
         const file_obj = await files_api.getVideo(uid, uuid, sub_id)
-        file_path_to_download = file_obj.path;
+        file_path_to_download = file_obj && file_obj.path;
     }
-    if (!path.isAbsolute(file_path_to_download)) file_path_to_download = path.join(__dirname, file_path_to_download);
+    const allowed_roots = zip_file_generated
+        ? [path.join(__dirname, 'appdata', 'temp')]
+        : media_paths.getConfiguredMediaRoots();
+    file_path_to_download = media_paths.resolveExistingMediaFile(file_path_to_download, allowed_roots);
+    if (!file_path_to_download) {
+        res.sendStatus(404);
+        return;
+    }
     res.sendFile(file_path_to_download, function (err) {
         if (err) {
           logger.error(err);

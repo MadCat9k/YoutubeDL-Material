@@ -147,7 +147,7 @@ normal subscription cycle and a deliberate container restart without regression.
 | Clear-text logging | Three confirmed sites; draft fix implemented | API keys and downloader argument values are no longer included. Fixed-message tests use synthetic secret values. Re-run CodeQL before closing. |
 | Database query/filter injection | Confirmed; draft central guard implemented | This project uses MongoDB-style filters and a local JSON equivalent, not SQL. Request-shaped object conditions could alter MongoDB queries, while an unknown object condition could match the first local record. Both paths now reject object/operator filters unless server code constructs an allowlisted condition. Update objects also reject MongoDB operator and prototype-related keys. Add endpoint-specific field allowlists separately. |
 | Session cookie / CSRF | Alert is secondary to the actual credential design | The Angular client sends a fixed public token on every API request. In multi-user mode it additionally stores a JWT in local storage and sends it as a query parameter; sessions are initialized but are not the primary API authorization mechanism. Cookie flags alone would not fix token leakage or the single-user trust model. Keep the test deployment LAN-only and require reverse-proxy access control or a dedicated authentication redesign before internet exposure. |
-| Request-derived paths | Mixed; needs individual review | The fork already has configured-root, realpath, and symlink containment for media and thumbnails. Remaining updater, upload, Twitch, subscription, task, and download paths must be traced individually rather than dismissed as one group. |
+| Request-derived paths | Confirmed weaknesses; persistent-file slice implemented | Media downloads and generated container archives are now constrained to configured roots, archive names are random rather than request-derived, and database restore accepts only existing generated backup files beneath the backup root. Remaining upload, Twitch, subscription, and task paths still require individual review. Re-run CodeQL before closing the affected alerts. |
 | Missing rate limiting | Architectural backlog | The alert count is dominated by route-level reports. Prioritize login, registration, token/API-key generation, Telegram, uploads, update, and other mutation endpoints; choose limits compatible with subscription polling and reverse proxies. |
 | Prototype pollution | Needs investigation | Review request-controlled object keys in category, task, configuration, and nested-object helpers. Apply allowlists and forbidden-key checks at the boundary, then add local and MongoDB-mode tests. |
 
@@ -202,3 +202,12 @@ normal subscription cycle and a deliberate container restart without regression.
   query strings. Treat the current application as trusted-LAN-only until token
   transport and route authorization are redesigned or a reverse proxy enforces
   authentication and network restrictions.
+- 2026-10-25: contained the persistent-file paths used by database restore,
+  generated subscription/playlist archives, and server-side file download.
+  Backup restore now accepts only generated backup names whose real files remain
+  beneath the backup root; archive inputs must resolve beneath configured media
+  roots; generated archives use random names in the temporary application-data
+  directory; and the final response path is revalidated before transmission.
+  Six focused path tests pass, including traversal and symlink-escape cases. The
+  full offline backend result is 115 passing and 30 intentionally pending; the
+  only two failures remain the missing-FFmpeg fixture tests.

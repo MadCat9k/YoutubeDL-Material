@@ -4,6 +4,7 @@ const { MongoClient } = require("mongodb");
 const _ = require('lodash');
 
 const config_api = require('./config');
+const db_backup_paths = require('./db-backup-paths');
 const utils = require('./utils')
 const logger = require('./logger');
 
@@ -807,13 +808,18 @@ exports.backupDB = async () => {
 }
 
 exports.restoreDB = async (file_name) => {
-    const path_to_backup = path.join('appdata', 'db_backup', file_name);
+    const backup_root = path.join(__dirname, 'appdata', 'db_backup');
+    const path_to_backup = db_backup_paths.resolveExistingBackupFile(file_name, backup_root);
+    if (!path_to_backup) {
+        logger.error('Failed to restore DB! The requested backup file is invalid.');
+        return false;
+    }
 
     logger.debug('Reading database backup file.');
     const table_to_records = fs.readJSONSync(path_to_backup);
 
     if (!table_to_records) {
-        logger.error(`Failed to restore DB! Backup file '${path_to_backup}' could not be read.`);
+        logger.error('Failed to restore DB! The requested backup file could not be read.');
         return false;
     }
 

@@ -11,6 +11,7 @@ const winston = require('winston');
 
 const config_api = require('./config');
 const logger = require('./logger');
+const media_paths = require('./media-paths');
 const network_safety = require('./network-safety');
 const security_logging = require('./security-logging');
 const CONSTS = require('./consts');
@@ -69,13 +70,17 @@ exports.getDownloadedFilesByType = async (basePath, type, full_metadata = false)
     return files;
 }
 
-exports.createContainerZipFile = async (file_name, container_file_objs) => {
+exports.createContainerZipFile = async (_file_name, container_file_objs, media_roots = media_paths.getConfiguredMediaRoots(), output_root = path.join(__dirname, 'appdata', 'temp')) => {
     const container_files_to_download = [];
     for (let i = 0; i < container_file_objs.length; i++) {
         const container_file_obj = container_file_objs[i];
-        container_files_to_download.push(container_file_obj.path);
+        const resolved_file = container_file_obj && media_paths.resolveExistingMediaFile(container_file_obj.path, media_roots);
+        if (!resolved_file) throw new Error('Container archive contains an invalid media path.');
+        container_files_to_download.push(resolved_file);
     }
-    return await exports.createZipFile(path.join('appdata', file_name + '.zip'), container_files_to_download);
+    await fs.ensureDir(output_root);
+    const output_path = path.join(output_root, `container-${crypto.randomBytes(12).toString('hex')}.zip`);
+    return await exports.createZipFile(output_path, container_files_to_download);
 }
 
 exports.createZipFile = async (zip_file_path, file_paths) => {
