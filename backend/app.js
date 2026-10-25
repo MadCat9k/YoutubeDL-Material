@@ -4,7 +4,6 @@ const { promisify } = require('util');
 const auth_api = require('./authentication/auth');
 const path = require('path');
 const compression = require('compression');
-const multer  = require('multer');
 const express = require("express");
 const bodyParser = require("body-parser");
 const archiver = require('archiver');
@@ -21,6 +20,7 @@ const session = require('express-session');
 
 const logger = require('./logger');
 const config_api = require('./config.js');
+const cookie_upload = require('./cookie-upload');
 const downloader_api = require('./downloader');
 const tasks_api = require('./tasks');
 const subscriptions_api = require('./subscriptions');
@@ -1479,23 +1479,22 @@ app.post('/api/deleteArchiveItems', optionalJwt, async (req, res) => {
     });
 });
 
-var upload_multer = multer({ dest: __dirname + '/appdata/' });
-app.post('/api/uploadCookies', upload_multer.single('cookies'), async (req, res) => {
-    const new_path = path.join(__dirname, 'appdata', 'cookies.txt');
-
-    if (await fs.pathExists(req.file.path)) {
-        await fs.rename(req.file.path, new_path);
-    } else {
-        res.sendStatus(500);
+const appdata_root = path.join(__dirname, 'appdata');
+const upload_cookies = cookie_upload.createCookieUploader(appdata_root);
+app.post('/api/uploadCookies', optionalJwt, function(req, res, next) {
+    upload_cookies(req, res, function(error) {
+        if (!error) return next();
+        logger.warn('Rejected cookies file upload.');
+        res.sendStatus(error.code === 'LIMIT_FILE_SIZE' ? 413 : 400);
+    });
+}, async (req, res) => {
+    const success = await cookie_upload.installUploadedCookieFile(req.file, appdata_root);
+    if (!success) {
+        logger.warn('Failed to install cookies file.');
+        res.sendStatus(400);
         return;
     }
-
-    if (await fs.pathExists(new_path)) {
-        res.send({success: true});
-    } else {
-        res.sendStatus(500);
-    }
-
+    res.send({success: true});
 });
 
 // Updater API calls
