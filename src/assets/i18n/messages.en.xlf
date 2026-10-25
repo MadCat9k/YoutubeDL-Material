@@ -3697,6 +3697,12 @@
         </context-group>
         <note priority="1" from="description">Transfer DB button</note>
       </trans-unit>
+      <trans-unit id="task-settings-save-success" datatype="html">
+        <source>Task settings saved.</source>
+      </trans-unit>
+      <trans-unit id="task-settings-save-failed" datatype="html">
+        <source>Could not save task settings. Try again.</source>
+      </trans-unit>
       <trans-unit id="task-schedule-success" datatype="html">
         <source>Task schedule updated.</source>
       </trans-unit>

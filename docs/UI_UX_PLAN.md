@@ -613,6 +613,27 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Task-settings feedback (2026-10-25)
+
+- Task Settings now prevent duplicate saves and disable every editable field plus
+  the dialog actions while a save request is pending.
+- Successful saves announce completion and record the exact submitted snapshot,
+  so edits made while the request is pending remain visibly unsaved.
+- Rejected and failed saves preserve the current edits, restore the controls for
+  retry, and show localized actionable feedback instead of reloading and
+  discarding the form.
+- Task loading and save requests stop updating the dialog after it is destroyed.
+
+Verification:
+
+- focused Task Settings component suite: 8 passing in Chrome Headless, covering
+  loading, successful, rejected, transport-failed, duplicate, stale-edit, and
+  destroyed-dialog paths;
+- all 31 tracked XLF files passed XML validation and contain the stable task
+  settings success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
