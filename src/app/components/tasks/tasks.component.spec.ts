@@ -18,6 +18,7 @@ describe('TasksComponent', () => {
       'getDBBackups',
       'runTask',
       'confirmTask',
+      'updateTaskSchedule',
       'resetTasks',
       'openSnackBar'
     ]);
@@ -211,6 +212,70 @@ describe('TasksComponent', () => {
       'Could not confirm task. Try again.',
       'Dismiss'
     );
+  });
+
+  it('updates a task schedule and announces success', () => {
+    const schedule = {type: 'recurring', data: {hour: 12, minute: 30}} as any;
+    dialog.open.and.returnValue({afterClosed: () => of(schedule)} as any);
+    postsService.updateTaskSchedule.and.returnValue(of({success: true}));
+
+    component.scheduleTask({key: taskKey} as any);
+
+    expect(postsService.updateTaskSchedule).toHaveBeenCalledOnceWith(taskKey, schedule);
+    expect(postsService.getTasks).toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Task schedule updated.');
+    expect(component.taskSchedulePending(taskKey)).toBeFalse();
+  });
+
+  it('opens only one schedule dialog for a task and restores the action after cancellation', () => {
+    const dialogResult = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => dialogResult} as any);
+
+    component.scheduleTask({key: taskKey} as any);
+    component.scheduleTask({key: taskKey} as any);
+
+    expect(dialog.open).toHaveBeenCalledTimes(1);
+    expect(component.taskSchedulePending(taskKey)).toBeTrue();
+
+    dialogResult.next(undefined);
+    dialogResult.complete();
+    expect(postsService.updateTaskSchedule).not.toHaveBeenCalled();
+    expect(component.taskSchedulePending(taskKey)).toBeFalse();
+  });
+
+  it('allows a schedule update to be retried after rejected and failed requests', () => {
+    const schedule = {type: 'recurring', data: {hour: 12, minute: 30}} as any;
+    dialog.open.and.returnValue({afterClosed: () => of(schedule)} as any);
+    postsService.updateTaskSchedule.and.returnValues(
+      of({success: false}),
+      throwError(() => new Error('synthetic failure'))
+    );
+
+    component.scheduleTask({key: taskKey} as any);
+    component.scheduleTask({key: taskKey} as any);
+
+    expect(postsService.updateTaskSchedule).toHaveBeenCalledTimes(2);
+    expect(postsService.getTasks).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledTimes(2);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not update task schedule. Try again.',
+      'Dismiss'
+    );
+    expect(component.taskSchedulePending(taskKey)).toBeFalse();
+  });
+
+  it('does not show late schedule feedback after destruction', () => {
+    const schedule = {type: 'recurring', data: {hour: 12, minute: 30}} as any;
+    const response = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => of(schedule)} as any);
+    postsService.updateTaskSchedule.and.returnValue(response);
+
+    component.scheduleTask({key: taskKey} as any);
+    component.ngOnDestroy();
+    response.next({success: true});
+
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.taskSchedulePending(taskKey)).toBeFalse();
   });
 
   it('resets tasks once and refreshes task and backup data after success', () => {

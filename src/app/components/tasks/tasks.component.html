@@ -77,7 +77,7 @@
                             <button (click)="runTask(element.key)" [disabled]="element.running || element.confirming || taskActionPending(element.key)" mat-icon-button matTooltip="Run" i18n-matTooltip="Run" aria-label="Run" i18n-aria-label="Run task"><mat-icon>play_arrow</mat-icon></button>
                         </div>
                         <div class="col-3">
-                            <button (click)="scheduleTask(element)" mat-icon-button matTooltip="Schedule" i18n-matTooltip="Schedule" aria-label="Schedule" i18n-aria-label="Schedule task"><mat-icon>schedule</mat-icon></button>
+                            <button (click)="scheduleTask(element)" [disabled]="taskSchedulePending(element.key)" mat-icon-button matTooltip="Schedule" i18n-matTooltip="Schedule" aria-label="Schedule" i18n-aria-label="Schedule task"><mat-icon>schedule</mat-icon></button>
                         </div>
                         <div class="col-3">
                             <button (click)="openTaskSettings(element)" mat-icon-button matTooltip="Settings" i18n-matTooltip="Settings" aria-label="Settings" i18n-aria-label="Task settings"><mat-icon>settings</mat-icon></button>
@@ -163,7 +163,7 @@
                         <mat-icon>play_arrow</mat-icon>
                         <span i18n="Run">Run</span>
                     </button>
-                    <button (click)="scheduleTask(element)" mat-menu-item>
+                    <button (click)="scheduleTask(element)" [disabled]="taskSchedulePending(element.key)" mat-menu-item>
                         <mat-icon>schedule</mat-icon>
                         <span i18n="Schedule">Schedule</span>
                     </button>

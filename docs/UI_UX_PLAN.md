@@ -592,6 +592,27 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Task-schedule feedback (2026-10-25)
+
+- Task scheduling now allows only one open schedule dialog or update request per
+  task, and disables that task's Schedule action until the workflow settles.
+- A successful update refreshes the task list and announces completion. Rejected
+  and failed updates restore the action for retry and show localized actionable
+  feedback instead of failing silently.
+- Schedule-dialog and update-request subscriptions stop when the Tasks component
+  is destroyed, preventing late refreshes or feedback after navigation.
+
+Verification:
+
+- focused Tasks component suite: 23 passing in Chrome Headless, covering
+  successful, cancelled, rejected, transport-failed, duplicate, and destroyed
+  schedule workflows alongside the existing task-action, responsive, and polling
+  behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable schedule
+  success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for

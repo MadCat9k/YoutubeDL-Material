@@ -33,6 +33,7 @@ export class TasksComponent implements OnInit, OnDestroy {
   compactView = false;
   pending_task_actions = new Set<TaskType>();
   pending_task_confirmations = new Set<TaskType>();
+  pending_task_schedules = new Set<TaskType>();
   resetting_tasks = false;
 
   private destroyed = new Subject<void>();
@@ -239,19 +240,43 @@ export class TasksComponent implements OnInit, OnDestroy {
   }
 
   scheduleTask(task: Task): void {
-    // open dialog
+    if (this.taskSchedulePending(task.key)) return;
+
+    this.pending_task_schedules.add(task.key);
+    let updateStarted = false;
     const dialogRef = this.dialog.open(UpdateTaskScheduleDialogComponent, {
       data: {
         task: task
       }
     });
-    dialogRef.afterClosed().subscribe(schedule => {
+    dialogRef.afterClosed().pipe(
+      takeUntil(this.destroyed),
+      finalize(() => {
+        if (!updateStarted) this.pending_task_schedules.delete(task.key);
+      })
+    ).subscribe(schedule => {
       if (schedule || schedule === null) {
-        this.postsService.updateTaskSchedule(task['key'], schedule).subscribe(res => {
-          this.getTasks();
+        updateStarted = true;
+        this.postsService.updateTaskSchedule(task.key, schedule).pipe(
+          takeUntil(this.destroyed),
+          finalize(() => this.pending_task_schedules.delete(task.key))
+        ).subscribe({
+          next: res => {
+            if (res['success']) {
+              this.getTasks();
+              this.postsService.openSnackBar($localize`:@@task-schedule-success:Task schedule updated.`);
+            } else {
+              this.showTaskActionFailure($localize`:@@task-schedule-failed:Could not update task schedule. Try again.`);
+            }
+          },
+          error: () => this.showTaskActionFailure($localize`:@@task-schedule-failed:Could not update task schedule. Try again.`)
         });
       }
     });
+  }
+
+  taskSchedulePending(task_key: TaskType): boolean {
+    return this.pending_task_schedules.has(task_key);
   }
 
   openTaskSettings(task: Task): void {

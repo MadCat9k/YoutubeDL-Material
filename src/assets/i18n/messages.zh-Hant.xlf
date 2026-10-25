@@ -3919,6 +3919,14 @@
         </context-group>
         <note priority="1" from="description">Transfer DB button</note>
       </trans-unit>
+      <trans-unit id="task-schedule-success" datatype="html">
+        <source>Task schedule updated.</source>
+        <target state="new">Task schedule updated.</target>
+      </trans-unit>
+      <trans-unit id="task-schedule-failed" datatype="html">
+        <source>Could not update task schedule. Try again.</source>
+        <target state="new">Could not update task schedule. Try again.</target>
+      </trans-unit>
       <trans-unit id="task-run-failed" datatype="html">
         <source>Could not run task. Try again.</source>
         <target state="new">Could not run task. Try again.</target>
