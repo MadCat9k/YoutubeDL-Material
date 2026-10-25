@@ -381,7 +381,7 @@ exports.downloadQueuedFile = async(download_uid, customDownloadHandler = null) =
                     && config_api.getConfigItem('ytdl_twitch_auto_download_chat')) {
                         let vodId = url.split('twitch.tv/videos/')[1];
                         vodId = vodId.split('?')[0];
-                        twitch_api.downloadTwitchChatByVODID(vodId, file_name, type, download['user_uid']);
+                        twitch_api.downloadTwitchChatByVODID(vodId, path.basename(file_name), type, download['user_uid']);
                 }
 
                 // renames file if necessary due to bug
