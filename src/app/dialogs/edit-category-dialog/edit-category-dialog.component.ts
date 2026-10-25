@@ -1,17 +1,20 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PostsService } from 'app/posts.services';
+import { Subject } from 'rxjs';
+import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-edit-category-dialog',
   templateUrl: './edit-category-dialog.component.html',
   styleUrls: ['./edit-category-dialog.component.scss']
 })
-export class EditCategoryDialogComponent implements OnInit {
+export class EditCategoryDialogComponent implements OnInit, OnDestroy {
 
   updating = false;
   original_category = null;
   category = null;
+  private destroyed = new Subject<void>();
 
   ruleActionLabels = {
     moveDown: $localize`:Move category rule down action@@categoryMoveRuleDownAction:Move rule down`,
@@ -81,6 +84,11 @@ export class EditCategoryDialogComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  ngOnDestroy(): void {
+    this.destroyed.next();
+    this.destroyed.complete();
+  }
+
   addNewRule() {
     this.category['rules'].push({
       preceding_operator: 'or',
@@ -90,16 +98,34 @@ export class EditCategoryDialogComponent implements OnInit {
     });
   }
 
-  saveClicked() {
+  saveClicked(): void {
+    if (this.updating || this.categoryChanged() || !this.category['name']) return;
+
+    const submittedCategory = JSON.parse(JSON.stringify(this.category));
     this.updating = true;
-    this.postsService.updateCategory(this.category).subscribe(res => {
-      this.updating = false;
-      this.original_category = JSON.parse(JSON.stringify(this.category));
-      this.postsService.reloadCategories();
-    }, err => {
-      this.updating = false;
-      console.error(err);
+    this.postsService.updateCategory(submittedCategory).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.updating = false)
+    ).subscribe({
+      next: res => {
+        if (!res['success']) {
+          this.showUpdateFailure();
+          return;
+        }
+
+        this.original_category = submittedCategory;
+        this.postsService.reloadCategories();
+        this.postsService.openSnackBar($localize`:@@category-update-success:Category updated.`);
+      },
+      error: () => this.showUpdateFailure()
     });
+  }
+
+  private showUpdateFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@category-update-failed:Could not update category. Try again.`,
+      'Dismiss'
+    );
   }
 
   categoryChanged() {

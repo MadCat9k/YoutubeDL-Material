@@ -3,7 +3,7 @@
 <mat-dialog-content style="max-height: 50vh">
     <mat-form-field style="width: 250px; margin-bottom: 5px;">
         <mat-label i18n="Category name">Name</mat-label>
-        <input matInput [(ngModel)]="category['name']" required>
+        <input matInput [disabled]="updating" [(ngModel)]="category['name']" required>
     </mat-form-field>
 
     <mat-divider></mat-divider>
@@ -13,39 +13,39 @@
     <mat-list>
         <mat-list-item *ngFor="let rule of category['rules']; let i = index">
             <mat-form-field [style.visibility]="i === 0 ? 'hidden' : null" class="operator-select">
-                <mat-select [disabled]="i === 0" [(ngModel)]="rule['preceding_operator']">
+                <mat-select [disabled]="updating || i === 0" [(ngModel)]="rule['preceding_operator']">
                     <mat-option value="or">OR</mat-option>
                     <mat-option value="and">AND</mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field class="property-select">
-                <mat-select [(ngModel)]="rule['property']">
+                <mat-select [disabled]="updating" [(ngModel)]="rule['property']">
                     <mat-option *ngFor="let propertyOption of propertyOptions" [value]="propertyOption.value">{{propertyOption.label}}</mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field class="comparator-select">
-                <mat-select [(ngModel)]="rule['comparator']">
+                <mat-select [disabled]="updating" [(ngModel)]="rule['comparator']">
                     <mat-option *ngFor="let comparatorOption of comparatorOptions" [value]="comparatorOption.value">{{comparatorOption.label}}</mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field class="value-input">
-                <input matInput [(ngModel)]="rule['value']">
+                <input matInput [disabled]="updating" [(ngModel)]="rule['value']">
             </mat-form-field>
             <span class="rule-buttons">
-                <button [disabled]="i === category['rules'].length-1" (click)="swapRules(i, i+1)" mat-icon-button [attr.aria-label]="ruleActionLabels.moveDown"><mat-icon>arrow_downward</mat-icon></button>
-                <button [disabled]="i === 0" (click)="swapRules(i, i-1)" mat-icon-button [attr.aria-label]="ruleActionLabels.moveUp"><mat-icon>arrow_upward</mat-icon></button>
-                <button (click)="removeRule(i)" mat-icon-button [attr.aria-label]="ruleActionLabels.remove"><mat-icon>cancel</mat-icon></button>
+                <button [disabled]="updating || i === category['rules'].length-1" (click)="swapRules(i, i+1)" mat-icon-button [attr.aria-label]="ruleActionLabels.moveDown"><mat-icon>arrow_downward</mat-icon></button>
+                <button [disabled]="updating || i === 0" (click)="swapRules(i, i-1)" mat-icon-button [attr.aria-label]="ruleActionLabels.moveUp"><mat-icon>arrow_upward</mat-icon></button>
+                <button [disabled]="updating" (click)="removeRule(i)" mat-icon-button [attr.aria-label]="ruleActionLabels.remove"><mat-icon>cancel</mat-icon></button>
             </span>
         </mat-list-item>
     </mat-list>
 
-    <button style="margin-bottom: 8px;" mat-icon-button (click)="addNewRule()" matTooltip="Add new rule" i18n-matTooltip="Add new rule tooltip" [attr.aria-label]="ruleActionLabels.add"><mat-icon>add</mat-icon></button>
+    <button style="margin-bottom: 8px;" mat-icon-button [disabled]="updating" (click)="addNewRule()" matTooltip="Add new rule" i18n-matTooltip="Add new rule tooltip" [attr.aria-label]="ruleActionLabels.add"><mat-icon>add</mat-icon></button>
 
     <mat-divider></mat-divider>
 
     <mat-form-field style="width: 250px; margin-top: 10px;">
         <mat-label i18n="Custom file output">Custom file output</mat-label>
-        <input matInput [(ngModel)]="category['custom_output']">
+        <input matInput [disabled]="updating" [(ngModel)]="category['custom_output']">
         <mat-hint>
             <a target="_blank" href="https://github.com/ytdl-org/youtube-dl/blob/master/README.md#output-template">
             <ng-container i18n="Custom output template documentation link">Documentation</ng-container></a>.
@@ -55,9 +55,9 @@
 </mat-dialog-content>
 
 <mat-dialog-actions>
-    <button mat-button mat-dialog-close><ng-container i18n="Cancel">Cancel</ng-container></button>
+    <button mat-button [disabled]="updating" mat-dialog-close><ng-container i18n="Cancel">Cancel</ng-container></button>
 
-    <button mat-button [disabled]="categoryChanged()" type="submit" (click)="saveClicked()"><ng-container i18n="Save button">Save</ng-container></button>
+    <button mat-button [disabled]="updating || categoryChanged() || !category['name']" type="submit" (click)="saveClicked()"><ng-container i18n="Save button">Save</ng-container></button>
     <div class="mat-spinner" *ngIf="updating">
       <mat-spinner [diameter]="25"></mat-spinner>
     </div>

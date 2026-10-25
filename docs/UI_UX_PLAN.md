@@ -545,6 +545,28 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Category-update feedback (2026-10-25)
+
+- Category editing now prevents duplicate saves, disables every form and dialog
+  action while a request is pending, and validates that a category name is
+  present before submission.
+- Successful updates announce completion and record the exact submitted
+  snapshot. Rejected and failed updates preserve the current edits, restore the
+  controls for retry, and show a localized actionable message without logging
+  raw request errors.
+- Active update requests stop when the dialog is destroyed, preventing a late
+  response from refreshing categories or showing stale feedback.
+
+Verification:
+
+- focused Edit Category Dialog component suite: 8 passing in Chrome Headless,
+  including successful, rejected, transport-failed, duplicate, stale-edit, and
+  destroyed-dialog update paths;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  category-update success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for

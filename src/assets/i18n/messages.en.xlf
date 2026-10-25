@@ -3712,6 +3712,12 @@
       <trans-unit id="category-create-failed" datatype="html">
         <source>Could not create category. Try again.</source>
       </trans-unit>
+      <trans-unit id="category-update-success" datatype="html">
+        <source>Category updated.</source>
+      </trans-unit>
+      <trans-unit id="category-update-failed" datatype="html">
+        <source>Could not update category. Try again.</source>
+      </trans-unit>
       <trans-unit id="api-key-generation-success" datatype="html">
         <source>New API key generated.</source>
       </trans-unit>
