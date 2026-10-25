@@ -653,6 +653,12 @@ exports.getSubscriptionByName = async (subName, user_uid = null) => {
 
 exports.updateSubscription = async (sub) => {
     try {
+        const name = normalizeSubscriptionName(sub && sub.name);
+        if (!name) {
+            logger.error('Failed to update subscription because its name is invalid.');
+            return false;
+        }
+        sub.name = name;
         await db_api.updateRecord('subscriptions', {id: sub.id}, sub);
         if (!exports.writeSubscriptionMetadata(sub)) {
             logger.error('Failed to update subscription metadata.');
@@ -750,7 +756,9 @@ async function checkVideoIfBetterExists(file_obj, sub, user_uid) {
 // helper functions
 
 function getAppendedBasePath(sub, base_path) {
-    return path.join(base_path, (sub.isPlaylist ? 'playlists/' : 'channels/'), sub.name);
+    const name = normalizeSubscriptionName(sub && sub.name);
+    if (typeof base_path !== 'string' || !base_path || !name) throw new Error('Invalid subscription path.');
+    return path.join(base_path, (sub.isPlaylist ? 'playlists/' : 'channels/'), name);
 }
 
 function firstValidSubscriptionName(values) {

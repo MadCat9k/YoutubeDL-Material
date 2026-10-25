@@ -70,4 +70,23 @@ describe('Subscription update', function() {
 
         assert.strictEqual(result, false);
     });
+
+    it('rejects an unsafe name before database persistence', async function() {
+        let updateCalled = false;
+        let metadataWritten = false;
+        db_api.updateRecord = async () => {
+            updateCalled = true;
+            return true;
+        };
+        subscriptions_api.writeSubscriptionMetadata = () => {
+            metadataWritten = true;
+            return true;
+        };
+
+        const result = await subscriptions_api.updateSubscription({...subscription, name: '../outside'});
+
+        assert.strictEqual(result, false);
+        assert.strictEqual(updateCalled, false);
+        assert.strictEqual(metadataWritten, false);
+    });
 });
