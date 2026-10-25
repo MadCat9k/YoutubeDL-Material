@@ -8,7 +8,6 @@ const multer  = require('multer');
 const express = require("express");
 const bodyParser = require("body-parser");
 const archiver = require('archiver');
-const unzipper = require('unzipper');
 const db_api = require('./db');
 const utils = require('./utils')
 const low = require('lowdb')
@@ -31,7 +30,9 @@ const youtubedl_api = require('./youtube-dl');
 const archive_api = require('./archive');
 const files_api = require('./files');
 const media_paths = require('./media-paths');
+const security_logging = require('./security-logging');
 const thumbnails_api = require('./thumbnails');
+const update_archive_api = require('./update-archive');
 const notifications_api = require('./notifications');
 
 var app = express();
@@ -318,66 +319,27 @@ async function updateServer(tag) {
 }
 
 async function downloadReleaseFiles(tag) {
-    tag = tag ? tag : await getLatestVersion();
-    return new Promise(async resolve => {
-        logger.info('Downloading new files...')
+    tag = update_archive_api.validateReleaseTag(tag || await getLatestVersion());
+    logger.info('Downloading new files...')
 
-        // downloads the latest release zip file
-        await downloadReleaseZip(tag);
+    await downloadReleaseZip(tag);
 
-        // deletes contents of public dir
-        fs.removeSync(path.join(__dirname, 'public'));
-        fs.mkdirSync(path.join(__dirname, 'public'));
-
-        let replace_ignore_list = ['youtubedl-material/appdata/default.json',
-                                    'youtubedl-material/appdata/db.json',
-                                    'youtubedl-material/appdata/users.json',
-                                    'youtubedl-material/appdata/*']
-        logger.info(`Installing update ${tag}...`)
-
-        // downloads new package.json and adds new public dir files from the downloaded zip
-        fs.createReadStream(path.join(__dirname, `youtubedl-material-release-${tag}.zip`)).pipe(unzipper.Parse())
-        .on('entry', function (entry) {
-            var fileName = entry.path;
-            var is_dir = fileName.substring(fileName.length-1, fileName.length) === '/'
-            if (!is_dir && fileName.includes('youtubedl-material/public/')) {
-                // get public folder files
-                const actualFileName = fileName.replace('youtubedl-material/public/', '');
-                if (actualFileName.length !== 0 && actualFileName.substring(actualFileName.length-1, actualFileName.length) !== '/') {
-                    fs.ensureDirSync(path.join(__dirname, 'public', path.dirname(actualFileName)));
-                    entry.pipe(fs.createWriteStream(path.join(__dirname, 'public', actualFileName)));
-                } else {
-                    entry.autodrain();
-                }
-            } else if (!is_dir && !replace_ignore_list.includes(fileName)) {
-                // get package.json
-                const actualFileName = fileName.replace('youtubedl-material/', '');
-                logger.verbose('Downloading file ' + actualFileName);
-                entry.pipe(fs.createWriteStream(path.join(__dirname, actualFileName)));
-            } else {
-                entry.autodrain();
-            }
-        })
-        .on('close', function () {
-            resolve(true);
-        });
-    });
+    logger.info(`Installing update ${tag}...`)
+    const archivePath = path.join(__dirname, `youtubedl-material-release-${tag}.zip`);
+    await update_archive_api.extractReleaseArchive(archivePath, __dirname);
+    return true;
 }
 
 async function downloadReleaseZip(tag) {
-    return new Promise(async resolve => {
-        // get name of zip file, which depends on the version
-        const latest_release_link = `https://github.com/Tzahi12345/YoutubeDL-Material/releases/download/${tag}/`;
-        const tag_without_v = tag.substring(1, tag.length);
-        const zip_file_name = `youtubedl-material-${tag_without_v}.zip`
-        const latest_zip_link = latest_release_link + zip_file_name;
-        let output_path = path.join(__dirname, `youtubedl-material-release-${tag}.zip`);
+    const validatedTag = update_archive_api.validateReleaseTag(tag);
+    const latest_release_link = `https://github.com/Tzahi12345/YoutubeDL-Material/releases/download/${validatedTag}/`;
+    const tag_without_v = validatedTag.substring(1);
+    const zip_file_name = `youtubedl-material-${tag_without_v}.zip`
+    const latest_zip_link = latest_release_link + zip_file_name;
+    const output_path = path.join(__dirname, `youtubedl-material-release-${validatedTag}.zip`);
 
-        // download zip from release
-        await utils.fetchFile(latest_zip_link, output_path, 'update ' + tag);
-        resolve(true);
-    });
-
+    await utils.fetchFile(latest_zip_link, output_path, 'update ' + validatedTag);
+    return true;
 }
 
 async function installDependencies() {
@@ -619,7 +581,7 @@ app.use(function(req, res, next) {
     } else if (req.path.includes('/api/stream/') || req.path.includes('/api/thumbnail/') || req.path.includes('/api/rss') || req.path.includes('/api/telegramRequest')) {
         next();
     } else {
-        logger.verbose(`Rejecting request - invalid API use for endpoint: ${req.path}. API key received: ${req.query.apiKey}`);
+        logger.verbose(security_logging.getRejectedApiRequestLogMessage(req.query.apiKey));
         req.socket.end();
     }
 });

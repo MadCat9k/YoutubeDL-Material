@@ -1,16 +1,26 @@
+const crypto = require('crypto');
 const fs = require('fs-extra');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const archiver = require('archiver');
 const fetch = require('node-fetch');
 const ProgressBar = require('progress');
+const stream = require('stream');
+const {promisify} = require('util');
 const winston = require('winston');
 
 const config_api = require('./config');
 const logger = require('./logger');
+const network_safety = require('./network-safety');
+const security_logging = require('./security-logging');
 const CONSTS = require('./consts');
 
 const is_windows = process.platform === 'win32';
+const MAX_REMOTE_FILE_BYTES = 1024 * 1024 * 1024;
+const REMOTE_FILE_TIMEOUT_MS = 5 * 60 * 1000;
+const MAX_REMOTE_FILE_REDIRECTS = 5;
+const TRUSTED_DOWNLOAD_HOST_SUFFIXES = ['github.com', 'githubusercontent.com'];
+const pipeline = promisify(stream.pipeline);
 
 // replaces .webm with appropriate extension
 exports.getTrueFileName = (unfixed_path, type, force_ext = null) => {
@@ -358,33 +368,90 @@ exports.checkExistsWithTimeout = async (filePath, timeout) => {
     });
 }
 
-// helper function to download file using fetch
-exports.fetchFile = async (url, path, file_label) => {
-    var len = null;
-    const res = await fetch(url);
-
-    len = parseInt(res.headers.get("Content-Length"), 10);
-
-    var bar = new ProgressBar(`  Downloading ${file_label} [:bar] :percent :etas`, {
-        complete: '=',
-        incomplete: ' ',
-        width: 20,
-        total: len
-    });
-    const fileStream = fs.createWriteStream(path);
-    await new Promise((resolve, reject) => {
-        res.body.pipe(fileStream);
-        res.body.on("error", (err) => {
-          reject(err);
-        });
-        res.body.on('data', function (chunk) {
-            bar.tick(chunk.length);
-        });
-        fileStream.on("finish", function() {
-          resolve();
-        });
-    });
+function parseTrustedDownloadURL(url) {
+    const parsed_url = new URL(url);
+    const hostname = parsed_url.hostname.toLowerCase().replace(/\.$/, '');
+    const trusted_hostname = TRUSTED_DOWNLOAD_HOST_SUFFIXES.some(suffix =>
+        hostname === suffix || hostname.endsWith(`.${suffix}`)
+    );
+    if (parsed_url.protocol !== 'https:' || parsed_url.port || parsed_url.username || parsed_url.password || !trusted_hostname) {
+        throw new Error('Remote file URL is not an approved HTTPS download location.');
+    }
+    return parsed_url;
 }
+
+async function fetchFile(url, output_path, file_label, overrides = {}, redirect_count = 0) {
+    const parsed_url = parseTrustedDownloadURL(url);
+    const fetch_impl = overrides.fetch || fetch;
+    const resolve_public_address = overrides.resolvePublicAddress || network_safety.resolvePublicAddress;
+    const create_pinned_agent = overrides.createPinnedAgent || network_safety.createPinnedAgent;
+    const resolved_address = await resolve_public_address(parsed_url.hostname);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REMOTE_FILE_TIMEOUT_MS);
+
+    try {
+        const response = await fetch_impl(parsed_url.toString(), {
+            agent: create_pinned_agent(parsed_url, resolved_address),
+            redirect: 'manual',
+            signal: controller.signal
+        });
+
+        if (response.status >= 300 && response.status < 400) {
+            if (response.body && response.body.destroy) response.body.destroy();
+            const location = response.headers.get('location');
+            if (!location || redirect_count >= MAX_REMOTE_FILE_REDIRECTS) {
+                throw new Error('Remote file exceeded the redirect limit or returned an invalid redirect.');
+            }
+            const redirect_url = new URL(location, parsed_url).toString();
+            return await fetchFile(redirect_url, output_path, file_label, overrides, redirect_count + 1);
+        }
+
+        if (!response.ok) {
+            if (response.body && response.body.destroy) response.body.destroy();
+            throw new Error(`Remote file returned HTTP ${response.status}.`);
+        }
+
+        const content_length = Number(response.headers.get('content-length'));
+        if (Number.isFinite(content_length) && content_length > MAX_REMOTE_FILE_BYTES) {
+            if (response.body && response.body.destroy) response.body.destroy();
+            throw new Error('Remote file exceeds the size limit.');
+        }
+
+        const progress_bar = Number.isFinite(content_length) && content_length > 0
+            ? new ProgressBar(`  Downloading ${file_label} [:bar] :percent :etas`, {
+                complete: '=',
+                incomplete: ' ',
+                width: 20,
+                total: content_length
+            })
+            : null;
+        const temp_path = `${output_path}.download-${process.pid}-${crypto.randomBytes(6).toString('hex')}`;
+        let received_bytes = 0;
+        try {
+            const size_limiter = new stream.Transform({
+                transform(chunk, encoding, callback) {
+                    received_bytes += chunk.length;
+                    if (received_bytes > MAX_REMOTE_FILE_BYTES) {
+                        callback(new Error('Remote file exceeds the size limit.'));
+                        return;
+                    }
+                    if (progress_bar) progress_bar.tick(chunk.length);
+                    callback(null, chunk);
+                }
+            });
+            await pipeline(response.body, size_limiter, fs.createWriteStream(temp_path, {flags: 'wx'}));
+            await fs.move(temp_path, output_path, {overwrite: true});
+        } catch (error) {
+            await fs.remove(temp_path);
+            throw error;
+        }
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
+exports.fetchFile = fetchFile;
+exports.parseTrustedDownloadURL = parseTrustedDownloadURL;
 
 exports.restartServer = async (is_update = false) => {
     logger.info(`${is_update ? 'Update complete! ' : ''}Restarting server...`);
@@ -422,7 +489,7 @@ exports.injectArgs = (original_args, new_args) => {
         }
     } catch (err) {
         logger.warn(err);
-        logger.warn(`Failed to inject args (${new_args}) into (${original_args})`);
+        logger.warn(security_logging.getArgumentInjectionFailureLogMessage());
     }
 
     return updated_args;

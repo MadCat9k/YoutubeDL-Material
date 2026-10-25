@@ -5,6 +5,7 @@ const NodeID3 = require('node-id3')
 const Mutex = require('async-mutex').Mutex;
 
 const logger = require('./logger');
+const security_logging = require('./security-logging');
 const youtubedl_api = require('./youtube-dl');
 const config_api = require('./config');
 const twitch_api = require('./twitch');
@@ -569,7 +570,7 @@ exports.generateArgs = async (url, type, options, user_uid = null, simulated = f
     // filter out incompatible args
     downloadConfig = filterArgs(downloadConfig, is_audio);
 
-    if (!simulated) logger.verbose(`${default_downloader} args being used: ${downloadConfig.join(',')}`);
+    if (!simulated) logger.verbose(security_logging.getDownloaderInvocationLogMessage());
     return downloadConfig;
 }
 
