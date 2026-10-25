@@ -145,8 +145,8 @@ normal subscription cycle and a deliberate container restart without regression.
 | Remote-file SSRF | Confirmed weakness; draft fix implemented | Current callers use fixed GitHub repositories, but the generic helper previously trusted redirects and DNS. Focused tests now cover host/protocol restrictions, per-hop validation, private addresses, size limits, failed responses, and atomic replacement. Re-run CodeQL before closing. |
 | Update archive traversal | Confirmed and reachable; draft fix implemented | The updater previously joined archive paths directly to the backend root. Tests now cover traversal, absolute/foreign roots, release-tag traversal, persistent `appdata`, valid extraction, and existing symlink escapes. Re-run CodeQL before closing. |
 | Clear-text logging | Three confirmed sites; draft fix implemented | API keys and downloader argument values are no longer included. Fixed-message tests use synthetic secret values. Re-run CodeQL before closing. |
-| Database query/filter injection | Needs endpoint-by-endpoint investigation | This project uses MongoDB-style filters and a local JSON equivalent, not SQL. Several endpoints place request values into fixed filter keys; object/operator input may still change query meaning. Validate scalar IDs and allowlisted update fields at API boundaries before changing shared database behavior. |
-| Session cookie / CSRF | Needs investigation | The session middleware uses a restart-random secret, `resave: true`, and `saveUninitialized: true` without explicit `sameSite`/`secure` policy. Authentication also uses JWT/API-key flows, so the actual browser credential path and reverse-proxy TLS behavior must be mapped before changing cookies or adding CSRF enforcement. |
+| Database query/filter injection | Confirmed; draft central guard implemented | This project uses MongoDB-style filters and a local JSON equivalent, not SQL. Request-shaped object conditions could alter MongoDB queries, while an unknown object condition could match the first local record. Both paths now reject object/operator filters unless server code constructs an allowlisted condition. Update objects also reject MongoDB operator and prototype-related keys. Add endpoint-specific field allowlists separately. |
+| Session cookie / CSRF | Alert is secondary to the actual credential design | The Angular client sends a fixed public token on every API request. In multi-user mode it additionally stores a JWT in local storage and sends it as a query parameter; sessions are initialized but are not the primary API authorization mechanism. Cookie flags alone would not fix token leakage or the single-user trust model. Keep the test deployment LAN-only and require reverse-proxy access control or a dedicated authentication redesign before internet exposure. |
 | Request-derived paths | Mixed; needs individual review | The fork already has configured-root, realpath, and symlink containment for media and thumbnails. Remaining updater, upload, Twitch, subscription, task, and download paths must be traced individually rather than dismissed as one group. |
 | Missing rate limiting | Architectural backlog | The alert count is dominated by route-level reports. Prioritize login, registration, token/API-key generation, Telegram, uploads, update, and other mutation endpoints; choose limits compatible with subscription polling and reverse proxies. |
 | Prototype pollution | Needs investigation | Review request-controlled object keys in category, task, configuration, and nested-object helpers. Apply allowlists and forbidden-key checks at the boundary, then add local and MongoDB-mode tests. |
@@ -189,3 +189,16 @@ normal subscription cycle and a deliberate container restart without regression.
   backend suite reports 105 passing and 30 intentionally pending tests; its only
   two failures are the existing host limitation that FFmpeg is not installed.
   No external subscription or media site was contacted.
+- 2026-10-25: confirmed MongoDB-style operator injection also affects the
+  supported local JSON mode: an untrusted object condition can change query
+  meaning or match the first record. A draft central database guard now accepts
+  only scalar filters and explicitly server-created operators, rejects unsafe
+  update keys recursively, and preserves the existing internal search, age, and
+  non-null filters. Four focused database-safety tests pass. The full offline
+  backend result is now 111 passing and 30 intentionally pending, with only the
+  same two missing-FFmpeg failures.
+- 2026-10-25: mapped the browser authentication path. Single-user mode relies on
+  a public fixed client token, and multi-user mode sends local-storage JWTs in
+  query strings. Treat the current application as trusted-LAN-only until token
+  transport and route authorization are redesigned or a reverse proxy enforces
+  authentication and network restrictions.

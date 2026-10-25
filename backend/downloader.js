@@ -149,7 +149,7 @@ exports.clearDownloads = async (clear_options, user_uid = null) => {
         success &= await db_api.removeAllRecords('download_queue', {paused: true, user_uid: user_uid});
     }
     if (clear_options.clear_errors) {
-        success &= await db_api.removeAllRecords('download_queue', {error: {$ne: null}, user_uid: user_uid});
+        success &= await db_api.removeAllRecords('download_queue', {error: db_api.filterCondition('$ne', null), user_uid: user_uid});
     }
     return !!success;
 }

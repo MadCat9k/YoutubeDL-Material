@@ -260,7 +260,7 @@ async function checkForAutoDeleteFiles() {
         return null;
     }
     const delete_older_than_timestamp = Date.now() - task_obj['options']['threshold_days']*86400*1000;
-    const files = (await db_api.getRecords('files', {registered: {$lt: delete_older_than_timestamp}}))
+    const files = (await db_api.getRecords('files', {registered: db_api.filterCondition('$lt', delete_older_than_timestamp)}))
     const files_to_remove = files.map(file => {return {uid: file.uid, sub_id: file.sub_id}});
     return {files_to_remove: files_to_remove};
 }

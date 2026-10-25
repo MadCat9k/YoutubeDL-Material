@@ -72,6 +72,71 @@ const tables = {
 const tables_list = Object.keys(tables);
 
 let using_local_db = null; 
+const trusted_filter_condition = Symbol('trusted_filter_condition');
+
+function isPlainObject(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+    const prototype = Object.getPrototypeOf(value);
+    return prototype === Object.prototype || prototype === null;
+}
+
+function hasUnsafeKeySegment(key) {
+    return key.split('.').some(segment =>
+        segment === '__proto__' || segment === 'prototype' || segment === 'constructor' || segment.includes('\0')
+    );
+}
+
+function assertSafeFilter(filter_obj) {
+    if (!isPlainObject(filter_obj)) throw new Error('Database filter must be a plain object.');
+
+    for (const [key, value] of Object.entries(filter_obj)) {
+        if (hasUnsafeKeySegment(key)) throw new Error('Database filter contains an unsafe key.');
+        if (key.startsWith('$') && (key !== '$text' || !value || value[trusted_filter_condition] !== true)) {
+            throw new Error('Database filter contains an unsafe operator.');
+        }
+        if (value && typeof value === 'object' && value[trusted_filter_condition] !== true) {
+            throw new Error('Database filter contains an untrusted object condition.');
+        }
+    }
+}
+
+function assertSafeUpdateObject(value) {
+    if (!isPlainObject(value)) throw new Error('Database update must be a plain object.');
+
+    for (const [key, nested_value] of Object.entries(value)) {
+        if (key.startsWith('$') || hasUnsafeKeySegment(key)) throw new Error('Database update contains an unsafe key.');
+        if (Array.isArray(nested_value)) {
+            for (const item of nested_value) {
+                if (isPlainObject(item)) assertSafeUpdateObject(item);
+            }
+        } else if (isPlainObject(nested_value)) {
+            assertSafeUpdateObject(nested_value);
+        }
+    }
+}
+
+exports.filterCondition = (operator, value, options = null) => {
+    let condition = null;
+    if (operator === '$regex') {
+        if (typeof value !== 'string') throw new Error('Database search condition must be a string.');
+        condition = {$regex: value};
+        if (options) condition.$options = options;
+    } else if (operator === '$text') {
+        if (typeof value !== 'string') throw new Error('Database search condition must be a string.');
+        condition = {$search: value};
+    } else if (['$ne', '$lt', '$gt', '$lte', '$gte'].includes(operator)) {
+        if (value && typeof value === 'object') throw new Error('Database comparison condition must be a scalar.');
+        condition = {[operator]: value};
+    } else {
+        throw new Error('Unsupported database filter operator.');
+    }
+
+    Object.defineProperty(condition, trusted_filter_condition, {value: true});
+    return condition;
+};
+
+exports.validateFilter = assertSafeFilter;
+exports.validateUpdateObject = assertSafeUpdateObject;
 
 function setDB(input_db, input_users_db) {
     db = input_db; users_db = input_users_db;
@@ -250,6 +315,7 @@ exports.getFileDirectoriesAndDBs = async () => {
 // Create
 
 exports.insertRecordIntoTable = async (table, doc, replaceFilter = null) => {
+    if (replaceFilter) assertSafeFilter(replaceFilter);
     // local db override
     if (using_local_db) {
         if (replaceFilter) local_db.get(table).remove((doc) => _.isMatch(doc, replaceFilter)).write();
@@ -321,6 +387,7 @@ exports.bulkInsertRecordsIntoTable = async (table, docs) => {
 // Read
 
 exports.getRecord = async (table, filter_obj) => {
+    assertSafeFilter(filter_obj);
     // local db override
     if (using_local_db) {
         return exports.applyFilterLocalDB(local_db.get(table), filter_obj, 'find').value();
@@ -330,6 +397,7 @@ exports.getRecord = async (table, filter_obj) => {
 }
 
 exports.getRecords = async (table, filter_obj = null, return_count = false, sort = null, range = null) => {
+    if (filter_obj) assertSafeFilter(filter_obj);
     // local db override
     if (using_local_db) {
         let cursor = filter_obj ? exports.applyFilterLocalDB(local_db.get(table), filter_obj, 'filter').value() : local_db.get(table).value();
@@ -356,6 +424,8 @@ exports.getRecords = async (table, filter_obj = null, return_count = false, sort
 // Update
 
 exports.updateRecord = async (table, filter_obj, update_obj, nested_mode = false) => {
+    assertSafeFilter(filter_obj);
+    assertSafeUpdateObject(update_obj);
     // local db override
     if (using_local_db) {
         if (nested_mode) {
@@ -375,6 +445,8 @@ exports.updateRecord = async (table, filter_obj, update_obj, nested_mode = false
 }
 
 exports.updateRecords = async (table, filter_obj, update_obj) => {
+    assertSafeFilter(filter_obj);
+    assertSafeUpdateObject(update_obj);
     // local db override
     if (using_local_db) {
         exports.applyFilterLocalDB(local_db.get(table), filter_obj, 'filter').each((record) => {
@@ -393,6 +465,8 @@ exports.updateRecords = async (table, filter_obj, update_obj) => {
 }
 
 exports.removePropertyFromRecord = async (table, filter_obj, remove_obj) => {
+    assertSafeFilter(filter_obj);
+    assertSafeUpdateObject(remove_obj);
     // local db override
     if (using_local_db) {
         const props_to_remove = Object.keys(remove_obj);
@@ -439,6 +513,8 @@ exports.bulkUpdateRecordsByKey = async (table, key_label, update_obj) => {
 }
 
 exports.pushToRecordsArray = async (table, filter_obj, key, value) => {
+    assertSafeFilter(filter_obj);
+    if (key.startsWith('$') || hasUnsafeKeySegment(key)) throw new Error('Database update contains an unsafe key.');
     // local db override
     if (using_local_db) {
         exports.applyFilterLocalDB(local_db.get(table), filter_obj, 'find').get(key).push(value).write();
@@ -450,6 +526,8 @@ exports.pushToRecordsArray = async (table, filter_obj, key, value) => {
 }
 
 exports.pullFromRecordsArray = async (table, filter_obj, key, value) => {
+    assertSafeFilter(filter_obj);
+    if (key.startsWith('$') || hasUnsafeKeySegment(key)) throw new Error('Database update contains an unsafe key.');
     // local db override
     if (using_local_db) {
         exports.applyFilterLocalDB(local_db.get(table), filter_obj, 'find').get(key).pull(value).write();
@@ -463,6 +541,7 @@ exports.pullFromRecordsArray = async (table, filter_obj, key, value) => {
 // Delete
 
 exports.removeRecord = async (table, filter_obj) => {
+    assertSafeFilter(filter_obj);
     // local db override
     if (using_local_db) {
         exports.applyFilterLocalDB(local_db.get(table), filter_obj, 'remove').write();
@@ -534,6 +613,7 @@ exports.findDuplicatesByKey = async (table, key) => {
 }
 
 exports.removeAllRecords = async (table = null, filter_obj = null) => {
+    if (filter_obj) assertSafeFilter(filter_obj);
     // local db override
     const tables_to_remove = table ? [table] : tables_list;
     logger.debug(`Removing all records from: ${tables_to_remove} with filter: ${JSON.stringify(filter_obj)}`)

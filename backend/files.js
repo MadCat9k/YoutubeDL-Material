@@ -327,9 +327,9 @@ exports.getAllFiles = async (sort, range, text_search, file_type_filter, favorit
     const regex = true;
     if (text_search) {
         if (regex) {
-            filter_obj['title'] = {$regex: `.*${text_search}.*`, $options: 'i'};
+            filter_obj['title'] = db_api.filterCondition('$regex', `.*${text_search}.*`, 'i');
         } else {
-            filter_obj['$text'] = { $search: utils.createEdgeNGrams(text_search) };
+            filter_obj['$text'] = db_api.filterCondition('$text', utils.createEdgeNGrams(text_search));
         }
     }
 
