@@ -57,7 +57,7 @@
                     <div class="row justify-content-start">
                         <div *ngIf="element.data?.uids?.length > 0 || (!element.data?.uids && element.data)" class="col-12 mt-2" style="display: flex; justify-content: center;">
                             <ng-container>
-                                <button (click)="confirmTask(element.key)" [disabled]="element.running || element.confirming" mat-stroked-button>
+                                <button (click)="confirmTask(element.key)" [disabled]="element.running || element.confirming || taskActionPending(element.key)" mat-stroked-button>
                                     <ng-container *ngIf="element.key == 'missing_files_check'">
                                         <ng-container i18n="Clear missing files from DB">Clear missing files from DB:</ng-container>{{element.data.uids.length}}
                                     </ng-container>
@@ -74,7 +74,7 @@
                             </ng-container>
                         </div>
                         <div class="col-3">
-                            <button (click)="runTask(element.key)" [disabled]="element.running || element.confirming" mat-icon-button matTooltip="Run" i18n-matTooltip="Run" aria-label="Run" i18n-aria-label="Run task"><mat-icon>play_arrow</mat-icon></button>
+                            <button (click)="runTask(element.key)" [disabled]="element.running || element.confirming || taskActionPending(element.key)" mat-icon-button matTooltip="Run" i18n-matTooltip="Run" aria-label="Run" i18n-aria-label="Run task"><mat-icon>play_arrow</mat-icon></button>
                         </div>
                         <div class="col-3">
                             <button (click)="scheduleTask(element)" mat-icon-button matTooltip="Schedule" i18n-matTooltip="Schedule" aria-label="Schedule" i18n-aria-label="Schedule task"><mat-icon>schedule</mat-icon></button>
@@ -138,7 +138,7 @@
                     </div>
                 </dl>
 
-                <button class="task-confirm-button" *ngIf="element.data?.uids?.length > 0 || (!element.data?.uids && element.data)" (click)="confirmTask(element.key)" [disabled]="element.running || element.confirming" mat-stroked-button>
+                <button class="task-confirm-button" *ngIf="element.data?.uids?.length > 0 || (!element.data?.uids && element.data)" (click)="confirmTask(element.key)" [disabled]="element.running || element.confirming || taskActionPending(element.key)" mat-stroked-button>
                     <ng-container *ngIf="element.key == 'missing_files_check'">
                         <ng-container i18n="Clear missing files from DB">Clear missing files from DB:</ng-container>{{element.data.uids.length}}
                     </ng-container>
@@ -159,7 +159,7 @@
                     <mat-icon>more_vert</mat-icon>
                 </button>
                 <mat-menu #taskActions="matMenu">
-                    <button (click)="runTask(element.key)" [disabled]="element.running || element.confirming" mat-menu-item>
+                    <button (click)="runTask(element.key)" [disabled]="element.running || element.confirming || taskActionPending(element.key)" mat-menu-item>
                         <mat-icon>play_arrow</mat-icon>
                         <span i18n="Run">Run</span>
                     </button>
@@ -182,7 +182,7 @@
 
     <div class="task-page-actions">
         <button mat-stroked-button (click)="openRestoreDBBackupDialog()" i18n="Restore DB from backup button">Restore DB from backup</button>
-        <button mat-stroked-button (click)="resetTasks()" color="warn" i18n="Reset tasks button">Reset tasks</button>
+        <button mat-stroked-button (click)="resetTasks()" [disabled]="resetting_tasks" color="warn" i18n="Reset tasks button">Reset tasks</button>
     </div>
 </div>
 

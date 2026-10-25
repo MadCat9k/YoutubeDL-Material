@@ -3,17 +3,30 @@ import { MatDialog } from '@angular/material/dialog';
 import { Subject, of, throwError } from 'rxjs';
 
 import { PostsService } from 'app/posts.services';
+import { TaskType } from 'api-types';
 import { TasksComponent } from './tasks.component';
 
 describe('TasksComponent', () => {
   let component: TasksComponent;
   let postsService: jasmine.SpyObj<PostsService>;
+  let dialog: jasmine.SpyObj<MatDialog>;
+  const taskKey = 'synthetic-task' as any;
 
   beforeEach(() => {
-    postsService = jasmine.createSpyObj<PostsService>('PostsService', ['getTasks']);
+    postsService = jasmine.createSpyObj<PostsService>('PostsService', [
+      'getTasks',
+      'getDBBackups',
+      'runTask',
+      'confirmTask',
+      'resetTasks',
+      'openSnackBar'
+    ]);
+    postsService.getTasks.and.returnValue(of({tasks: []}));
+    postsService.getDBBackups.and.returnValue(of({db_backups: []} as any));
+    dialog = jasmine.createSpyObj<MatDialog>('MatDialog', ['open']);
     component = new TasksComponent(
       postsService,
-      {} as MatDialog,
+      dialog,
       {} as Clipboard
     );
   });
@@ -92,5 +105,184 @@ describe('TasksComponent', () => {
 
     expect(response.observers.length).toBe(0);
     expect(component.tasks_request_in_flight).toBe(false);
+  });
+
+  it('runs a task once, refreshes task data, and announces success', () => {
+    postsService.runTask.and.returnValue(of({success: true}));
+
+    component._runTask(taskKey);
+
+    expect(postsService.runTask).toHaveBeenCalledOnceWith(taskKey);
+    expect(postsService.getTasks).toHaveBeenCalled();
+    expect(postsService.getDBBackups).toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Successfully ran task!');
+    expect(component.taskActionPending(taskKey)).toBeFalse();
+  });
+
+  it('allows a task run to be retried after a rejected response', () => {
+    postsService.runTask.and.returnValue(of({success: false}));
+
+    component._runTask(taskKey);
+    component._runTask(taskKey);
+
+    expect(postsService.runTask).toHaveBeenCalledTimes(2);
+    expect(postsService.getTasks).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not run task. Try again.',
+      'Dismiss'
+    );
+  });
+
+  it('allows a task run to be retried after a failed request', () => {
+    postsService.runTask.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component._runTask(taskKey);
+
+    expect(postsService.getTasks).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not run task. Try again.',
+      'Dismiss'
+    );
+    expect(component.taskActionPending(taskKey)).toBeFalse();
+  });
+
+  it('prevents overlapping run and confirm requests for the same task', () => {
+    const response = new Subject<any>();
+    postsService.runTask.and.returnValue(response);
+
+    component._runTask(taskKey);
+    component._runTask(taskKey);
+    component.confirmTask(taskKey);
+
+    expect(postsService.runTask).toHaveBeenCalledTimes(1);
+    expect(postsService.confirmTask).not.toHaveBeenCalled();
+    expect(component.taskActionPending(taskKey)).toBeTrue();
+
+    response.next({success: true});
+    response.complete();
+    expect(component.taskActionPending(taskKey)).toBeFalse();
+  });
+
+  it('opens only one confirmation for a destructive task run', () => {
+    const confirmation = new Subject<boolean>();
+    const response = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => confirmation} as any);
+    postsService.runTask.and.returnValue(response);
+
+    component.runTask(TaskType.REBUILD_DATABASE);
+    component.runTask(TaskType.REBUILD_DATABASE);
+
+    expect(dialog.open).toHaveBeenCalledTimes(1);
+    expect(component.taskActionPending(TaskType.REBUILD_DATABASE)).toBeTrue();
+
+    confirmation.next(true);
+    confirmation.complete();
+    expect(postsService.runTask).toHaveBeenCalledOnceWith(TaskType.REBUILD_DATABASE);
+    expect(component.taskActionPending(TaskType.REBUILD_DATABASE)).toBeTrue();
+
+    response.next({success: true});
+    response.complete();
+    expect(component.taskActionPending(TaskType.REBUILD_DATABASE)).toBeFalse();
+  });
+
+  it('confirms a task once and announces success', () => {
+    postsService.confirmTask.and.returnValue(of({success: true}));
+
+    component.confirmTask(taskKey);
+
+    expect(postsService.confirmTask).toHaveBeenCalledOnceWith(taskKey);
+    expect(postsService.getTasks).toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Successfully confirmed task!');
+  });
+
+  it('restores confirmation after rejected and failed requests', () => {
+    postsService.confirmTask.and.returnValues(
+      of({success: false}),
+      throwError(() => new Error('synthetic failure'))
+    );
+
+    component.confirmTask(taskKey);
+    component.confirmTask(taskKey);
+
+    expect(postsService.confirmTask).toHaveBeenCalledTimes(2);
+    expect(postsService.getTasks).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledTimes(2);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not confirm task. Try again.',
+      'Dismiss'
+    );
+  });
+
+  it('resets tasks once and refreshes task and backup data after success', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)} as any);
+    postsService.resetTasks.and.returnValue(of({success: true}));
+
+    component.resetTasks();
+
+    expect(postsService.resetTasks).toHaveBeenCalledTimes(1);
+    expect(postsService.getTasks).toHaveBeenCalled();
+    expect(postsService.getDBBackups).toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Tasks successfully reset!');
+    expect(component.resetting_tasks).toBeFalse();
+  });
+
+  it('restores Reset when its confirmation is cancelled', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(false)} as any);
+
+    component.resetTasks();
+
+    expect(postsService.resetTasks).not.toHaveBeenCalled();
+    expect(component.resetting_tasks).toBeFalse();
+  });
+
+  it('restores Reset after a rejected response', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)} as any);
+    postsService.resetTasks.and.returnValue(of({success: false}));
+
+    component.resetTasks();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not reset tasks. Try again.',
+      'Dismiss'
+    );
+    expect(component.resetting_tasks).toBeFalse();
+  });
+
+  it('prevents duplicate resets and restores the action after failure', () => {
+    const response = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => of(true)} as any);
+    postsService.resetTasks.and.returnValue(response);
+
+    component.resetTasks();
+    component.resetTasks();
+
+    expect(dialog.open).toHaveBeenCalledTimes(1);
+    expect(postsService.resetTasks).toHaveBeenCalledTimes(1);
+    expect(component.resetting_tasks).toBeTrue();
+
+    response.error(new Error('synthetic failure'));
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not reset tasks. Try again.',
+      'Dismiss'
+    );
+    expect(component.resetting_tasks).toBeFalse();
+  });
+
+  it('does not show late task-action feedback after destruction', () => {
+    const runResponse = new Subject<any>();
+    const resetResponse = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => of(true)} as any);
+    postsService.runTask.and.returnValue(runResponse);
+    postsService.resetTasks.and.returnValue(resetResponse);
+
+    component._runTask(taskKey);
+    component.resetTasks();
+    component.ngOnDestroy();
+    runResponse.next({success: true});
+    resetResponse.next({success: true});
+
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.taskActionPending(taskKey)).toBeFalse();
+    expect(component.resetting_tasks).toBeFalse();
   });
 });

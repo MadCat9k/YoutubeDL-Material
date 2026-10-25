@@ -3697,6 +3697,15 @@
         </context-group>
         <note priority="1" from="description">Transfer DB button</note>
       </trans-unit>
+      <trans-unit id="task-run-failed" datatype="html">
+        <source>Could not run task. Try again.</source>
+      </trans-unit>
+      <trans-unit id="task-confirm-failed" datatype="html">
+        <source>Could not confirm task. Try again.</source>
+      </trans-unit>
+      <trans-unit id="tasks-reset-failed" datatype="html">
+        <source>Could not reset tasks. Try again.</source>
+      </trans-unit>
       <trans-unit id="category-order-save-success" datatype="html">
         <source>Category order saved.</source>
       </trans-unit>

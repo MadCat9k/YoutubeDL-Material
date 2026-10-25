@@ -567,6 +567,31 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Task-action feedback (2026-10-25)
+
+- Running and confirming a task now disable both actions for that task until the
+  request settles, preventing overlapping operations before polling reports the
+  task as busy.
+- Successful actions refresh the task list, and task runs also refresh the
+  available database backups. Rejected and failed requests restore the controls
+  for retry and show localized actionable feedback without logging raw errors.
+- Task reset now prevents duplicate confirmation or reset requests, refreshes
+  tasks and database backups after success, and restores the action after a
+  rejected or failed request.
+- Pending confirmations and task requests stop updating the page after the Tasks
+  component is destroyed.
+
+Verification:
+
+- focused Tasks component suite: 19 passing in Chrome Headless, covering
+  successful, rejected, transport-failed, duplicate, cross-action, reset, and
+  destroyed-component paths alongside the existing responsive and polling
+  behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  task-action failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
