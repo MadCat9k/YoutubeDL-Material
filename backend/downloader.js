@@ -5,6 +5,7 @@ const NodeID3 = require('node-id3')
 const Mutex = require('async-mutex').Mutex;
 
 const logger = require('./logger');
+const security_logging = require('./security-logging');
 const youtubedl_api = require('./youtube-dl');
 const config_api = require('./config');
 const twitch_api = require('./twitch');
@@ -148,7 +149,7 @@ exports.clearDownloads = async (clear_options, user_uid = null) => {
         success &= await db_api.removeAllRecords('download_queue', {paused: true, user_uid: user_uid});
     }
     if (clear_options.clear_errors) {
-        success &= await db_api.removeAllRecords('download_queue', {error: {$ne: null}, user_uid: user_uid});
+        success &= await db_api.removeAllRecords('download_queue', {error: db_api.filterCondition('$ne', null), user_uid: user_uid});
     }
     return !!success;
 }
@@ -380,7 +381,7 @@ exports.downloadQueuedFile = async(download_uid, customDownloadHandler = null) =
                     && config_api.getConfigItem('ytdl_twitch_auto_download_chat')) {
                         let vodId = url.split('twitch.tv/videos/')[1];
                         vodId = vodId.split('?')[0];
-                        twitch_api.downloadTwitchChatByVODID(vodId, file_name, type, download['user_uid']);
+                        twitch_api.downloadTwitchChatByVODID(vodId, path.basename(file_name), type, download['user_uid']);
                 }
 
                 // renames file if necessary due to bug
@@ -569,7 +570,7 @@ exports.generateArgs = async (url, type, options, user_uid = null, simulated = f
     // filter out incompatible args
     downloadConfig = filterArgs(downloadConfig, is_audio);
 
-    if (!simulated) logger.verbose(`${default_downloader} args being used: ${downloadConfig.join(',')}`);
+    if (!simulated) logger.verbose(security_logging.getDownloaderInvocationLogMessage());
     return downloadConfig;
 }
 

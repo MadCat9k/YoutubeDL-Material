@@ -4,6 +4,7 @@ const os = require('os');
 const path = require('path');
 
 const media_paths = require('../media-paths');
+const twitch_api = require('../twitch');
 
 describe('Media path containment', function() {
     let test_dir;
@@ -38,5 +39,23 @@ describe('Media path containment', function() {
         assert.strictEqual(media_paths.resolveExistingMediaFile('../outside.webp', [media_root], media_root), null);
         assert.strictEqual(media_paths.resolveExistingMediaFile(outside_path, [media_root]), null);
         assert.strictEqual(media_paths.resolveExistingMediaFile(symlink_path, [media_root]), null);
+    });
+
+    it('accepts a new output only when its real parent is beneath a media root', function() {
+        const output_path = path.join(media_root, 'sample.twitch_chat.json');
+        const outside_path = path.join(test_dir, 'outside.twitch_chat.json');
+        const expected_output_path = path.join(fs.realpathSync(media_root), 'sample.twitch_chat.json');
+
+        assert.strictEqual(media_paths.resolveMediaOutputFile(output_path, [media_root]), expected_output_path);
+        assert.strictEqual(media_paths.resolveMediaOutputFile(outside_path, [media_root]), null);
+    });
+
+    it('rejects request-shaped Twitch path segments before creating an output path', function() {
+        const expected_output_path = path.join(fs.realpathSync(media_root), 'sample.twitch_chat.json');
+        assert.strictEqual(twitch_api.resolveTwitchChatPath('sample', 'video', null, null, media_root), expected_output_path);
+        assert.strictEqual(twitch_api.resolveTwitchChatPath('sample', null, null, null, media_root), expected_output_path);
+        assert.strictEqual(twitch_api.resolveTwitchChatPath('../outside', 'video', null, null, media_root), null);
+        assert.strictEqual(twitch_api.resolveTwitchChatPath('sample', '../video', null, null), null);
+        assert.strictEqual(twitch_api.resolveTwitchChatPath('sample', 'video', null, {name: '../outside', isPlaylist: false}, media_root), null);
     });
 });

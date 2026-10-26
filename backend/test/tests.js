@@ -149,8 +149,8 @@ describe('Database', async function() {
                 });
                 it('Replace filter', async function() {
                     this.timeout(120000);
-                    await db_api.insertRecordIntoTable('test', {test_replace_filter: 'test', test_nested: {test_key1: 'test1', test_key2: 'test2'}}, {test_nested: {test_key1: 'test1', test_key2: 'test2'}});
-                    await db_api.insertRecordIntoTable('test', {test_replace_filter: 'test', test_nested: {test_key1: 'test1', test_key2: 'test2'}}, {test_nested: {test_key1: 'test1', test_key2: 'test2'}});
+                    await db_api.insertRecordIntoTable('test', {test_replace_filter: 'test'}, {test_replace_filter: 'test'});
+                    await db_api.insertRecordIntoTable('test', {test_replace_filter: 'test'}, {test_replace_filter: 'test'});
                     const count = await db_api.getRecords('test', {test_replace_filter: 'test'}, true);
                     assert(count === 1);
                     await db_api.removeRecord('test', {test_replace_filter: 'test'});
@@ -688,7 +688,7 @@ describe('Subscriptions', function() {
     });
     it('Unsubscribe', async function () {
         await subscriptions_api.subscribe(new_sub, null, true);
-        await subscriptions_api.unsubscribe(new_sub);
+        await subscriptions_api.unsubscribe(new_sub.id);
         const sub_exists = await db_api.getRecord('subscriptions', {id: new_sub['id']});
         assert(!sub_exists);
     });

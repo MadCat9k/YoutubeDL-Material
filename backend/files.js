@@ -229,37 +229,38 @@ exports.calculatePlaylistDuration = async (playlist, playlist_file_objs = null) 
 
 exports.deleteFile = async (uid, blacklistMode = false) => {
     const file_obj = await exports.getVideo(uid);
-    const type = file_obj.isAudio ? 'audio' : 'video';
-    const folderPath = path.dirname(file_obj.path);
-    const name = file_obj.id;
-    const filePathNoExtension = utils.removeFileExtension(file_obj.path);
+    if (!file_obj || typeof file_obj.path !== 'string') return false;
 
-    var jsonPath = `${file_obj.path}.info.json`;
+    const stored_file_path = path.resolve(__dirname, file_obj.path);
+    const fileExists = await fs.pathExists(stored_file_path);
+    if (!fileExists) {
+        await db_api.removeRecord('files', {uid: uid});
+        return true;
+    }
+
+    const file_path = media_paths.resolveExistingMediaFile(file_obj.path);
+    if (!file_path) {
+        logger.warn('Refusing to delete a file outside configured media roots.');
+        return false;
+    }
+
+    const type = file_obj.isAudio ? 'audio' : 'video';
+    const folderPath = path.dirname(file_path);
+    const filePathNoExtension = utils.removeFileExtension(file_path);
+    const name = path.basename(filePathNoExtension);
+
+    var jsonPath = `${file_path}.info.json`;
     var altJSONPath = `${filePathNoExtension}.info.json`;
     var thumbnailPath = `${filePathNoExtension}.webp`;
     var altThumbnailPath = `${filePathNoExtension}.jpg`;
 
-    jsonPath = path.join(__dirname, jsonPath);
-    altJSONPath = path.join(__dirname, altJSONPath);
+    jsonPath = media_paths.resolveExistingMediaFile(jsonPath);
+    altJSONPath = media_paths.resolveExistingMediaFile(altJSONPath);
+    thumbnailPath = media_paths.resolveExistingMediaFile(thumbnailPath);
+    altThumbnailPath = media_paths.resolveExistingMediaFile(altThumbnailPath);
 
-    let jsonExists = await fs.pathExists(jsonPath);
-    let thumbnailExists = await fs.pathExists(thumbnailPath);
-
-    if (!jsonExists) {
-        if (await fs.pathExists(altJSONPath)) {
-            jsonExists = true;
-            jsonPath = altJSONPath;
-        }
-    }
-
-    if (!thumbnailExists) {
-        if (await fs.pathExists(altThumbnailPath)) {
-            thumbnailExists = true;
-            thumbnailPath = altThumbnailPath;
-        }
-    }
-
-    let fileExists = await fs.pathExists(file_obj.path);
+    if (!jsonPath) jsonPath = altJSONPath;
+    if (!thumbnailPath) thumbnailPath = altThumbnailPath;
 
     if (config_api.descriptors[uid]) {
         try {
@@ -294,20 +295,15 @@ exports.deleteFile = async (uid, blacklistMode = false) => {
         }
     }
 
-    if (jsonExists) await fs.unlink(jsonPath);
-    if (thumbnailExists) await fs.unlink(thumbnailPath);
+    if (jsonPath) await fs.unlink(jsonPath);
+    if (thumbnailPath) await fs.unlink(thumbnailPath);
 
     await db_api.removeRecord('files', {uid: uid});
 
-    if (fileExists) {
-        await fs.unlink(file_obj.path);
-        if (await fs.pathExists(jsonPath) || await fs.pathExists(file_obj.path)) {
-            return false;
-        } else {
-            return true;
-        }
+    await fs.unlink(file_path);
+    if ((jsonPath && await fs.pathExists(jsonPath)) || await fs.pathExists(file_path)) {
+        return false;
     } else {
-        // TODO: tell user that the file didn't exist
         return true;
     }
 }
@@ -327,9 +323,9 @@ exports.getAllFiles = async (sort, range, text_search, file_type_filter, favorit
     const regex = true;
     if (text_search) {
         if (regex) {
-            filter_obj['title'] = {$regex: `.*${text_search}.*`, $options: 'i'};
+            filter_obj['title'] = db_api.filterCondition('$regex', `.*${text_search}.*`, 'i');
         } else {
-            filter_obj['$text'] = { $search: utils.createEdgeNGrams(text_search) };
+            filter_obj['$text'] = db_api.filterCondition('$text', utils.createEdgeNGrams(text_search));
         }
     }
 

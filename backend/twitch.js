@@ -7,6 +7,7 @@ const path = require('path');
 const { promisify } = require('util');
 const child_process = require('child_process');
 const commandExistsSync = require('command-exists').sync;
+const media_paths = require('./media-paths');
 
 async function getCommentsForVOD(vodId) {
     const exec = promisify(child_process.exec);
@@ -53,56 +54,65 @@ async function getCommentsForVOD(vodId) {
 }
 
 async function getTwitchChatByFileID(id, type, user_uid, uuid, sub) {
+    const file_path = resolveTwitchChatPath(id, type, user_uid, sub, null, true);
+    return file_path ? fs.readJSONSync(file_path) : null;
+}
+
+function isSafePathSegment(value) {
+    return typeof value === 'string' && value.length > 0 && value !== '.' && value !== '..'
+        && !value.includes('/') && !value.includes('\\') && !value.includes('\0');
+}
+
+function resolveTwitchChatPath(id, type, user_uid, sub, customFileFolderPath = null, mustExist = false) {
+    const safe_id = typeof id === 'string' ? path.basename(id) : null;
+    const safe_user_uid = typeof user_uid === 'string' ? path.basename(user_uid) : user_uid;
+    const safe_sub_name = sub && typeof sub.name === 'string' ? path.basename(sub.name) : null;
+    let safe_type = null;
+    if (type === 'audio') safe_type = 'audio';
+    if (type === 'video') safe_type = 'video';
+    if (safe_id !== id || !isSafePathSegment(safe_id) || (!customFileFolderPath && !safe_type)) return null;
+    if (user_uid && (safe_user_uid !== user_uid || !isSafePathSegment(safe_user_uid))) return null;
+    if (sub && (safe_sub_name !== sub.name || !isSafePathSegment(safe_sub_name) || typeof sub.isPlaylist !== 'boolean')) return null;
+
     const usersFileFolder = config_api.getConfigItem('ytdl_users_base_path');
     const subscriptionsFileFolder = config_api.getConfigItem('ytdl_subscriptions_base_path');
     let file_path = null;
+    let allowed_roots = null;
 
-    if (user_uid) {
+    if (customFileFolderPath) {
+        file_path = path.join(customFileFolderPath, `${safe_id}.twitch_chat.json`);
+        allowed_roots = [customFileFolderPath];
+    } else if (user_uid) {
         if (sub) {
-            file_path = path.join(usersFileFolder, user_uid, 'subscriptions', sub.isPlaylist ? 'playlists' : 'channels', sub.name, `${id}.twitch_chat.json`);
+            file_path = path.join(usersFileFolder, safe_user_uid, 'subscriptions', sub.isPlaylist ? 'playlists' : 'channels', safe_sub_name, `${safe_id}.twitch_chat.json`);
         } else {
-            file_path = path.join(usersFileFolder, user_uid, type, `${id}.twitch_chat.json`);
+            file_path = path.join(usersFileFolder, safe_user_uid, safe_type, `${safe_id}.twitch_chat.json`);
         }
+        allowed_roots = [usersFileFolder];
     } else {
         if (sub) {
-            file_path = path.join(subscriptionsFileFolder, sub.isPlaylist ? 'playlists' : 'channels', sub.name, `${id}.twitch_chat.json`);
+            file_path = path.join(subscriptionsFileFolder, sub.isPlaylist ? 'playlists' : 'channels', safe_sub_name, `${safe_id}.twitch_chat.json`);
+            allowed_roots = [subscriptionsFileFolder];
         } else {
-            const typeFolder = config_api.getConfigItem(`ytdl_${type}_folder_path`);
-            file_path = path.join(typeFolder, `${id}.twitch_chat.json`);
+            const typeFolder = config_api.getConfigItem(`ytdl_${safe_type}_folder_path`);
+            file_path = path.join(typeFolder, `${safe_id}.twitch_chat.json`);
+            allowed_roots = [typeFolder];
         }
     }
 
-    var chat_file = null;
-    if (fs.existsSync(file_path)) {
-        chat_file = fs.readJSONSync(file_path);
-    }
-
-    return chat_file;
+    return mustExist
+        ? media_paths.resolveExistingMediaFile(file_path, allowed_roots)
+        : media_paths.resolveMediaOutputFile(file_path, allowed_roots);
 }
 
 async function downloadTwitchChatByVODID(vodId, id, type, user_uid, sub, customFileFolderPath = null) {
-    const usersFileFolder           = config_api.getConfigItem('ytdl_users_base_path');
-    const subscriptionsFileFolder   = config_api.getConfigItem('ytdl_subscriptions_base_path');
-    const chat = await getCommentsForVOD(vodId);
-
-    // save file if needed params are included
-    let file_path = null;
-    if (customFileFolderPath) {
-        file_path = path.join(customFileFolderPath, `${id}.twitch_chat.json`)
-    } else if (user_uid) {
-        if (sub) {
-            file_path = path.join(usersFileFolder, user_uid, 'subscriptions', sub.isPlaylist ? 'playlists' : 'channels', sub.name, `${id}.twitch_chat.json`);
-        } else {
-            file_path = path.join(usersFileFolder, user_uid, type, `${id}.twitch_chat.json`);
-        }
-    } else {
-        if (sub) {
-            file_path = path.join(subscriptionsFileFolder, sub.isPlaylist ? 'playlists' : 'channels', sub.name, `${id}.twitch_chat.json`);
-        } else {
-            file_path = path.join(type, `${id}.twitch_chat.json`);
-        }
+    const file_path = resolveTwitchChatPath(id, type, user_uid, sub, customFileFolderPath);
+    if (!file_path) {
+        logger.warn('Refusing to write Twitch chat outside configured media roots.');
+        return null;
     }
 
+    const chat = await getCommentsForVOD(vodId);
     if (chat) fs.writeJSONSync(file_path, chat);
 
     return chat;
@@ -119,5 +129,6 @@ const convertTimestamp = (timestamp) => moment.duration(timestamp, 'seconds')
 module.exports = {
     getCommentsForVOD: getCommentsForVOD,
     getTwitchChatByFileID: getTwitchChatByFileID,
-    downloadTwitchChatByVODID: downloadTwitchChatByVODID
+    downloadTwitchChatByVODID: downloadTwitchChatByVODID,
+    resolveTwitchChatPath: resolveTwitchChatPath
 }

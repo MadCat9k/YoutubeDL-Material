@@ -31,13 +31,47 @@ exports.resolveExistingMediaFile = (candidate, roots = exports.getConfiguredMedi
     if (typeof candidate !== 'string' || candidate.length === 0 || candidate.includes('\0')) return null;
 
     const resolved_candidate = path.resolve(base_directory, candidate);
-    const real_candidate = realPathIfPresent(resolved_candidate, 'file');
-    if (!real_candidate) return null;
-
     for (const root of roots) {
         const resolved_root = path.resolve(base_directory, root);
         const real_root = realPathIfPresent(resolved_root, 'directory');
-        if (real_root && isWithinRoot(real_candidate, real_root)) return real_candidate;
+        if (!real_root) continue;
+
+        const relative_candidate = path.relative(resolved_root, resolved_candidate);
+        const real_relative_candidate = path.relative(real_root, resolved_candidate);
+        const under_resolved_root = relative_candidate !== '..' && !relative_candidate.startsWith(`..${path.sep}`) && !path.isAbsolute(relative_candidate);
+        const under_real_root = real_relative_candidate !== '..' && !real_relative_candidate.startsWith(`..${path.sep}`) && !path.isAbsolute(real_relative_candidate);
+        if (!under_resolved_root && !under_real_root) continue;
+
+        const real_candidate = realPathIfPresent(resolved_candidate, 'file');
+        if (real_candidate && isWithinRoot(real_candidate, real_root)) return real_candidate;
+    }
+
+    return null;
+};
+
+exports.resolveMediaOutputFile = (candidate, roots = exports.getConfiguredMediaRoots(), base_directory = __dirname) => {
+    if (typeof candidate !== 'string' || candidate.length === 0 || candidate.includes('\0')) return null;
+
+    const resolved_candidate = path.resolve(base_directory, candidate);
+    for (const root of roots) {
+        const resolved_root = path.resolve(base_directory, root);
+        const real_root = realPathIfPresent(resolved_root, 'directory');
+        if (!real_root) continue;
+
+        const relative_candidate = path.relative(resolved_root, resolved_candidate);
+        const real_relative_candidate = path.relative(real_root, resolved_candidate);
+        const under_resolved_root = relative_candidate !== '..' && !relative_candidate.startsWith(`..${path.sep}`) && !path.isAbsolute(relative_candidate);
+        const under_real_root = real_relative_candidate !== '..' && !real_relative_candidate.startsWith(`..${path.sep}`) && !path.isAbsolute(real_relative_candidate);
+        if (!under_resolved_root && !under_real_root) continue;
+
+        if (fs.existsSync(resolved_candidate)) {
+            const real_candidate = realPathIfPresent(resolved_candidate, 'file');
+            if (real_candidate && isWithinRoot(real_candidate, real_root)) return real_candidate;
+            continue;
+        }
+
+        const real_parent = realPathIfPresent(path.dirname(resolved_candidate), 'directory');
+        if (real_parent && isWithinRoot(real_parent, real_root)) return path.join(real_parent, path.basename(resolved_candidate));
     }
 
     return null;
