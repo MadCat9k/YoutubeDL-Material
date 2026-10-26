@@ -147,7 +147,7 @@ normal subscription cycle and a deliberate container restart without regression.
 | Clear-text logging | Three confirmed sites; draft fix implemented | API keys and downloader argument values are no longer included. Fixed-message tests use synthetic secret values. Re-run CodeQL before closing. |
 | Database query/filter injection | Confirmed; draft central guard implemented | This project uses MongoDB-style filters and a local JSON equivalent, not SQL. Request-shaped object conditions could alter MongoDB queries, while an unknown object condition could match the first local record. Both paths now reject object/operator filters unless server code constructs an allowlisted condition. Update objects also reject MongoDB operator and prototype-related keys. Add endpoint-specific field allowlists separately. |
 | Session cookie / CSRF | Alert is secondary to the actual credential design | The Angular client sends a fixed public token on every API request. In multi-user mode it additionally stores a JWT in local storage and sends it as a query parameter; sessions are initialized but are not the primary API authorization mechanism. Cookie flags alone would not fix token leakage or the single-user trust model. Keep the test deployment LAN-only and require reverse-proxy access control or a dedicated authentication redesign before internet exposure. |
-| Request-derived paths | Confirmed weaknesses; persistent-file slices implemented | Media downloads, generated container archives, deletion, Twitch chat files, cookies upload, and subscription folder names are now constrained or validated; archive names are random rather than request-derived; and database restore accepts only existing generated backup files beneath the backup root. Remaining task/rebuild paths still require individual review. Re-run CodeQL before closing the affected alerts. |
+| Request-derived paths | Confirmed weaknesses; persistent-file slices implemented | Media downloads, generated container archives, deletion, Twitch chat files, cookies upload, subscription folder names, and user-folder deletion are now constrained or validated; archive names are random rather than request-derived; and database restore accepts only existing generated backup files beneath the backup root. Re-run CodeQL and review the remaining database/application findings before closing the affected alerts. |
 | Missing rate limiting | Architectural backlog | The alert count is dominated by route-level reports. Prioritize login, registration, token/API-key generation, Telegram, uploads, update, and other mutation endpoints; choose limits compatible with subscription polling and reverse proxies. |
 | Prototype pollution | Needs investigation | Review request-controlled object keys in category, task, configuration, and nested-object helpers. Apply allowlists and forbidden-key checks at the boundary, then add local and MongoDB-mode tests. |
 
@@ -240,3 +240,13 @@ normal subscription cycle and a deliberate container restart without regression.
   operation. Seventeen focused subscription lifecycle tests pass. The full
   offline backend result is 122 passing and 30 intentionally pending, with the
   same two missing-FFmpeg fixture failures.
+- 2026-10-26: reviewed rebuild discovery. It enumerates only direct directories
+  beneath configured roots, ignores directory symlinks, and sends recovered
+  subscription metadata back through subscription-name validation. The review
+  exposed the separate CodeQL-reported user deletion sink: user IDs were joined
+  directly into the configured users path. Registration and LDAP provisioning
+  now require one bounded path segment, and deletion resolves an existing user
+  directory beneath the real users root while rejecting symlink escapes. Four
+  focused path tests and the existing multi-user tests pass. The full offline
+  backend result is 126 passing and 30 intentionally pending, with the same two
+  missing-FFmpeg fixture failures.
