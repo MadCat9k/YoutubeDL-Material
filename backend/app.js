@@ -33,6 +33,7 @@ const media_paths = require('./media-paths');
 const security_logging = require('./security-logging');
 const thumbnails_api = require('./thumbnails');
 const update_archive_api = require('./update-archive');
+const xml_safety = require('./xml-safety');
 const notifications_api = require('./notifications');
 
 var app = express();
@@ -2082,7 +2083,7 @@ app.get('/api/rss', async function (req, res) {
             contributor: [],
             date: file.timestamp,
             // https://stackoverflow.com/a/45415677/8088021
-            image: file.thumbnailURL.replace('&', '&amp;')
+            image: xml_safety.escapeAmpersands(file.thumbnailURL)
         });
       });
     res.send(feed.rss2());

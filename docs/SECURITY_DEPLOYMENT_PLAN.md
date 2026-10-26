@@ -150,6 +150,7 @@ normal subscription cycle and a deliberate container restart without regression.
 | Request-derived paths | Confirmed weaknesses; persistent-file slices implemented | Media downloads, generated container archives, deletion, Twitch chat files, cookies upload, subscription folder names, and user-folder deletion are now constrained or validated; archive names are random rather than request-derived; and database restore accepts only existing generated backup files beneath the backup root. Re-run CodeQL and review the remaining database/application findings before closing the affected alerts. |
 | Missing rate limiting | Architectural backlog | The alert count is dominated by route-level reports. Prioritize login, registration, token/API-key generation, Telegram, uploads, update, and other mutation endpoints; choose limits compatible with subscription polling and reverse proxies. |
 | Prototype pollution | Confirmed task-key weakness fixed; frontend findings remain | Task operations now accept only own keys from the fixed server registry, so inherited names such as `__proto__` and `constructor` cannot reach registry assignment. Database updates already reject prototype-related keys recursively. Review the separate Angular findings and rerun CodeQL before closing. |
+| Incomplete sanitization | Confirmed RSS weakness fixed; extension finding is separate | RSS thumbnail URLs now escape every ampersand rather than only the first. The Chrome extension's YouTube substring check is not loaded by the NAS container and will be handled as a separate extension fix. Four URL-substring alerts are synthetic test assertions. |
 
 ## Current work log
 
@@ -257,3 +258,9 @@ normal subscription cycle and a deliberate container restart without regression.
   focused task-safety tests pass. The full offline backend result is 128 passing
   and 30 intentionally pending, with the same two missing-FFmpeg fixture
   failures.
+- 2026-10-26: confirmed the RSS incomplete-sanitization alert. Thumbnail URLs
+  escaped only their first ampersand; the output helper now escapes every
+  occurrence. Two focused XML-output tests pass. The full offline backend result
+  is 130 passing and 30 intentionally pending, with the same two missing-FFmpeg
+  fixture failures. The separate browser-extension URL check is outside the NAS
+  runtime, and four URL-substring findings are test-only synthetic assertions.
