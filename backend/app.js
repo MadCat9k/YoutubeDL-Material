@@ -5,6 +5,7 @@ const auth_api = require('./authentication/auth');
 const path = require('path');
 const compression = require('compression');
 const express = require("express");
+const rateLimit = require('express-rate-limit');
 const bodyParser = require("body-parser");
 const archiver = require('archiver');
 const db_api = require('./db');
@@ -1482,7 +1483,13 @@ app.post('/api/deleteArchiveItems', optionalJwt, async (req, res) => {
 
 const appdata_root = path.join(__dirname, 'appdata');
 const upload_cookies = cookie_upload.createCookieUploader(appdata_root);
-app.post('/api/uploadCookies', optionalJwt, function(req, res, next) {
+const upload_cookies_limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false
+});
+app.post('/api/uploadCookies', upload_cookies_limiter, optionalJwt, function(req, res, next) {
     upload_cookies(req, res, function(error) {
         if (!error) return next();
         logger.warn('Rejected cookies file upload.');

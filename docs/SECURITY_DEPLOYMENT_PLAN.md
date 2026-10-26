@@ -148,7 +148,7 @@ normal subscription cycle and a deliberate container restart without regression.
 | Database query/filter injection | Confirmed; draft central guard implemented | This project uses MongoDB-style filters and a local JSON equivalent, not SQL. Request-shaped object conditions could alter MongoDB queries, while an unknown object condition could match the first local record. Both paths now reject object/operator filters unless server code constructs an allowlisted condition. Update objects also reject MongoDB operator and prototype-related keys. Add endpoint-specific field allowlists separately. |
 | Session cookie / CSRF | Alert is secondary to the actual credential design | The Angular client sends a fixed public token on every API request. In multi-user mode it additionally stores a JWT in local storage and sends it as a query parameter; sessions are initialized but are not the primary API authorization mechanism. Cookie flags alone would not fix token leakage or the single-user trust model. Keep the test deployment LAN-only and require reverse-proxy access control or a dedicated authentication redesign before internet exposure. |
 | Request-derived paths | Confirmed weaknesses; persistent-file slices implemented | Media downloads, generated container archives, deletion, Twitch chat files, cookies upload, subscription folder names, and user-folder deletion are now constrained or validated; archive names are random rather than request-derived; and database restore accepts only existing generated backup files beneath the backup root. Re-run CodeQL and review the remaining database/application findings before closing the affected alerts. |
-| Missing rate limiting | Architectural backlog | The alert count is dominated by route-level reports. Prioritize login, registration, token/API-key generation, Telegram, uploads, update, and other mutation endpoints; choose limits compatible with subscription polling and reverse proxies. |
+| Missing rate limiting | Cookies upload fixed; architectural backlog remains | Cookies upload now allows five attempts per client address in a rolling 15-minute window before authentication or multipart parsing. The remaining alert count is dominated by route-level reports. Prioritize login, registration, token/API-key generation, Telegram, update, and other mutation endpoints; choose limits compatible with subscription polling and reverse proxies. |
 | Prototype pollution | Confirmed task-key weakness fixed; frontend findings remain | Task operations now accept only own keys from the fixed server registry, so inherited names such as `__proto__` and `constructor` cannot reach registry assignment. Database updates already reject prototype-related keys recursively. Review the separate Angular findings and rerun CodeQL before closing. |
 | Incomplete sanitization | Confirmed RSS weakness fixed; extension finding is separate | RSS thumbnail URLs now escape every ampersand rather than only the first. The Chrome extension's YouTube substring check is not loaded by the NAS container and will be handled as a separate extension fix. Four URL-substring alerts are synthetic test assertions. |
 
@@ -264,3 +264,20 @@ normal subscription cycle and a deliberate container restart without regression.
   is 130 passing and 30 intentionally pending, with the same two missing-FFmpeg
   fixture failures. The separate browser-extension URL check is outside the NAS
   runtime, and four URL-substring findings are test-only synthetic assertions.
+- 2026-10-26: draft PR #1 ran the GitHub backend and frontend jobs successfully.
+  CodeQL completed but marked ten changed-file alerts: nine path-injection reports
+  point at canonical-path/containment helpers whose traversal and symlink-escape
+  behavior is covered by focused tests, while the cookies-upload rate-limit
+  report was valid. The upload route now uses pinned `express-rate-limit` 6.11.2
+  with five attempts per client address per 15 minutes before authentication or
+  multipart parsing. The offline backend result remains 130 passing and 30
+  intentionally pending; the only two failures remain the missing-FFmpeg fixture
+  tests. The inherited npm audit backlog was observed but not modified in this
+  focused security phase.
+- 2026-10-26: the first draft-PR container validation reached dependency
+  installation but an npm registry socket timed out on the inherited
+  `linux/arm/v7` leg after about ten minutes; no image was published. The PR
+  workflow now checks only the fork's documented supported targets,
+  `linux/amd64` and `linux/arm64`. This still covers the DS923+ (`amd64`) and the
+  supported ARM deployment target while avoiding a legacy architecture outside
+  the fork's support contract.
