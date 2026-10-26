@@ -743,6 +743,27 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Subscription media-export feedback (2026-10-27)
+
+- Full subscription media export now snapshots the subscription identity and
+  name, prevents duplicate requests, and restores its action when the request
+  settles.
+- Successful exports announce that the browser download started. Request and
+  local save failures show localized retry guidance instead of writing raw
+  errors to the browser console.
+- Route changes and component destruction cancel pending export requests, so a
+  response for an older subscription cannot save a file or show stale feedback.
+
+Verification:
+
+- focused Subscription component suite: 13 passing in Chrome Headless, covering
+  successful, request-failed, local-save-failed, duplicate, route-replacement,
+  polling, and manual-check behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  subscription download success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for

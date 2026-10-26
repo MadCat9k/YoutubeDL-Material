@@ -36,6 +36,7 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   private subscriptionRequest: RxSubscription = null;
   private checkRequest: RxSubscription = null;
   private cancelCheckRequest: RxSubscription = null;
+  private downloadRequest: RxSubscription = null;
   private checkSawActiveScan = false;
   private checkIdlePolls = 0;
   private requestGeneration = 0;
@@ -50,6 +51,7 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
         this.stopSubscriptionPolling();
         this.cancelSubscriptionRequest();
         this.cancelCheckRequests();
+        this.cancelDownloadRequest();
         this.requestGeneration++;
         this.id = id;
         this.subscription = null;
@@ -75,6 +77,7 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     this.stopSubscriptionPolling();
     this.cancelSubscriptionRequest();
     this.cancelCheckRequests();
+    this.cancelDownloadRequest();
   }
 
   goBack() {
@@ -161,20 +164,54 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     this.cancel_clicked = false;
   }
 
+  private cancelDownloadRequest(): void {
+    this.downloadRequest?.unsubscribe();
+    this.downloadRequest = null;
+    this.downloading = false;
+  }
+
   getConfig(): void {
     this.use_youtubedl_archive = this.postsService.config['Downloader']['use_youtubedl_archive'];
   }
 
   downloadContent(): void {
+    if (!this.subscription || this.downloading || this.downloadRequest) return;
+
+    const requestedId = this.subscription.id;
+    const requestedName = this.subscription.name;
     this.downloading = true;
-    this.postsService.downloadSubFromServer(this.subscription.id).subscribe(res => {
-      this.downloading = false;
-      const blob: Blob = res;
-      saveAs(blob, this.subscription.name + '.zip');
-    }, err => {
-      console.log(err);
-      this.downloading = false;
+    const request = this.postsService.downloadSubFromServer(requestedId).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: res => {
+        if (requestedId !== this.id) return;
+        try {
+          this.saveSubscriptionArchive(res as Blob, requestedName);
+          this.postsService.openSnackBar($localize`:@@subscription-download-success:Subscription download started.`);
+        } catch (_) {
+          this.showSubscriptionDownloadFailure();
+        }
+      },
+      error: () => {
+        if (requestedId === this.id) this.showSubscriptionDownloadFailure();
+      }
     });
+    this.downloadRequest = request.closed ? null : request;
+    request.add(() => {
+      if (this.downloadRequest === request) this.downloadRequest = null;
+      if (requestedId === this.id) this.downloading = false;
+    });
+  }
+
+  saveSubscriptionArchive(blob: Blob, subscriptionName: string): void {
+    saveAs(blob, subscriptionName + '.zip');
+  }
+
+  private showSubscriptionDownloadFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@subscription-download-failed:Could not download subscription. Try again.`,
+      $localize`Dismiss`
+    );
   }
 
   editSubscription(): void {

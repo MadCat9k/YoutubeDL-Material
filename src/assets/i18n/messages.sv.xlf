@@ -2731,6 +2731,14 @@
         <source>Could not load archives. Try again.</source>
         <target state="new">Could not load archives. Try again.</target>
       </trans-unit>
+      <trans-unit id="subscription-download-success" datatype="html">
+        <source>Subscription download started.</source>
+        <target state="new">Subscription download started.</target>
+      </trans-unit>
+      <trans-unit id="subscription-download-failed" datatype="html">
+        <source>Could not download subscription. Try again.</source>
+        <target state="new">Could not download subscription. Try again.</target>
+      </trans-unit>
       <trans-unit id="task-settings-save-success" datatype="html">
         <source>Task settings saved.</source>
         <target state="new">Task settings saved.</target>

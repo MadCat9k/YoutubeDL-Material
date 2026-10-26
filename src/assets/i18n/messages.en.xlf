@@ -3715,6 +3715,12 @@
       <trans-unit id="archive-list-load-failed" datatype="html">
         <source>Could not load archives. Try again.</source>
       </trans-unit>
+      <trans-unit id="subscription-download-success" datatype="html">
+        <source>Subscription download started.</source>
+      </trans-unit>
+      <trans-unit id="subscription-download-failed" datatype="html">
+        <source>Could not download subscription. Try again.</source>
+      </trans-unit>
       <trans-unit id="task-settings-save-success" datatype="html">
         <source>Task settings saved.</source>
       </trans-unit>
