@@ -4,7 +4,7 @@ import { PostsService } from 'app/posts.services';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { Subscription } from 'api-types';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-subscription-info-dialog',
@@ -16,6 +16,7 @@ export class SubscriptionInfoDialogComponent implements OnInit, OnDestroy {
   sub: Subscription = null;
   unsubbedEmitter = null;
   isUnsubscribing = false;
+  isDownloadingArchive = false;
   private destroyed = new Subject<void>();
 
   constructor(public dialogRef: MatDialogRef<SubscriptionInfoDialogComponent>,
@@ -35,6 +36,8 @@ export class SubscriptionInfoDialogComponent implements OnInit, OnDestroy {
   }
 
   confirmUnsubscribe() {
+    if (this.isUnsubscribing || this.isDownloadingArchive) return;
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         dialogTitle: $localize`Unsubscribe from ${this.sub['name']}:subscription name:`,
@@ -51,7 +54,7 @@ export class SubscriptionInfoDialogComponent implements OnInit, OnDestroy {
   }
 
   unsubscribe() {
-    if (this.isUnsubscribing) return;
+    if (this.isUnsubscribing || this.isDownloadingArchive) return;
 
     this.isUnsubscribing = true;
     this.dialogRef.disableClose = true;
@@ -79,10 +82,34 @@ export class SubscriptionInfoDialogComponent implements OnInit, OnDestroy {
   }
 
   downloadArchive() {
-    this.postsService.downloadArchive(null, this.sub.id).pipe(takeUntil(this.destroyed)).subscribe(res => {
-      const blob: Blob = res;
-      saveAs(blob, 'archive.txt');
+    if (this.isDownloadingArchive || this.isUnsubscribing || !this.sub) return;
+
+    this.isDownloadingArchive = true;
+    this.postsService.downloadArchive(null, this.sub.id).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.isDownloadingArchive = false)
+    ).subscribe({
+      next: res => {
+        try {
+          this.saveArchive(res as Blob);
+          this.postsService.openSnackBar($localize`:@@archive-download-success:Archive download started.`);
+        } catch (_) {
+          this.showArchiveDownloadFailure();
+        }
+      },
+      error: () => this.showArchiveDownloadFailure()
     });
+  }
+
+  saveArchive(blob: Blob): void {
+    saveAs(blob, 'archive.txt');
+  }
+
+  private showArchiveDownloadFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@archive-download-failed:Could not download archive. Try again.`,
+      $localize`Dismiss`
+    );
   }
 
 }

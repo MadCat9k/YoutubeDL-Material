@@ -722,6 +722,27 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Subscription archive-export feedback (2026-10-27)
+
+- Archive export from Subscription Information now prevents duplicate requests
+  and conflicting unsubscribe actions while the export is pending.
+- Successful exports announce that the browser download started. Request and
+  local save failures restore the action and show the same localized retry cue
+  as Archive Viewer.
+- Closing or destroying the dialog cancels pending export work, preventing a
+  late response from saving a file or showing stale feedback.
+
+Verification:
+
+- focused Subscription Information dialog suite: 10 passing in Chrome Headless,
+  covering successful, request-failed, local-save-failed, duplicate,
+  cross-action, and destroyed-dialog export paths alongside subscription-removal
+  coverage;
+- the existing archive download success and failure translations are reused in
+  all 31 tracked locale catalogs;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
