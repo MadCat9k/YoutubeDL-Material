@@ -67,7 +67,10 @@ function resolveTwitchChatPath(id, type, user_uid, sub, customFileFolderPath = n
     const safe_id = typeof id === 'string' ? path.basename(id) : null;
     const safe_user_uid = typeof user_uid === 'string' ? path.basename(user_uid) : user_uid;
     const safe_sub_name = sub && typeof sub.name === 'string' ? path.basename(sub.name) : null;
-    if (safe_id !== id || !isSafePathSegment(safe_id) || (!customFileFolderPath && type !== 'audio' && type !== 'video')) return null;
+    let safe_type = null;
+    if (type === 'audio') safe_type = 'audio';
+    if (type === 'video') safe_type = 'video';
+    if (safe_id !== id || !isSafePathSegment(safe_id) || (!customFileFolderPath && !safe_type)) return null;
     if (user_uid && (safe_user_uid !== user_uid || !isSafePathSegment(safe_user_uid))) return null;
     if (sub && (safe_sub_name !== sub.name || !isSafePathSegment(safe_sub_name) || typeof sub.isPlaylist !== 'boolean')) return null;
 
@@ -83,7 +86,7 @@ function resolveTwitchChatPath(id, type, user_uid, sub, customFileFolderPath = n
         if (sub) {
             file_path = path.join(usersFileFolder, safe_user_uid, 'subscriptions', sub.isPlaylist ? 'playlists' : 'channels', safe_sub_name, `${safe_id}.twitch_chat.json`);
         } else {
-            file_path = path.join(usersFileFolder, safe_user_uid, type, `${safe_id}.twitch_chat.json`);
+            file_path = path.join(usersFileFolder, safe_user_uid, safe_type, `${safe_id}.twitch_chat.json`);
         }
         allowed_roots = [usersFileFolder];
     } else {
@@ -91,7 +94,7 @@ function resolveTwitchChatPath(id, type, user_uid, sub, customFileFolderPath = n
             file_path = path.join(subscriptionsFileFolder, sub.isPlaylist ? 'playlists' : 'channels', safe_sub_name, `${safe_id}.twitch_chat.json`);
             allowed_roots = [subscriptionsFileFolder];
         } else {
-            const typeFolder = config_api.getConfigItem(`ytdl_${type}_folder_path`);
+            const typeFolder = config_api.getConfigItem(`ytdl_${safe_type}_folder_path`);
             file_path = path.join(typeFolder, `${safe_id}.twitch_chat.json`);
             allowed_roots = [typeFolder];
         }

@@ -298,3 +298,8 @@ normal subscription cycle and a deliberate container restart without regression.
   deletion, and thumbnail tests pass. The full offline backend result remains
   130 passing and 30 intentionally pending; its only two failures are the known
   missing-FFmpeg fixture tests.
+- 2026-10-27: the next CodeQL pass closed three of those five findings. The last
+  two traces both originated at the request-provided Twitch media `type`, even
+  though only `audio` and `video` passed validation. Path construction now uses
+  fresh server-owned string literals selected from that two-value allowlist,
+  never the request value itself. No CodeQL findings were dismissed.
