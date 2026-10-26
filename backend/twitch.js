@@ -64,9 +64,12 @@ function isSafePathSegment(value) {
 }
 
 function resolveTwitchChatPath(id, type, user_uid, sub, customFileFolderPath = null, mustExist = false) {
-    if (!isSafePathSegment(id) || (!customFileFolderPath && type !== 'audio' && type !== 'video')) return null;
-    if (user_uid && !isSafePathSegment(user_uid)) return null;
-    if (sub && (!isSafePathSegment(sub.name) || typeof sub.isPlaylist !== 'boolean')) return null;
+    const safe_id = typeof id === 'string' ? path.basename(id) : null;
+    const safe_user_uid = typeof user_uid === 'string' ? path.basename(user_uid) : user_uid;
+    const safe_sub_name = sub && typeof sub.name === 'string' ? path.basename(sub.name) : null;
+    if (safe_id !== id || !isSafePathSegment(safe_id) || (!customFileFolderPath && type !== 'audio' && type !== 'video')) return null;
+    if (user_uid && (safe_user_uid !== user_uid || !isSafePathSegment(safe_user_uid))) return null;
+    if (sub && (safe_sub_name !== sub.name || !isSafePathSegment(safe_sub_name) || typeof sub.isPlaylist !== 'boolean')) return null;
 
     const usersFileFolder = config_api.getConfigItem('ytdl_users_base_path');
     const subscriptionsFileFolder = config_api.getConfigItem('ytdl_subscriptions_base_path');
@@ -74,22 +77,22 @@ function resolveTwitchChatPath(id, type, user_uid, sub, customFileFolderPath = n
     let allowed_roots = null;
 
     if (customFileFolderPath) {
-        file_path = path.join(customFileFolderPath, `${id}.twitch_chat.json`);
+        file_path = path.join(customFileFolderPath, `${safe_id}.twitch_chat.json`);
         allowed_roots = [customFileFolderPath];
     } else if (user_uid) {
         if (sub) {
-            file_path = path.join(usersFileFolder, user_uid, 'subscriptions', sub.isPlaylist ? 'playlists' : 'channels', sub.name, `${id}.twitch_chat.json`);
+            file_path = path.join(usersFileFolder, safe_user_uid, 'subscriptions', sub.isPlaylist ? 'playlists' : 'channels', safe_sub_name, `${safe_id}.twitch_chat.json`);
         } else {
-            file_path = path.join(usersFileFolder, user_uid, type, `${id}.twitch_chat.json`);
+            file_path = path.join(usersFileFolder, safe_user_uid, type, `${safe_id}.twitch_chat.json`);
         }
         allowed_roots = [usersFileFolder];
     } else {
         if (sub) {
-            file_path = path.join(subscriptionsFileFolder, sub.isPlaylist ? 'playlists' : 'channels', sub.name, `${id}.twitch_chat.json`);
+            file_path = path.join(subscriptionsFileFolder, sub.isPlaylist ? 'playlists' : 'channels', safe_sub_name, `${safe_id}.twitch_chat.json`);
             allowed_roots = [subscriptionsFileFolder];
         } else {
             const typeFolder = config_api.getConfigItem(`ytdl_${type}_folder_path`);
-            file_path = path.join(typeFolder, `${id}.twitch_chat.json`);
+            file_path = path.join(typeFolder, `${safe_id}.twitch_chat.json`);
             allowed_roots = [typeFolder];
         }
     }

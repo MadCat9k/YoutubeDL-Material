@@ -16,15 +16,16 @@ exports.isValidUserID = (uid) => typeof uid === 'string'
     && !uid.includes('\0');
 
 exports.resolveUserDirectory = (uid, users_root, base_directory = __dirname) => {
-    if (!exports.isValidUserID(uid) || typeof users_root !== 'string' || users_root.length === 0) return null;
+    const safe_uid = typeof uid === 'string' ? path.basename(uid) : null;
+    if (safe_uid !== uid || !exports.isValidUserID(safe_uid) || typeof users_root !== 'string' || users_root.length === 0) return null;
 
     try {
         const resolved_root = path.resolve(base_directory, users_root);
-        if (!fs.existsSync(resolved_root)) return path.join(resolved_root, uid);
+        if (!fs.existsSync(resolved_root)) return path.join(resolved_root, safe_uid);
 
         const real_root = fs.realpathSync(resolved_root);
         if (!fs.statSync(real_root).isDirectory()) return null;
-        const candidate = path.join(real_root, uid);
+        const candidate = path.join(real_root, safe_uid);
         if (!fs.existsSync(candidate)) return candidate;
 
         const real_candidate = fs.realpathSync(candidate);

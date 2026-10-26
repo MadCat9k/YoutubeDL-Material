@@ -288,3 +288,13 @@ normal subscription cycle and a deliberate container restart without regression.
   tag validation now also applies the standard `path.basename` sanitizer and
   rejects any value changed by it before applying the existing allowlist. Tests
   cover POSIX and Windows-style path separators.
+- 2026-10-27: strengthened the five remaining pull-request path findings rather
+  than dismissing them. Cookie installation now reconstructs the temporary path
+  only from Multer's generated 32-character filename beneath the real appdata
+  root. User and Twitch path segments apply `path.basename` before their existing
+  allowlists. Media candidates must be lexically beneath either the configured
+  root or its canonical real path before any candidate filesystem access, and
+  real-path containment still rejects symlink escapes. Twenty-two focused path,
+  deletion, and thumbnail tests pass. The full offline backend result remains
+  130 passing and 30 intentionally pending; its only two failures are the known
+  missing-FFmpeg fixture tests.

@@ -21,11 +21,14 @@ exports.createCookieUploader = (appdata_root) => multer({
 }).single('cookies');
 
 exports.installUploadedCookieFile = async (uploaded_file, appdata_root) => {
-    if (!uploaded_file || typeof uploaded_file.path !== 'string') return false;
+    if (!uploaded_file || typeof uploaded_file.filename !== 'string') return false;
+
+    const upload_name = path.basename(uploaded_file.filename);
+    if (upload_name !== uploaded_file.filename || !/^[0-9a-f]{32}$/.test(upload_name)) return false;
 
     try {
         const real_root = await fs.realpath(appdata_root);
-        const real_upload = await fs.realpath(uploaded_file.path);
+        const real_upload = await fs.realpath(path.join(real_root, upload_name));
         const stats = await fs.stat(real_upload);
         if (!stats.isFile() || !isWithinRoot(real_upload, real_root)) return false;
         if (stats.size === 0 || stats.size > MAX_COOKIE_FILE_SIZE) {
