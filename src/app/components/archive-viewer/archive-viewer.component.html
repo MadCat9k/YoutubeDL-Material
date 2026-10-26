@@ -13,12 +13,14 @@
             <ng-container matColumnDef="select">
               <mat-header-cell *matHeaderCellDef>
                 <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                              [disabled]="delete_confirmation_open || deleting_archives"
                               [checked]="selection.hasValue() && isAllSelected()"
                               [indeterminate]="selection.hasValue() && !isAllSelected()">
                 </mat-checkbox>
               </mat-header-cell>
               <mat-cell *matCellDef="let row">
                 <mat-checkbox (click)="$event.stopPropagation()"
+                              [disabled]="delete_confirmation_open || deleting_archives"
                               (change)="$event ? selection.toggle(row) : null"
                               [checked]="selection.isSelected(row)">
                 </mat-checkbox>
@@ -74,7 +76,7 @@
 
 <div style="margin: 10px 10px 10px 0px; display: flex;">
   <span style="flex-grow: 1;" class="flex-items">
-    <button [disabled]="selection.selected.length === 0" color="warn" style="margin: 10px;" mat-stroked-button i18n="Delete selected" (click)="openDeleteSelectedArchivesDialog()">Delete selected</button>
+    <button [disabled]="selection.selected.length === 0 || delete_confirmation_open || deleting_archives" color="warn" style="margin: 10px;" mat-stroked-button i18n="Delete selected" (click)="openDeleteSelectedArchivesDialog()">Delete selected</button>
   </span>
   <span class="flex-items">
     <button [disabled]="!(archives && archives.length > 0)" (click)="downloadArchive()" mat-stroked-button i18n="Download archive">Download archive</button>

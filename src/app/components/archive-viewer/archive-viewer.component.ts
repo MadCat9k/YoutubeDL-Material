@@ -1,5 +1,5 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, ViewChild } from '@angular/core';
+import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -8,13 +8,15 @@ import { Archive } from 'api-types/models/Archive';
 import { ConfirmDialogComponent } from 'app/dialogs/confirm-dialog/confirm-dialog.component';
 import { PostsService } from 'app/posts.services';
 import { NgxFileDropEntry } from 'ngx-file-drop';
+import { Subject } from 'rxjs';
+import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-archive-viewer',
   templateUrl: './archive-viewer.component.html',
   styleUrls: ['./archive-viewer.component.scss']
 })
-export class ArchiveViewerComponent {
+export class ArchiveViewerComponent implements OnDestroy {
   readonly uploadLabel = $localize`:|Upload:Upload`;
 
   // table
@@ -35,6 +37,10 @@ export class ArchiveViewerComponent {
   uploading_archive = false;
   uploaded_archive = false;
   files = [];
+  delete_confirmation_open = false;
+  deleting_archives = false;
+
+  private destroyed = new Subject<void>();
 
   typeSelectOptions = {
     video: {
@@ -55,6 +61,11 @@ export class ArchiveViewerComponent {
 
   ngOnInit() {
     this.getArchives();
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed.next();
+    this.destroyed.complete();
   }
 
   applyFilter(event: Event) {
@@ -149,6 +160,10 @@ export class ArchiveViewerComponent {
   }
 
   openDeleteSelectedArchivesDialog(): void {
+    if (this.delete_confirmation_open || this.deleting_archives || !this.selection.hasValue()) return;
+
+    const selectedArchives = [...this.selection.selected];
+    this.delete_confirmation_open = true;
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         dialogTitle: $localize`Delete archives`,
@@ -157,27 +172,46 @@ export class ArchiveViewerComponent {
         warnSubmitColor: true
       }
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.afterClosed().pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.delete_confirmation_open = false)
+    ).subscribe(confirmed => {
       if (confirmed) {
-        this.deleteSelectedArchives();
+        this.deleteSelectedArchives(selectedArchives);
       }
     });
-    
   }
 
-  deleteSelectedArchives(): void {
-    for (const archive of this.selection.selected) {
-      this.archives = this.archives.filter((_archive: Archive) => !(archive['extractor'] === _archive['extractor'] && archive['id'] !== _archive['id']));
-    }
-    this.postsService.deleteArchiveItems(this.selection.selected).subscribe(res => {
-      if (res['success']) {
+  deleteSelectedArchives(selectedArchives = [...this.selection.selected]): void {
+    if (this.deleting_archives || selectedArchives.length === 0) return;
+
+    this.deleting_archives = true;
+    this.postsService.deleteArchiveItems(selectedArchives).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.deleting_archives = false)
+    ).subscribe({
+      next: res => {
+        if (!res['success']) {
+          this.showArchiveDeleteFailure();
+          return;
+        }
+
+        this.archives = (this.archives || []).filter((archive: Archive) =>
+          !selectedArchives.some(selected => selected.extractor === archive.extractor && selected.id === archive.id)
+        );
+        if (this.dataSource) this.dataSource.data = this.archives;
+        this.selection.clear();
         this.postsService.openSnackBar($localize`Successfully deleted archive items!`);
-      } else {
-        this.postsService.openSnackBar($localize`Failed to delete archive items!`);
-      }
-      this.getArchives();
+      },
+      error: () => this.showArchiveDeleteFailure()
     });
-    this.selection.clear();
+  }
+
+  showArchiveDeleteFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@archive-delete-failed:Could not delete archive items. Try again.`,
+      $localize`Dismiss`
+    );
   }
 
   public dropped(files: NgxFileDropEntry[]) {

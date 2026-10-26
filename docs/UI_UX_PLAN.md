@@ -634,6 +634,30 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Archive-deletion feedback (2026-10-25)
+
+- Archive deletion now waits for an explicit successful response before changing
+  the visible archive list or clearing its selection.
+- Successful deletion removes only the confirmed extractor-and-ID records. This
+  corrects the previous inverted local filter, which could retain the selected
+  row while removing unrelated rows from the same extractor.
+- Rejected and failed deletions preserve both the archive list and selection for
+  retry, show localized actionable feedback, and no longer produce a false local
+  success state.
+- Confirmation and deletion controls prevent duplicate work, remain disabled
+  while the workflow is pending, and stop updating after the component is
+  destroyed.
+
+Verification:
+
+- focused Archive Viewer component suite: 6 passing in Chrome Headless, covering
+  exact-record deletion, rejected and transport-failed requests, duplicate
+  confirmation and request prevention, and destroyed-component behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable archive
+  deletion failure message;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
