@@ -3705,6 +3705,14 @@
         <source>Could not import archive. Check the file and try again.</source>
         <target state="new">Could not import archive. Check the file and try again.</target>
       </trans-unit>
+      <trans-unit id="archive-download-success" datatype="html">
+        <source>Archive download started.</source>
+        <target state="new">Archive download started.</target>
+      </trans-unit>
+      <trans-unit id="archive-download-failed" datatype="html">
+        <source>Could not download archive. Try again.</source>
+        <target state="new">Could not download archive. Try again.</target>
+      </trans-unit>
       <trans-unit id="task-settings-save-success" datatype="html">
         <source>Task settings saved.</source>
         <target state="new">Task settings saved.</target>

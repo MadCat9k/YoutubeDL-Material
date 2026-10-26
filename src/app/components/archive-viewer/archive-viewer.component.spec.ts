@@ -16,6 +16,7 @@ describe('ArchiveViewerComponent', () => {
   beforeEach(() => {
     postsService = {
       deleteArchiveItems: jasmine.createSpy('deleteArchiveItems'),
+      downloadArchive: jasmine.createSpy('downloadArchive'),
       getArchives: jasmine.createSpy('getArchives').and.returnValue(of({archives: [archiveA, archiveB]})),
       importArchive: jasmine.createSpy('importArchive'),
       openSnackBar: jasmine.createSpy('openSnackBar')
@@ -125,6 +126,73 @@ describe('ArchiveViewerComponent', () => {
     expect(postsService.openSnackBar).not.toHaveBeenCalled();
     expect(component.uploading_archive).toBeFalse();
   }));
+
+  it('downloads the current archive selection and announces the result', () => {
+    const archiveBlob = new Blob(['synthetic archive']);
+    postsService.downloadArchive.and.returnValue(of(archiveBlob));
+    spyOn(component, 'saveArchive');
+    component.type = 'audio' as any;
+    component.sub_id = 'synthetic-subscription';
+
+    component.downloadArchive();
+
+    expect(postsService.downloadArchive).toHaveBeenCalledOnceWith('audio', 'synthetic-subscription');
+    expect(component.saveArchive).toHaveBeenCalledOnceWith(archiveBlob);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Archive download started.');
+    expect(component.downloading_archive).toBeFalse();
+  });
+
+  it('reports a failed archive download and restores the action', () => {
+    postsService.downloadArchive.and.returnValue(throwError(() => new Error('synthetic failure')));
+    spyOn(component, 'saveArchive');
+
+    component.downloadArchive();
+
+    expect(component.saveArchive).not.toHaveBeenCalled();
+    expect(component.downloading_archive).toBeFalse();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not download archive. Try again.',
+      'Dismiss'
+    );
+  });
+
+  it('reports a local archive save failure', () => {
+    postsService.downloadArchive.and.returnValue(of(new Blob(['synthetic archive'])));
+    spyOn(component, 'saveArchive').and.throwError('synthetic save failure');
+
+    component.downloadArchive();
+
+    expect(component.downloading_archive).toBeFalse();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not download archive. Try again.',
+      'Dismiss'
+    );
+  });
+
+  it('starts only one archive download while a request is pending', () => {
+    const response = new Subject<Blob>();
+    postsService.downloadArchive.and.returnValue(response);
+
+    component.downloadArchive();
+    component.downloadArchive();
+
+    expect(postsService.downloadArchive).toHaveBeenCalledTimes(1);
+    expect(component.downloading_archive).toBeTrue();
+  });
+
+  it('does not save or announce a late archive download after destruction', () => {
+    const response = new Subject<Blob>();
+    postsService.downloadArchive.and.returnValue(response);
+    spyOn(component, 'saveArchive');
+
+    component.downloadArchive();
+    component.ngOnDestroy();
+    response.next(new Blob(['synthetic archive']));
+
+    expect(component.saveArchive).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.downloading_archive).toBeFalse();
+  });
 
   it('removes only confirmed archive items after server success', () => {
     postsService.deleteArchiveItems.and.returnValue(of({success: true}));

@@ -679,6 +679,26 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Archive-download feedback (2026-10-26)
+
+- Archive export now snapshots the selected file type and subscription, disables
+  its action while the request is pending, and ignores repeated activation.
+- Successful exports announce that the browser download started. Request and
+  local save failures restore the action and show a localized retry cue instead
+  of failing silently.
+- Pending export requests stop updating or saving files after Archive Viewer is
+  destroyed.
+
+Verification:
+
+- focused Archive Viewer component suite: 17 passing in Chrome Headless,
+  covering successful, request-failed, local-save-failed, duplicate, and
+  destroyed-component export paths alongside import and deletion coverage;
+- all 31 tracked XLF files passed XML validation and contain the stable archive
+  download success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for

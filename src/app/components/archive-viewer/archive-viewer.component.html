@@ -79,7 +79,7 @@
     <button [disabled]="selection.selected.length === 0 || delete_confirmation_open || deleting_archives" color="warn" style="margin: 10px;" mat-stroked-button i18n="Delete selected" (click)="openDeleteSelectedArchivesDialog()">Delete selected</button>
   </span>
   <span class="flex-items">
-    <button [disabled]="!(archives && archives.length > 0)" (click)="downloadArchive()" mat-stroked-button i18n="Download archive">Download archive</button>
+    <button [disabled]="!(archives && archives.length > 0) || downloading_archive" (click)="downloadArchive()" mat-stroked-button i18n="Download archive">Download archive</button>
     <mat-form-field style="width: 150px; margin-bottom: -1.25em; margin-left: 10px;">
       <mat-label i18n="Subscription">Subscription</mat-label>
       <mat-select [ngModel]="sub_id" (ngModelChange)="subFilterSelectionChanged($event)">

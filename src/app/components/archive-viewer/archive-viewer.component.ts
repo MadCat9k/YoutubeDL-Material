@@ -36,6 +36,7 @@ export class ArchiveViewerComponent implements OnDestroy {
   // importing
   uploading_archive = false;
   uploaded_archive = false;
+  downloading_archive = false;
   files = [];
   delete_confirmation_open = false;
   deleting_archives = false;
@@ -197,10 +198,36 @@ export class ArchiveViewerComponent implements OnDestroy {
   }
 
   downloadArchive(): void {
-    this.postsService.downloadArchive(this.type === 'both' ? null : this.type, this.sub_id === 'none' ? null : this.sub_id).subscribe(res => {
-      const blob: Blob = res;
-      saveAs(blob, 'archive.txt');
+    if (this.downloading_archive || !(this.archives && this.archives.length > 0)) return;
+
+    this.downloading_archive = true;
+    const requestedType = this.type === 'both' ? null : this.type;
+    const requestedSubId = this.sub_id === 'none' ? null : this.sub_id;
+    this.postsService.downloadArchive(requestedType, requestedSubId).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.downloading_archive = false)
+    ).subscribe({
+      next: res => {
+        try {
+          this.saveArchive(res as Blob);
+          this.postsService.openSnackBar($localize`:@@archive-download-success:Archive download started.`);
+        } catch (_) {
+          this.showArchiveDownloadFailure();
+        }
+      },
+      error: () => this.showArchiveDownloadFailure()
     });
+  }
+
+  saveArchive(blob: Blob): void {
+    saveAs(blob, 'archive.txt');
+  }
+
+  showArchiveDownloadFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@archive-download-failed:Could not download archive. Try again.`,
+      $localize`Dismiss`
+    );
   }
 
   openDeleteSelectedArchivesDialog(): void {
