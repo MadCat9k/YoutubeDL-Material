@@ -764,6 +764,27 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Custom-playlist export feedback (2026-10-27)
+
+- Custom-playlist export now blocks duplicate requests for the same playlist
+  while still allowing different playlists to export independently.
+- Successful exports announce that the browser download started. Request and
+  local save failures restore the affected action and show localized retry
+  guidance.
+- Pending exports and the component's other observable work are cancelled when
+  the Custom Playlists view is destroyed, preventing late responses from saving
+  files or updating a view that is no longer active.
+
+Verification:
+
+- focused Custom Playlists component suite: 7 passing in Chrome Headless,
+  covering successful, request-failed, local-save-failed, duplicate,
+  concurrent-playlist, and destroyed-component export paths;
+- all 31 tracked XLF files passed XML validation and contain the stable playlist
+  download success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
@@ -1186,6 +1207,11 @@ Verification:
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
+- validation image at commit `492c743` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with zero restarts
+  and HTTP 200, and its startup subscription scan completed in 5 seconds with
+  189 discovered entries and 0 queued, while the prior container was retained
+  for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section
   copy, category-action names, top-bar navigation names, and player action names

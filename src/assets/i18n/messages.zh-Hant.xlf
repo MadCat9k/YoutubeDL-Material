@@ -3951,6 +3951,14 @@
         <source>Could not download subscription. Try again.</source>
         <target state="new">Could not download subscription. Try again.</target>
       </trans-unit>
+      <trans-unit id="playlist-download-success" datatype="html">
+        <source>Playlist download started.</source>
+        <target state="new">Playlist download started.</target>
+      </trans-unit>
+      <trans-unit id="playlist-download-failed" datatype="html">
+        <source>Could not download playlist. Try again.</source>
+        <target state="new">Could not download playlist. Try again.</target>
+      </trans-unit>
       <trans-unit id="task-settings-save-success" datatype="html">
         <source>Task settings saved.</source>
         <target state="new">Task settings saved.</target>
