@@ -3373,6 +3373,10 @@
         <source>Could not delete archive items. Try again.</source>
         <target state="new">Could not delete archive items. Try again.</target>
       </trans-unit>
+      <trans-unit id="archive-import-failed" datatype="html">
+        <source>Could not import archive. Check the file and try again.</source>
+        <target state="new">Could not import archive. Check the file and try again.</target>
+      </trans-unit>
       <trans-unit id="task-settings-save-success" datatype="html">
         <source>Task settings saved.</source>
         <target state="new">Task settings saved.</target>

@@ -41,6 +41,7 @@ export class ArchiveViewerComponent implements OnDestroy {
   deleting_archives = false;
 
   private destroyed = new Subject<void>();
+  private archive_import_id = 0;
 
   typeSelectOptions = {
     video: {
@@ -64,6 +65,8 @@ export class ArchiveViewerComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.archive_import_id++;
+    this.uploading_archive = false;
     this.destroyed.next();
     this.destroyed.complete();
   }
@@ -129,27 +132,68 @@ export class ArchiveViewerComponent implements OnDestroy {
   }
 
   importArchive(): void {
-    this.uploading_archive = true;
-        for (const droppedFile of this.files) {
-      // Is it a file?
-      if (droppedFile.fileEntry.isFile) {
-        const fileEntry = droppedFile.fileEntry as FileSystemFileEntry;
-        fileEntry.file(async (file: File) => {          
-          const archive_base64 = await blobToBase64(file);
-          this.postsService.importArchive(archive_base64 as string, this.upload_type, this.upload_sub_id === 'none' ? null : this.upload_sub_id).subscribe(res => {
-            this.uploading_archive = false;
-            if (res['success']) {
-              this.uploaded_archive = true;
-              this.postsService.openSnackBar($localize`Archive successfully imported!`);
-            }
-            this.getArchives();
-          }, err => {
-            console.error(err);
-            this.uploading_archive = false;
-          });
-        });
-      }
+    if (this.uploading_archive || this.uploaded_archive || this.files.length === 0) return;
+
+    const droppedFile = this.files[0];
+    if (!droppedFile.fileEntry.isFile) {
+      this.showArchiveImportFailure();
+      return;
     }
+
+    this.uploading_archive = true;
+    const importId = ++this.archive_import_id;
+    const uploadType = this.upload_type;
+    const uploadSubId = this.upload_sub_id === 'none' ? null : this.upload_sub_id;
+    const fileEntry = droppedFile.fileEntry as FileSystemFileEntry;
+    fileEntry.file(
+      (file: File) => this.readArchiveFile(file, uploadType, uploadSubId, importId),
+      () => this.finishArchiveImportFailure(importId)
+    );
+  }
+
+  archiveToBase64(file: File): Promise<string> {
+    return blobToBase64(file);
+  }
+
+  private async readArchiveFile(file: File, uploadType: FileType, uploadSubId: string, importId: number): Promise<void> {
+    try {
+      const archiveBase64 = await this.archiveToBase64(file);
+      if (importId !== this.archive_import_id) return;
+
+      this.postsService.importArchive(archiveBase64, uploadType, uploadSubId).pipe(
+        takeUntil(this.destroyed),
+        finalize(() => {
+          if (importId === this.archive_import_id) this.uploading_archive = false;
+        })
+      ).subscribe({
+        next: res => {
+          if (!res['success']) {
+            this.showArchiveImportFailure();
+            return;
+          }
+
+          this.uploaded_archive = true;
+          this.postsService.openSnackBar($localize`Archive successfully imported!`);
+          this.getArchives();
+        },
+        error: () => this.showArchiveImportFailure()
+      });
+    } catch (_) {
+      this.finishArchiveImportFailure(importId);
+    }
+  }
+
+  private finishArchiveImportFailure(importId: number): void {
+    if (importId !== this.archive_import_id) return;
+    this.uploading_archive = false;
+    this.showArchiveImportFailure();
+  }
+
+  showArchiveImportFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@archive-import-failed:Could not import archive. Check the file and try again.`,
+      $localize`Dismiss`
+    );
   }
 
   downloadArchive(): void {
@@ -215,7 +259,10 @@ export class ArchiveViewerComponent implements OnDestroy {
   }
 
   public dropped(files: NgxFileDropEntry[]) {
-    this.files = files;
+    if (this.uploading_archive) return;
+
+    this.archive_import_id++;
+    this.files = files.slice(0, 1);
     this.uploading_archive = false;
     this.uploaded_archive = false;
   }
@@ -225,10 +272,11 @@ export class ArchiveViewerComponent implements OnDestroy {
   }
 }
 
-function blobToBase64(blob: Blob) {
-  return new Promise((resolve, _) => {
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(blob);
   });
 }

@@ -658,6 +658,27 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Archive-import feedback (2026-10-26)
+
+- Archive import now accepts only the first selected file, snapshots its target
+  file type and subscription, and prevents duplicate submissions while the file
+  or request is pending.
+- Successful imports refresh the archive list only after the server confirms the
+  operation. Rejected requests, transport failures, and local file-read failures
+  preserve the selected file for retry and show localized actionable feedback.
+- Import target controls stay disabled while work is pending, and late file or
+  request results cannot update a destroyed component.
+
+Verification:
+
+- focused Archive Viewer component suite: 12 passing in Chrome Headless,
+  including successful, rejected, transport-failed, duplicate, and
+  destroyed-component import paths alongside the deletion coverage;
+- all 31 tracked XLF files passed XML validation and contain the stable archive
+  import failure message;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for

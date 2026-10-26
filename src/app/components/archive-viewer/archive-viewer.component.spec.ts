@@ -1,6 +1,7 @@
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { of, Subject, throwError } from 'rxjs';
+import { fakeAsync, flushMicrotasks } from '@angular/core/testing';
 
 import { PostsService } from 'app/posts.services';
 import { ArchiveViewerComponent } from './archive-viewer.component';
@@ -15,6 +16,8 @@ describe('ArchiveViewerComponent', () => {
   beforeEach(() => {
     postsService = {
       deleteArchiveItems: jasmine.createSpy('deleteArchiveItems'),
+      getArchives: jasmine.createSpy('getArchives').and.returnValue(of({archives: [archiveA, archiveB]})),
+      importArchive: jasmine.createSpy('importArchive'),
       openSnackBar: jasmine.createSpy('openSnackBar')
     };
     dialog = jasmine.createSpyObj<MatDialog>('MatDialog', ['open']);
@@ -26,6 +29,102 @@ describe('ArchiveViewerComponent', () => {
   it('provides an accessible name for the archive upload action', () => {
     expect(component.uploadLabel).toBe('Upload');
   });
+
+  it('reports a successful archive import and refreshes the archive list', fakeAsync(() => {
+    const file = new File(['synthetic archive'], 'archive.txt');
+    component.files = [archiveDrop(file)];
+    spyOn(component, 'archiveToBase64').and.returnValue(Promise.resolve('data:text/plain;base64,c3ludGhldGlj'));
+    postsService.importArchive.and.returnValue(of({success: true}));
+
+    component.importArchive();
+    flushMicrotasks();
+
+    expect(postsService.importArchive).toHaveBeenCalledOnceWith(
+      'data:text/plain;base64,c3ludGhldGlj',
+      component.upload_type,
+      null
+    );
+    expect(component.uploaded_archive).toBeTrue();
+    expect(component.uploading_archive).toBeFalse();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Archive successfully imported!');
+    expect(postsService.getArchives).toHaveBeenCalled();
+  }));
+
+  it('keeps a rejected archive import available for retry', fakeAsync(() => {
+    component.files = [archiveDrop(new File(['synthetic archive'], 'archive.txt'))];
+    spyOn(component, 'archiveToBase64').and.returnValue(Promise.resolve('synthetic archive'));
+    postsService.importArchive.and.returnValue(of({success: false}));
+
+    component.importArchive();
+    flushMicrotasks();
+
+    expect(component.uploaded_archive).toBeFalse();
+    expect(component.uploading_archive).toBeFalse();
+    expect(component.files.length).toBe(1);
+    expect(postsService.getArchives).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not import archive. Check the file and try again.',
+      'Dismiss'
+    );
+  }));
+
+  it('reports a failed archive import request and restores retry controls', fakeAsync(() => {
+    component.files = [archiveDrop(new File(['synthetic archive'], 'archive.txt'))];
+    spyOn(component, 'archiveToBase64').and.returnValue(Promise.resolve('synthetic archive'));
+    postsService.importArchive.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.importArchive();
+    flushMicrotasks();
+
+    expect(component.uploaded_archive).toBeFalse();
+    expect(component.uploading_archive).toBeFalse();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not import archive. Check the file and try again.',
+      'Dismiss'
+    );
+  }));
+
+  it('reports a local archive read failure without starting a request', fakeAsync(() => {
+    component.files = [archiveDrop(new File(['synthetic archive'], 'archive.txt'))];
+    spyOn(component, 'archiveToBase64').and.returnValue(Promise.reject(new Error('synthetic read failure')));
+
+    component.importArchive();
+    flushMicrotasks();
+
+    expect(postsService.importArchive).not.toHaveBeenCalled();
+    expect(component.uploading_archive).toBeFalse();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not import archive. Check the file and try again.',
+      'Dismiss'
+    );
+  }));
+
+  it('starts only one archive import while a request is pending', fakeAsync(() => {
+    const response = new Subject<any>();
+    component.files = [archiveDrop(new File(['synthetic archive'], 'archive.txt'))];
+    spyOn(component, 'archiveToBase64').and.returnValue(Promise.resolve('synthetic archive'));
+    postsService.importArchive.and.returnValue(response);
+
+    component.importArchive();
+    component.importArchive();
+    flushMicrotasks();
+
+    expect(postsService.importArchive).toHaveBeenCalledTimes(1);
+    expect(component.uploading_archive).toBeTrue();
+  }));
+
+  it('does not start an archive import after destruction', fakeAsync(() => {
+    component.files = [archiveDrop(new File(['synthetic archive'], 'archive.txt'))];
+    spyOn(component, 'archiveToBase64').and.returnValue(Promise.resolve('synthetic archive'));
+
+    component.importArchive();
+    component.ngOnDestroy();
+    flushMicrotasks();
+
+    expect(postsService.importArchive).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.uploading_archive).toBeFalse();
+  }));
 
   it('removes only confirmed archive items after server success', () => {
     postsService.deleteArchiveItems.and.returnValue(of({success: true}));
@@ -102,3 +201,13 @@ describe('ArchiveViewerComponent', () => {
     expect(component.deleting_archives).toBeFalse();
   });
 });
+
+function archiveDrop(file: File): any {
+  return {
+    fileEntry: {
+      isFile: true,
+      file: (success: (selectedFile: File) => void) => success(file)
+    },
+    relativePath: file.name
+  };
+}

@@ -3700,6 +3700,9 @@
       <trans-unit id="archive-delete-failed" datatype="html">
         <source>Could not delete archive items. Try again.</source>
       </trans-unit>
+      <trans-unit id="archive-import-failed" datatype="html">
+        <source>Could not import archive. Check the file and try again.</source>
+      </trans-unit>
       <trans-unit id="task-settings-save-success" datatype="html">
         <source>Task settings saved.</source>
       </trans-unit>
