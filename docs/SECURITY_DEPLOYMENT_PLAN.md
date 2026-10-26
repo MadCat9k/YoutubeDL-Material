@@ -281,3 +281,10 @@ normal subscription cycle and a deliberate container restart without regression.
   `linux/amd64` and `linux/arm64`. This still covers the DS923+ (`amd64`) and the
   supported ARM deployment target while avoiding a legacy architecture outside
   the fork's support contract.
+- 2026-10-27: reviewed CodeQL alert 176 end to end. Its request source is the
+  `/api/updateServer` release tag, and all production paths pass through the
+  strict release-tag allowlist before constructing a ZIP path beneath the
+  backend directory. CodeQL did not recognize the custom validator, so release
+  tag validation now also applies the standard `path.basename` sanitizer and
+  rejects any value changed by it before applying the existing allowlist. Tests
+  cover POSIX and Windows-style path separators.

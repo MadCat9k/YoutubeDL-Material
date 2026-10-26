@@ -8,10 +8,11 @@ const pipelineAsync = promisify(pipeline);
 const ARCHIVE_ROOT = 'youtubedl-material';
 
 function validateReleaseTag(tag) {
-    if (typeof tag !== 'string' || !/^v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/.test(tag)) {
+    const safeTag = typeof tag === 'string' ? path.basename(tag) : null;
+    if (safeTag !== tag || !/^v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/.test(safeTag)) {
         throw new Error('Invalid release tag.');
     }
-    return tag;
+    return safeTag;
 }
 
 function getArchiveEntryDestination(entryPath, backendRoot) {

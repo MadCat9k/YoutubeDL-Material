@@ -39,6 +39,8 @@ describe('Update archive safety', function() {
         assert.strictEqual(update_archive.validateReleaseTag('v4.3.2'), 'v4.3.2');
         assert.strictEqual(update_archive.validateReleaseTag('v4.3.2-rc.1'), 'v4.3.2-rc.1');
         assert.throws(() => update_archive.validateReleaseTag('../../tmp/owned'), /Invalid release tag/);
+        assert.throws(() => update_archive.validateReleaseTag('v4.3.2/owned'), /Invalid release tag/);
+        assert.throws(() => update_archive.validateReleaseTag('v4.3.2\\owned'), /Invalid release tag/);
         assert.throws(() => update_archive.validateReleaseTag('latest'), /Invalid release tag/);
     });
 
