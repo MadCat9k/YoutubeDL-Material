@@ -1724,6 +1724,7 @@ app.post('/api/resetTasks', optionalJwt, async (req, res) => {
 
 app.post('/api/getTask', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
+    if (!tasks_api.isKnownTaskKey(task_key)) return res.sendStatus(400);
     const task = await db_api.getRecord('tasks', {key: task_key});
     if (task['schedule']) task['next_invocation'] = tasks_api.TASKS[task_key]['job'].nextInvocation().getTime();
     res.send({task: task});
@@ -1731,6 +1732,7 @@ app.post('/api/getTask', optionalJwt, async (req, res) => {
 
 app.post('/api/runTask', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
+    if (!tasks_api.isKnownTaskKey(task_key)) return res.sendStatus(400);
     const task = await db_api.getRecord('tasks', {key: task_key});
 
     let success = true;
@@ -1742,6 +1744,7 @@ app.post('/api/runTask', optionalJwt, async (req, res) => {
 
 app.post('/api/confirmTask', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
+    if (!tasks_api.isKnownTaskKey(task_key)) return res.sendStatus(400);
     const task = await db_api.getRecord('tasks', {key: task_key});
 
     let success = true;
@@ -1755,14 +1758,15 @@ app.post('/api/updateTaskSchedule', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
     const new_schedule = req.body.new_schedule;
   
-    await tasks_api.updateTaskSchedule(task_key, new_schedule);
+    const success = await tasks_api.updateTaskSchedule(task_key, new_schedule);
 
-    res.send({success: true});
+    res.send({success: success});
 });
 
 app.post('/api/updateTaskData', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
     const new_data = req.body.new_data;
+    if (!tasks_api.isKnownTaskKey(task_key)) return res.sendStatus(400);
   
     const success = await db_api.updateRecord('tasks', {key: task_key}, {data: new_data});
 
@@ -1772,6 +1776,7 @@ app.post('/api/updateTaskData', optionalJwt, async (req, res) => {
 app.post('/api/updateTaskOptions', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
     const new_options = req.body.new_options;
+    if (!tasks_api.isKnownTaskKey(task_key)) return res.sendStatus(400);
   
     const success = await db_api.updateRecord('tasks', {key: task_key}, {options: new_options});
 

@@ -149,7 +149,7 @@ normal subscription cycle and a deliberate container restart without regression.
 | Session cookie / CSRF | Alert is secondary to the actual credential design | The Angular client sends a fixed public token on every API request. In multi-user mode it additionally stores a JWT in local storage and sends it as a query parameter; sessions are initialized but are not the primary API authorization mechanism. Cookie flags alone would not fix token leakage or the single-user trust model. Keep the test deployment LAN-only and require reverse-proxy access control or a dedicated authentication redesign before internet exposure. |
 | Request-derived paths | Confirmed weaknesses; persistent-file slices implemented | Media downloads, generated container archives, deletion, Twitch chat files, cookies upload, subscription folder names, and user-folder deletion are now constrained or validated; archive names are random rather than request-derived; and database restore accepts only existing generated backup files beneath the backup root. Re-run CodeQL and review the remaining database/application findings before closing the affected alerts. |
 | Missing rate limiting | Architectural backlog | The alert count is dominated by route-level reports. Prioritize login, registration, token/API-key generation, Telegram, uploads, update, and other mutation endpoints; choose limits compatible with subscription polling and reverse proxies. |
-| Prototype pollution | Needs investigation | Review request-controlled object keys in category, task, configuration, and nested-object helpers. Apply allowlists and forbidden-key checks at the boundary, then add local and MongoDB-mode tests. |
+| Prototype pollution | Confirmed task-key weakness fixed; frontend findings remain | Task operations now accept only own keys from the fixed server registry, so inherited names such as `__proto__` and `constructor` cannot reach registry assignment. Database updates already reject prototype-related keys recursively. Review the separate Angular findings and rerun CodeQL before closing. |
 
 ## Current work log
 
@@ -250,3 +250,10 @@ normal subscription cycle and a deliberate container restart without regression.
   focused path tests and the existing multi-user tests pass. The full offline
   backend result is 126 passing and 30 intentionally pending, with the same two
   missing-FFmpeg fixture failures.
+- 2026-10-26: confirmed the CodeQL task prototype-pollution finding. A supplied
+  task key such as `__proto__` could reach the inherited registry object and its
+  `job` assignment. All task execution, confirmation, scheduling, data, and
+  option endpoints now require an own key from the fixed task registry. Two
+  focused task-safety tests pass. The full offline backend result is 128 passing
+  and 30 intentionally pending, with the same two missing-FFmpeg fixture
+  failures.
