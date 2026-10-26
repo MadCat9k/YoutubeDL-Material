@@ -4,7 +4,17 @@
   <input matInput [(ngModel)]="text_filter" (keyup)="applyFilter($event)" #input>
 </mat-form-field>
 
-<div [hidden]="!(archives && archives.length > 0)">
+<div *ngIf="archives_loading" role="status" aria-live="polite" style="text-align: center; margin: 20px 0;">
+  <mat-spinner [diameter]="32" style="margin: 0 auto 10px;"></mat-spinner>
+  <span i18n="@@archive-list-loading">Loading archives...</span>
+</div>
+
+<div *ngIf="archives_load_failed" role="alert" style="text-align: center; margin: 20px 0;">
+  <h4 i18n="@@archive-list-load-failed">Could not load archives. Try again.</h4>
+  <button mat-stroked-button (click)="retryArchives()" i18n="Retry">Retry</button>
+</div>
+
+<div [hidden]="archives_loading || archives_load_failed || !(archives && archives.length > 0)">
     <div class="mat-elevation-z8">
         <mat-table matSort [dataSource]="dataSource">
 
@@ -70,16 +80,16 @@
       </div>
 </div>
 
-<div *ngIf="(!archives || archives.length === 0)">
+<div *ngIf="archives_retrieved && !archives_loading && !archives_load_failed && (!archives || archives.length === 0)">
   <h4 style="text-align: center; margin-top: 10px;" i18n="Archives empty">Archives empty</h4>
 </div>
 
 <div style="margin: 10px 10px 10px 0px; display: flex;">
   <span style="flex-grow: 1;" class="flex-items">
-    <button [disabled]="selection.selected.length === 0 || delete_confirmation_open || deleting_archives" color="warn" style="margin: 10px;" mat-stroked-button i18n="Delete selected" (click)="openDeleteSelectedArchivesDialog()">Delete selected</button>
+    <button [disabled]="selection.selected.length === 0 || archives_loading || archives_load_failed || delete_confirmation_open || deleting_archives" color="warn" style="margin: 10px;" mat-stroked-button i18n="Delete selected" (click)="openDeleteSelectedArchivesDialog()">Delete selected</button>
   </span>
   <span class="flex-items">
-    <button [disabled]="!(archives && archives.length > 0) || downloading_archive" (click)="downloadArchive()" mat-stroked-button i18n="Download archive">Download archive</button>
+    <button [disabled]="archives_loading || archives_load_failed || !(archives && archives.length > 0) || downloading_archive" (click)="downloadArchive()" mat-stroked-button i18n="Download archive">Download archive</button>
     <mat-form-field style="width: 150px; margin-bottom: -1.25em; margin-left: 10px;">
       <mat-label i18n="Subscription">Subscription</mat-label>
       <mat-select [ngModel]="sub_id" (ngModelChange)="subFilterSelectionChanged($event)">

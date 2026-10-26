@@ -3709,6 +3709,12 @@
       <trans-unit id="archive-download-failed" datatype="html">
         <source>Could not download archive. Try again.</source>
       </trans-unit>
+      <trans-unit id="archive-list-loading" datatype="html">
+        <source>Loading archives...</source>
+      </trans-unit>
+      <trans-unit id="archive-list-load-failed" datatype="html">
+        <source>Could not load archives. Try again.</source>
+      </trans-unit>
       <trans-unit id="task-settings-save-success" datatype="html">
         <source>Task settings saved.</source>
       </trans-unit>

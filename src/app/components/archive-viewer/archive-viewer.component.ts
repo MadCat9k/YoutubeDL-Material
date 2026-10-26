@@ -8,7 +8,7 @@ import { Archive } from 'api-types/models/Archive';
 import { ConfirmDialogComponent } from 'app/dialogs/confirm-dialog/confirm-dialog.component';
 import { PostsService } from 'app/posts.services';
 import { NgxFileDropEntry } from 'ngx-file-drop';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
@@ -27,6 +27,8 @@ export class ArchiveViewerComponent implements OnDestroy {
   // general
   archives = null;
   archives_retrieved = false;
+  archives_loading = false;
+  archives_load_failed = false;
   text_filter = '';
   sub_id = 'none';
   upload_sub_id = 'none';
@@ -43,6 +45,8 @@ export class ArchiveViewerComponent implements OnDestroy {
 
   private destroyed = new Subject<void>();
   private archive_import_id = 0;
+  private archive_list_request_id = 0;
+  private archive_list_request: Subscription = null;
 
   typeSelectOptions = {
     video: {
@@ -67,20 +71,24 @@ export class ArchiveViewerComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.archive_import_id++;
+    this.archive_list_request_id++;
+    this.archive_list_request?.unsubscribe();
+    this.archive_list_request = null;
     this.uploading_archive = false;
+    this.archives_loading = false;
     this.destroyed.next();
     this.destroyed.complete();
   }
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    if (this.dataSource) this.dataSource.filter = filterValue.trim().toLowerCase();
   }
 
   /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource.data.length;
+    const numRows = this.dataSource ? this.dataSource.data.length : 0;
     return numSelected === numRows;
   }
 
@@ -96,14 +104,14 @@ export class ArchiveViewerComponent implements OnDestroy {
 
   typeFilterSelectionChanged(value): void {
     this.type = value;
-    this.dataSource.filter = '';
+    if (this.dataSource) this.dataSource.filter = '';
     this.text_filter = '';
     this.getArchives();
   }
 
   subFilterSelectionChanged(value): void {
     this.sub_id = value;
-    this.dataSource.filter = '';
+    if (this.dataSource) this.dataSource.filter = '';
     this.text_filter = '';
     if (this.sub_id !== 'none') {
       this.type = this.postsService.getSubscriptionByID(this.sub_id)['type'];
@@ -119,17 +127,49 @@ export class ArchiveViewerComponent implements OnDestroy {
   }
 
   getArchives(): void {
-    this.postsService.getArchives(this.type === 'both' ? null : this.type, this.sub_id === 'none' ? null : this.sub_id).subscribe(res => {
-      if (res['archives'] !== null 
-        && res['archives'] !== undefined
-        && JSON.stringify(this.archives) !== JSON.stringify(res['archives'])) {
-          this.archives = res['archives']
-          this.dataSource = new MatTableDataSource<Archive>(this.archives);
-          this.dataSource.sort = this.sort;
-      } else {
-        // failed to get downloads
-      }
+    this.archive_list_request?.unsubscribe();
+    const requestId = ++this.archive_list_request_id;
+    const requestedType = this.type === 'both' ? null : this.type;
+    const requestedSubId = this.sub_id === 'none' ? null : this.sub_id;
+    this.archives_loading = true;
+    this.archives_retrieved = false;
+    this.archives_load_failed = false;
+    this.selection.clear();
+
+    const request = this.postsService.getArchives(requestedType, requestedSubId).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => {
+        if (requestId === this.archive_list_request_id) {
+          this.archives_loading = false;
+          this.archive_list_request = null;
+        }
+      })
+    ).subscribe({
+      next: res => {
+        if (requestId !== this.archive_list_request_id) return;
+        if (!res || !Array.isArray(res['archives'])) {
+          this.finishArchiveListFailure(requestId);
+          return;
+        }
+
+        this.archives = res['archives'];
+        this.dataSource = new MatTableDataSource<Archive>(this.archives);
+        this.dataSource.sort = this.sort;
+        this.archives_retrieved = true;
+      },
+      error: () => this.finishArchiveListFailure(requestId)
     });
+    this.archive_list_request = request.closed ? null : request;
+  }
+
+  private finishArchiveListFailure(requestId: number): void {
+    if (requestId !== this.archive_list_request_id) return;
+    this.archives_retrieved = true;
+    this.archives_load_failed = true;
+  }
+
+  retryArchives(): void {
+    this.getArchives();
   }
 
   importArchive(): void {

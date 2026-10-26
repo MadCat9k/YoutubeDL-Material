@@ -31,6 +31,68 @@ describe('ArchiveViewerComponent', () => {
     expect(component.uploadLabel).toBe('Upload');
   });
 
+  it('loads archives and records an empty result as retrieved', () => {
+    postsService.getArchives.and.returnValue(of({archives: []}));
+
+    component.getArchives();
+
+    expect(component.archives).toEqual([]);
+    expect(component.dataSource.data).toEqual([]);
+    expect(component.archives_retrieved).toBeTrue();
+    expect(component.archives_loading).toBeFalse();
+    expect(component.archives_load_failed).toBeFalse();
+  });
+
+  it('shows a retryable state after an archive-list request fails', () => {
+    postsService.getArchives.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.getArchives();
+
+    expect(component.archives).toEqual([archiveA, archiveB]);
+    expect(component.archives_retrieved).toBeTrue();
+    expect(component.archives_loading).toBeFalse();
+    expect(component.archives_load_failed).toBeTrue();
+  });
+
+  it('treats an invalid archive-list response as a retryable failure', () => {
+    postsService.getArchives.and.returnValue(of({archives: null}));
+
+    component.getArchives();
+
+    expect(component.archives).toEqual([archiveA, archiveB]);
+    expect(component.archives_load_failed).toBeTrue();
+  });
+
+  it('cancels a superseded archive-list request and keeps the latest result', () => {
+    const firstResponse = new Subject<any>();
+    const secondResponse = new Subject<any>();
+    postsService.getArchives.and.returnValues(firstResponse, secondResponse);
+
+    component.getArchives();
+    component.type = 'audio' as any;
+    component.getArchives();
+    secondResponse.next({archives: [archiveB]});
+    secondResponse.complete();
+    firstResponse.next({archives: [archiveA]});
+
+    expect(firstResponse.observers.length).toBe(0);
+    expect(component.archives).toEqual([archiveB]);
+    expect(component.archives_loading).toBeFalse();
+    expect(component.archives_load_failed).toBeFalse();
+  });
+
+  it('does not apply an archive-list response after destruction', () => {
+    const response = new Subject<any>();
+    postsService.getArchives.and.returnValue(response);
+
+    component.getArchives();
+    component.ngOnDestroy();
+    response.next({archives: [archiveB]});
+
+    expect(component.archives).toEqual([archiveA, archiveB]);
+    expect(component.archives_loading).toBeFalse();
+  });
+
   it('reports a successful archive import and refreshes the archive list', fakeAsync(() => {
     const file = new File(['synthetic archive'], 'archive.txt');
     component.files = [archiveDrop(file)];

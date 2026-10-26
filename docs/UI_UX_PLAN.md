@@ -699,6 +699,29 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Archive-list loading and recovery (2026-10-26)
+
+- Archive Viewer now distinguishes initial/loading, empty, populated, and failed
+  list states instead of showing an empty message before retrieval or silently
+  retaining stale content after a request failure.
+- Failed and invalid responses show sanitized guidance with a direct Retry
+  action. Destructive and export actions stay disabled until a valid list is
+  available.
+- Filter changes cancel the previous list request, clear stale selection, and
+  guard the result so an older response cannot overwrite the newest filter.
+  Pending requests stop updating after the component is destroyed.
+
+Verification:
+
+- focused Archive Viewer component suite: 22 passing in Chrome Headless,
+  covering successful empty retrieval, transport and invalid-response failures,
+  superseded requests, and destroyed-component list loading alongside the
+  import, export, and deletion coverage;
+- all 31 tracked XLF files passed XML validation and contain the stable archive
+  loading and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
