@@ -832,6 +832,30 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Recent Videos export feedback (2026-10-27)
+
+- Direct exports from Recent Videos now prevent duplicate requests for the same
+  file while allowing different files to export independently.
+- Successful exports announce that the browser download started. Request and
+  local-save failures show localized retry guidance instead of leaving a card
+  blurred without an explanation.
+- For download-only files, the server copy is removed only after the browser save
+  starts successfully. Cleanup failure reports that the downloaded file is safe
+  but its server copy remains.
+- Subscription changes and component destruction cancel pending exports and
+  cleanup work, preventing an old response from saving, deleting, refreshing, or
+  showing feedback in a replacement view.
+
+Verification:
+
+- focused Recent Videos component suite: 19 passing in Chrome Headless, covering
+  export success, request and local-save failure, cleanup success and failure,
+  duplicate prevention, subscription replacement, teardown, and the existing
+  navigation, filtering, pagination, and stale-response behavior;
+- existing stable file-download and cleanup-failure translations are reused;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
@@ -1270,6 +1294,12 @@ Verification:
   redeployed on port `18084`; the container remained healthy with HTTP 200,
   zero restarts, all five isolated volumes attached, persisted yt-dlp
   `2026.10.26` executable, and a 3-second subscription scan that discovered 189
+  entries and queued 0, while the prior healthy container was retained for
+  rollback;
+- validation image at commit `ff676c0` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 4-second subscription scan that discovered 189
   entries and queued 0, while the prior healthy container was retained for
   rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section

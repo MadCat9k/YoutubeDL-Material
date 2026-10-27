@@ -9,6 +9,7 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MatChipListboxChange } from '@angular/material/chips';
 import { MatSelectionListChange } from '@angular/material/list';
 import { LocationStrategy } from '@angular/common';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-recent-videos',
@@ -84,6 +85,8 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   private destroy$ = new Subject<void>();
   private fileRequest: Subscription = null;
   private playlistRequest: Subscription = null;
+  private exportRequests = new Map<string, Subscription>();
+  private exportCleanupRequests = new Set<Subscription>();
   private fileRequestGeneration = 0;
   private filterChangeTimer: number = null;
 
@@ -184,6 +187,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
     this.destroy$.next();
     this.destroy$.complete();
     this.cancelPendingFileRequest();
+    this.cancelPendingExports();
     this.playlistRequest?.unsubscribe();
     if (this.filterChangeTimer !== null) {
       window.clearTimeout(this.filterChangeTimer);
@@ -311,6 +315,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
 
   private resetSubscriptionState(): void {
     this.cancelPendingFileRequest();
+    this.cancelPendingExports();
     this.fileRequestGeneration++;
 
     if (this.filterChangeTimer !== null) {
@@ -338,6 +343,14 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   private cancelPendingFileRequest(): void {
     this.fileRequest?.unsubscribe();
     this.fileRequest = null;
+  }
+
+  private cancelPendingExports(): void {
+    this.exportRequests.forEach(request => request.unsubscribe());
+    this.exportCleanupRequests.forEach(request => request.unsubscribe());
+    this.exportRequests.clear();
+    this.exportCleanupRequests.clear();
+    this.downloading_content = {};
   }
 
   private resetPaginator(): void {
@@ -381,23 +394,74 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   // downloading
 
   downloadFile(file: DatabaseFile): void {
-    const type = (file.isAudio ? 'audio' : 'video') as FileType;
-    const ext = type === 'audio' ? '.mp3' : '.mp4'
-    const name = file.id;
-    this.downloading_content[file.uid] = true;
-    this.postsService.downloadFileFromServer(file.uid).subscribe(res => {
-      this.downloading_content[file.uid] = false;
-      const blob: Blob = res;
-      saveAs(blob, decodeURIComponent(name) + ext);
+    if (!file?.uid || this.exportRequests.has(file.uid)) return;
 
-      if (!this.postsService.config.Extra.file_manager_enabled && !file.sub_id) {
-        // tell server to delete the file once downloaded
-        this.postsService.deleteFile(file.uid).subscribe(() => {
-          // reload files
-          this.getAllFiles();
-        });
-      }
+    const type = (file.isAudio ? 'audio' : 'video') as FileType;
+    const ext = type === 'audio' ? '.mp3' : '.mp4';
+    const requestedUid = file.uid;
+    const requestedName = file.id;
+    const requestedSubId = file.sub_id;
+    this.downloading_content[requestedUid] = true;
+    const request = this.postsService.downloadFileFromServer(requestedUid).subscribe({
+      next: res => {
+        try {
+          this.saveExportedFile(res as Blob, decodeURIComponent(requestedName) + ext);
+          this.postsService.openSnackBar($localize`:@@file-download-success:File download started.`);
+        } catch (_) {
+          this.showFileExportFailure();
+          return;
+        }
+
+        if (!this.postsService.config.Extra.file_manager_enabled && !requestedSubId) {
+          this.removeExportedServerFile(requestedUid);
+        }
+      },
+      error: () => this.showFileExportFailure()
     });
+    if (!request.closed) {
+      this.exportRequests.set(requestedUid, request);
+    }
+    request.add(() => {
+      if (this.exportRequests.get(requestedUid) === request) {
+        this.exportRequests.delete(requestedUid);
+      }
+      delete this.downloading_content[requestedUid];
+    });
+  }
+
+  saveExportedFile(blob: Blob, filename: string): void {
+    saveAs(blob, filename);
+  }
+
+  private removeExportedServerFile(uid: string): void {
+    const cleanupRequest = this.postsService.deleteFile(uid).subscribe({
+      next: removed => {
+        if (removed) {
+          this.getAllFiles();
+        } else {
+          this.showFileCleanupFailure();
+        }
+      },
+      error: () => this.showFileCleanupFailure()
+    });
+    if (!cleanupRequest.closed) {
+      this.exportCleanupRequests.add(cleanupRequest);
+      cleanupRequest.add(() => this.exportCleanupRequests.delete(cleanupRequest));
+    }
+  }
+
+  private showFileCleanupFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@file-download-cleanup-failed:File downloaded, but the server copy could not be removed.`,
+      $localize`Dismiss`
+    );
+  }
+
+  private showFileExportFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@file-download-failed:Could not download file. Try again.`,
+      $localize`Dismiss`
+    );
   }
 
   // deleting

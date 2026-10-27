@@ -4,6 +4,7 @@ import { LocationStrategy } from '@angular/common';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 
 import { PostsService } from 'app/posts.services';
+import { DatabaseFile } from 'api-types';
 import { RecentVideosComponent } from './recent-videos.component';
 
 describe('RecentVideosComponent', () => {
@@ -27,13 +28,19 @@ describe('RecentVideosComponent', () => {
     };
 
     postsService = Object.assign(
-      jasmine.createSpyObj<PostsService>('PostsService', ['getAllFiles', 'getPlaylists']),
+      jasmine.createSpyObj<PostsService>('PostsService', [
+        'getAllFiles',
+        'getPlaylists',
+        'downloadFileFromServer',
+        'deleteFile',
+        'openSnackBar'
+      ]),
       {
         service_initialized: new BehaviorSubject(true),
         files_changed: new BehaviorSubject(true),
         playlists_changed: new BehaviorSubject(true),
         initialized: true,
-        config: {Extra: {download_only_mode: false}}
+        config: {Extra: {download_only_mode: false, file_manager_enabled: true}}
       }
     );
     postsService.getAllFiles.and.callFake((sort, range, text, type, favorite, subId) => fileResponses[subId]);
@@ -250,5 +257,145 @@ describe('RecentVideosComponent', () => {
     expect(component.descendingMode).toBe(false);
     expect(localStorage.getItem('file_filter')).toBe('[]');
     expect(postsService.getAllFiles).toHaveBeenCalledTimes(1);
+  });
+
+  it('exports a file once and reports when the browser download starts', () => {
+    const response = new Subject<Blob>();
+    const blob = new Blob(['synthetic file']);
+    const file = {uid: 'file-1', id: 'Synthetic%20video', isAudio: false} as DatabaseFile;
+    postsService.downloadFileFromServer.and.returnValue(response);
+    spyOn(component, 'saveExportedFile');
+
+    component.downloadFile(file);
+    component.downloadFile(file);
+
+    expect(postsService.downloadFileFromServer).toHaveBeenCalledOnceWith('file-1');
+    expect(component.downloading_content['file-1']).toBeTrue();
+
+    response.next(blob);
+    response.complete();
+
+    expect(component.saveExportedFile).toHaveBeenCalledOnceWith(blob, 'Synthetic video.mp4');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('File download started.');
+    expect(component.downloading_content['file-1']).toBeUndefined();
+  });
+
+  it('allows different files to export independently', () => {
+    const responses = {
+      'file-1': new Subject<Blob>(),
+      'file-2': new Subject<Blob>()
+    };
+    postsService.downloadFileFromServer.and.callFake(uid => responses[uid]);
+    spyOn(component, 'saveExportedFile');
+
+    component.downloadFile({uid: 'file-1', id: 'First', isAudio: false} as DatabaseFile);
+    component.downloadFile({uid: 'file-2', id: 'Second', isAudio: true} as DatabaseFile);
+
+    expect(postsService.downloadFileFromServer.calls.allArgs()).toEqual([['file-1'], ['file-2']]);
+    expect(component.downloading_content['file-1']).toBeTrue();
+    expect(component.downloading_content['file-2']).toBeTrue();
+
+    responses['file-1'].next(new Blob(['first file']));
+    responses['file-1'].complete();
+    responses['file-2'].next(new Blob(['second file']));
+    responses['file-2'].complete();
+
+    expect(component.saveExportedFile).toHaveBeenCalledWith(jasmine.any(Blob), 'First.mp4');
+    expect(component.saveExportedFile).toHaveBeenCalledWith(jasmine.any(Blob), 'Second.mp3');
+  });
+
+  it('reports file export request failures and restores the card', () => {
+    const response = new Subject<Blob>();
+    postsService.downloadFileFromServer.and.returnValue(response);
+
+    component.downloadFile({uid: 'file-1', id: 'Synthetic video', isAudio: false} as DatabaseFile);
+    response.error(new Error('synthetic request failure'));
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not download file. Try again.',
+      'Dismiss'
+    );
+    expect(component.downloading_content['file-1']).toBeUndefined();
+  });
+
+  it('does not remove the server file when the local save fails', () => {
+    postsService.config.Extra.file_manager_enabled = false;
+    postsService.downloadFileFromServer.and.returnValue(of(new Blob(['synthetic file'])));
+    spyOn(component, 'saveExportedFile').and.throwError('synthetic save failure');
+
+    component.downloadFile({uid: 'file-1', id: 'Synthetic video', isAudio: false} as DatabaseFile);
+
+    expect(postsService.deleteFile).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not download file. Try again.',
+      'Dismiss'
+    );
+  });
+
+  it('removes a non-subscription server file only after the local save starts', () => {
+    postsService.config.Extra.file_manager_enabled = false;
+    postsService.downloadFileFromServer.and.returnValue(of(new Blob(['synthetic file'])));
+    postsService.deleteFile.and.returnValue(of(true));
+    spyOn(component, 'saveExportedFile');
+    spyOn(component, 'getAllFiles');
+
+    component.downloadFile({uid: 'file-1', id: 'Synthetic video', isAudio: false} as DatabaseFile);
+
+    expect(component.saveExportedFile).toHaveBeenCalled();
+    expect(postsService.deleteFile).toHaveBeenCalledOnceWith('file-1');
+    expect(component.getAllFiles).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports when the downloaded server copy could not be removed', () => {
+    postsService.config.Extra.file_manager_enabled = false;
+    postsService.downloadFileFromServer.and.returnValue(of(new Blob(['synthetic file'])));
+    postsService.deleteFile.and.returnValue(of(false));
+    spyOn(component, 'saveExportedFile');
+
+    component.downloadFile({uid: 'file-1', id: 'Synthetic video', isAudio: false} as DatabaseFile);
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'File downloaded, but the server copy could not be removed.',
+      'Dismiss'
+    );
+  });
+
+  it('cancels an in-flight export when the component is destroyed', () => {
+    const response = new Subject<Blob>();
+    postsService.downloadFileFromServer.and.returnValue(response);
+    spyOn(component, 'saveExportedFile');
+
+    component.downloadFile({uid: 'file-1', id: 'Synthetic video', isAudio: false} as DatabaseFile);
+    expect(response.observers.length).toBe(1);
+
+    fixture.destroy();
+    response.next(new Blob(['late file']));
+
+    expect(response.observers.length).toBe(0);
+    expect(component.saveExportedFile).not.toHaveBeenCalled();
+    expect(component.downloading_content['file-1']).toBeUndefined();
+  });
+
+  it('cancels an old subscription export when the input changes', () => {
+    const response = new Subject<Blob>();
+    postsService.downloadFileFromServer.and.returnValue(response);
+    spyOn(component, 'saveExportedFile');
+    fixture.componentRef.setInput('sub_id', 'subscriptionA');
+    fixture.detectChanges();
+
+    component.downloadFile({
+      uid: 'file-1',
+      id: 'Synthetic video',
+      isAudio: false,
+      sub_id: 'subscriptionA'
+    } as DatabaseFile);
+
+    fixture.componentRef.setInput('sub_id', 'subscriptionB');
+    fixture.detectChanges();
+    response.next(new Blob(['late file']));
+
+    expect(response.observers.length).toBe(0);
+    expect(component.saveExportedFile).not.toHaveBeenCalled();
+    expect(component.downloading_content['file-1']).toBeUndefined();
   });
 });
