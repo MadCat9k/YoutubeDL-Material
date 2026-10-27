@@ -1,5 +1,10 @@
+.sort-property-control {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
 .sort-dir-div {
     display: inline-block;
-    position: absolute;
-    top: 4px;
+    margin-top: 4px;
 }
