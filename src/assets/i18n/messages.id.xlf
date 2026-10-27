@@ -2587,6 +2587,10 @@
         <source>Could not download file. Try again.</source>
         <target state="new">Could not download file. Try again.</target>
       </trans-unit>
+      <trans-unit id="file-download-cleanup-failed" datatype="html">
+        <source>File downloaded, but the server copy could not be removed.</source>
+        <target state="new">File downloaded, but the server copy could not be removed.</target>
+      </trans-unit>
       <trans-unit id="task-settings-save-success" datatype="html">
         <source>Task settings saved.</source>
         <target state="new">Task settings saved.</target>

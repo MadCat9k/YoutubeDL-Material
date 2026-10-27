@@ -3733,6 +3733,9 @@
       <trans-unit id="file-download-failed" datatype="html">
         <source>Could not download file. Try again.</source>
       </trans-unit>
+      <trans-unit id="file-download-cleanup-failed" datatype="html">
+        <source>File downloaded, but the server copy could not be removed.</source>
+      </trans-unit>
       <trans-unit id="task-settings-save-success" datatype="html">
         <source>Task settings saved.</source>
       </trans-unit>

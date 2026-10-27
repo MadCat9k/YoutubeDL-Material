@@ -13,7 +13,13 @@ describe('MainComponent', () => {
   let postsService: jasmine.SpyObj<PostsService>;
 
   beforeEach(() => {
-    postsService = jasmine.createSpyObj<PostsService>('PostsService', ['getCurrentDownload', 'openSnackBar']);
+    postsService = jasmine.createSpyObj<PostsService>('PostsService', [
+      'getCurrentDownload',
+      'openSnackBar',
+      'downloadFileFromServer',
+      'downloadPlaylistFromServer',
+      'deleteFile'
+    ]);
     component = new MainComponent(
       postsService,
       {} as YoutubeSearchService,
@@ -24,6 +30,8 @@ describe('MainComponent', () => {
       {} as ActivatedRoute
     );
   });
+
+  afterEach(() => component.ngOnDestroy());
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -95,5 +103,104 @@ describe('MainComponent', () => {
 
     expect(response.observers.length).toBe(0);
     expect(component.current_download_request_in_flight).toBe(false);
+  });
+
+  it('downloads a file and removes its server copy in download-only mode', () => {
+    const fileBlob = new Blob(['synthetic media file']);
+    const file = {uid: 'file-a', id: 'Synthetic%20file'} as any;
+    component.fileManagerEnabled = false;
+    postsService.downloadFileFromServer.and.returnValue(of(fileBlob));
+    postsService.deleteFile.and.returnValue(of({success: true} as any));
+    spyOn(component, 'saveExportedFile');
+
+    component.downloadFileFromServer(file, 'video');
+
+    expect(component.saveExportedFile).toHaveBeenCalledOnceWith(fileBlob, 'Synthetic file.mp4');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('File download started.');
+    expect(postsService.deleteFile).toHaveBeenCalledOnceWith('file-a');
+  });
+
+  it('preserves the server copy when saving a file fails', () => {
+    const file = {uid: 'file-a', id: 'Synthetic%20file'} as any;
+    component.fileManagerEnabled = false;
+    postsService.downloadFileFromServer.and.returnValue(of(new Blob(['synthetic media file'])));
+    spyOn(component, 'saveExportedFile').and.throwError('synthetic save failure');
+
+    component.downloadFileFromServer(file, 'video');
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Could not download file. Try again.', 'Dismiss');
+    expect(postsService.deleteFile).not.toHaveBeenCalled();
+  });
+
+  it('reports file request and server-cleanup failures', () => {
+    const file = {uid: 'file-a', id: 'Synthetic%20file'} as any;
+    component.fileManagerEnabled = false;
+    postsService.downloadFileFromServer.and.returnValues(
+      throwError(() => new Error('synthetic request failure')),
+      of(new Blob(['synthetic media file']))
+    );
+    postsService.deleteFile.and.returnValue(throwError(() => new Error('synthetic cleanup failure')));
+    spyOn(component, 'saveExportedFile');
+
+    component.downloadFileFromServer(file, 'video');
+    component.downloadFileFromServer(file, 'video');
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Could not download file. Try again.', 'Dismiss');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'File downloaded, but the server copy could not be removed.',
+      'Dismiss'
+    );
+  });
+
+  it('downloads a completed playlist using its id', () => {
+    const playlistBlob = new Blob(['synthetic playlist archive']);
+    const playlist = {id: 'playlist-a', name: 'Synthetic playlist'} as any;
+    component.autoplay = true;
+    component.downloadOnlyMode = true;
+    postsService.downloadPlaylistFromServer.and.returnValue(of(playlistBlob));
+    spyOn(component, 'saveExportedPlaylist');
+    spyOn(component, 'reloadRecentVideos');
+
+    component.downloadHelper(playlist, 'video', true);
+
+    expect(postsService.downloadPlaylistFromServer).toHaveBeenCalledOnceWith('playlist-a');
+    expect(component.saveExportedPlaylist).toHaveBeenCalledOnceWith(playlistBlob, 'Synthetic playlist');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Playlist download started.');
+  });
+
+  it('reports playlist request and local save failures', () => {
+    const playlist = {id: 'playlist-a', name: 'Synthetic playlist'} as any;
+    postsService.downloadPlaylistFromServer.and.returnValues(
+      throwError(() => new Error('synthetic request failure')),
+      of(new Blob(['synthetic playlist archive']))
+    );
+    spyOn(component, 'saveExportedPlaylist').and.throwError('synthetic save failure');
+
+    component.downloadPlaylist(playlist);
+    component.downloadPlaylist(playlist);
+
+    expect(postsService.openSnackBar).toHaveBeenCalledTimes(2);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not download playlist. Try again.',
+      'Dismiss'
+    );
+  });
+
+  it('blocks duplicate exports and cancels pending export work when destroyed', () => {
+    const response = new Subject<Blob>();
+    const playlist = {id: 'playlist-a', name: 'Synthetic playlist'} as any;
+    postsService.downloadPlaylistFromServer.and.returnValue(response);
+    spyOn(component, 'saveExportedPlaylist');
+
+    component.downloadPlaylist(playlist);
+    component.downloadPlaylist(playlist);
+
+    expect(postsService.downloadPlaylistFromServer).toHaveBeenCalledTimes(1);
+    component.ngOnDestroy();
+    response.next(new Blob(['late synthetic response']));
+
+    expect(response.observers.length).toBe(0);
+    expect(component.saveExportedPlaylist).not.toHaveBeenCalled();
+    expect(component.export_requests.size).toBe(0);
   });
 });

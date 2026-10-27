@@ -808,6 +808,30 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Home export feedback (2026-10-27)
+
+- Home's download-only completion path now exports playlists with their actual
+  playlist ID instead of the nonexistent file-style `uid` property.
+- File and playlist exports prevent duplicate requests, announce successful
+  browser downloads, and show localized retry guidance for request or local save
+  failures.
+- A file is removed from the server only after the browser save starts
+  successfully. Cleanup failure now reports that the downloaded file is safe but
+  its server copy remains, rather than silently consuming storage.
+- Pending exports and post-download cleanup requests are cancelled when Home is
+  destroyed, preventing late saves, deletions, or feedback.
+
+Verification:
+
+- focused Main component suite: 13 passing in Chrome Headless, covering the
+  playlist-ID repair, file and playlist export success and failure, local-save
+  protection, cleanup failure, duplicate prevention, teardown, and existing
+  progress polling behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable cleanup
+  failure message; existing file and playlist export messages are reused;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
@@ -1242,6 +1266,12 @@ Verification:
   entries and 0 queued both before and after a deliberate restart. The container
   remained healthy with HTTP 200, zero restarts, and all five isolated volumes
   attached, while the replaced container was retained for comparison;
+- validation image at commit `0772786` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 3-second subscription scan that discovered 189
+  entries and queued 0, while the prior healthy container was retained for
+  rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section
   copy, category-action names, top-bar navigation names, and player action names

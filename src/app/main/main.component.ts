@@ -183,6 +183,8 @@ export class MainComponent implements OnInit, OnDestroy {
   config_reloaded_subscription: Subscription = null;
   args_changed_subscription: Subscription = null;
   current_download_request: Subscription = null;
+  export_requests = new Map<string, Subscription>();
+  export_cleanup_requests = new Set<Subscription>();
   polling_stopped = false;
   current_download_request_in_flight = false;
   currentDownloadConnectionError = false;
@@ -318,6 +320,10 @@ export class MainComponent implements OnInit, OnDestroy {
     this.config_reloaded_subscription?.unsubscribe();
     this.args_changed_subscription?.unsubscribe();
     this.current_download_request?.unsubscribe();
+    this.export_requests.forEach(request => request.unsubscribe());
+    this.export_cleanup_requests.forEach(request => request.unsubscribe());
+    this.export_requests.clear();
+    this.export_cleanup_requests.clear();
     this.current_download_request = null;
     this.current_download_request_in_flight = false;
     if (this.interval_id) { clearTimeout(this.interval_id) }
@@ -333,7 +339,7 @@ export class MainComponent implements OnInit, OnDestroy {
       // if download only mode, just download the file. no redirect
       if (force_view === false && this.downloadOnlyMode && !this.iOS) {
         if (is_playlist) {
-          this.downloadPlaylist(container['uid']);
+          this.downloadPlaylist(container as Playlist);
         } else {
           this.downloadFileFromServer(container as DatabaseFile, type);
         }
@@ -479,24 +485,106 @@ export class MainComponent implements OnInit, OnDestroy {
   }
 
   downloadFileFromServer(file: DatabaseFile, type: string): void {
-    const ext = type === 'audio' ? 'mp3' : 'mp4'
-    this.postsService.downloadFileFromServer(file.uid).subscribe(res => {
-      const blob: Blob = res;
-      saveAs(blob, decodeURIComponent(file.id) + `.${ext}`);
+    if (!file?.uid) return;
+    const requestKey = `file:${file.uid}`;
+    if (this.export_requests.has(requestKey)) return;
 
-      if (!this.fileManagerEnabled) {
-        // tell server to delete the file once downloaded
-        this.postsService.deleteFile(file.uid).subscribe(() => {});
-      }
+    const requestedUid = file.uid;
+    const ext = type === 'audio' ? 'mp3' : 'mp4';
+    let filename: string;
+    try {
+      filename = decodeURIComponent(file.id) + `.${ext}`;
+    } catch (_) {
+      this.showFileExportFailure();
+      return;
+    }
+
+    const request = this.postsService.downloadFileFromServer(requestedUid).subscribe({
+      next: res => {
+        try {
+          this.saveExportedFile(res as Blob, filename);
+          this.postsService.openSnackBar($localize`:@@file-download-success:File download started.`);
+        } catch (_) {
+          this.showFileExportFailure();
+          return;
+        }
+
+        if (!this.fileManagerEnabled) {
+          this.removeExportedServerFile(requestedUid);
+        }
+      },
+      error: () => this.showFileExportFailure()
     });
+    if (!request.closed) {
+      this.export_requests.set(requestKey, request);
+      request.add(() => this.export_requests.delete(requestKey));
+    }
+  }
+
+  saveExportedFile(blob: Blob, filename: string): void {
+    saveAs(blob, filename);
+  }
+
+  private removeExportedServerFile(uid: string): void {
+    const cleanupRequest = this.postsService.deleteFile(uid).subscribe({
+      next: removed => {
+        if (!removed) this.showFileCleanupFailure();
+      },
+      error: () => this.showFileCleanupFailure()
+    });
+    if (!cleanupRequest.closed) {
+      this.export_cleanup_requests.add(cleanupRequest);
+      cleanupRequest.add(() => this.export_cleanup_requests.delete(cleanupRequest));
+    }
+  }
+
+  private showFileCleanupFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@file-download-cleanup-failed:File downloaded, but the server copy could not be removed.`,
+      $localize`Dismiss`
+    );
+  }
+
+  private showFileExportFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@file-download-failed:Could not download file. Try again.`,
+      $localize`Dismiss`
+    );
   }
 
   downloadPlaylist(playlist: Playlist): void {
-    this.postsService.downloadPlaylistFromServer(playlist.id).subscribe(res => {
-      const blob: Blob = res;
-      saveAs(blob, playlist.name + '.zip');
-    });
+    if (!playlist?.id) return;
+    const requestKey = `playlist:${playlist.id}`;
+    if (this.export_requests.has(requestKey)) return;
 
+    const requestedId = playlist.id;
+    const requestedName = playlist.name;
+    const request = this.postsService.downloadPlaylistFromServer(requestedId).subscribe({
+      next: res => {
+        try {
+          this.saveExportedPlaylist(res as Blob, requestedName);
+          this.postsService.openSnackBar($localize`:@@playlist-download-success:Playlist download started.`);
+        } catch (_) {
+          this.showPlaylistExportFailure();
+        }
+      },
+      error: () => this.showPlaylistExportFailure()
+    });
+    if (!request.closed) {
+      this.export_requests.set(requestKey, request);
+      request.add(() => this.export_requests.delete(requestKey));
+    }
+  }
+
+  saveExportedPlaylist(blob: Blob, playlistName: string): void {
+    saveAs(blob, playlistName + '.zip');
+  }
+
+  private showPlaylistExportFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@playlist-download-failed:Could not download playlist. Try again.`,
+      $localize`Dismiss`
+    );
   }
 
   clearInput(): void {
