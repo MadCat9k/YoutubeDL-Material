@@ -4025,6 +4025,10 @@
         <source>Could not load search results. Check the connection and try again.</source>
         <target state="new">Could not load search results. Check the connection and try again.</target>
       </trans-unit>
+      <trans-unit id="cookies-upload-failed" datatype="html">
+        <source>Could not upload cookies. Check the file and try again.</source>
+        <target state="new">Could not upload cookies. Check the file and try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

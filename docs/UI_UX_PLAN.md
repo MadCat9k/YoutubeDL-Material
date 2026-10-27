@@ -948,6 +948,28 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Cookie upload feedback (2026-10-28)
+
+- Cookie-file uploads now wait for a confirmed successful API result before
+  reporting completion.
+- Rejected and failed uploads show a concise localized retry message instead of
+  exposing raw request errors only in the browser console.
+- The upload action ignores repeated activation while work is active and remains
+  available for retry after failure.
+- Selecting a replacement file or closing the dialog cancels the active request,
+  preventing late feedback from a stale upload.
+
+Verification:
+
+- focused cookie-uploader dialog suite: 4 passing in Chrome Headless, covering
+  accessible naming, confirmed success, duplicate prevention, rejected and
+  failed responses, retryability, and teardown;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  cookie-upload failure message; non-English locales use a safe English fallback
+  until translated;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
@@ -1412,6 +1434,11 @@ Verification:
   `2026.10.26` executable, and a 4-second subscription scan that discovered 189
   entries and queued 0, while the prior container was retained for rollback;
 - validation image at commit `fc3cd56` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 3-second subscription scan that discovered 189
+  entries and queued 0, while the prior container was retained for rollback;
+- validation image at commit `83b7278` rebuilt from a clean commit archive and
   redeployed on port `18084`; the container remained healthy with HTTP 200,
   zero restarts, all five isolated volumes attached, persisted yt-dlp
   `2026.10.26` executable, and a 3-second subscription scan that discovered 189
