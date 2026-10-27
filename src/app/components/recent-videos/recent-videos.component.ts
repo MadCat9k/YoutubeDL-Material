@@ -88,6 +88,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   private exportRequests = new Map<string, Subscription>();
   private exportCleanupRequests = new Set<Subscription>();
   private deleteRequests = new Map<string, Subscription>();
+  private playlistAddRequests = new Map<string, Subscription>();
   private fileRequestGeneration = 0;
   private filterChangeTimer: number = null;
 
@@ -190,6 +191,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
     this.cancelPendingFileRequest();
     this.cancelPendingExports();
     this.cancelPendingDeletions();
+    this.cancelPendingPlaylistAdds();
     this.playlistRequest?.unsubscribe();
     if (this.filterChangeTimer !== null) {
       window.clearTimeout(this.filterChangeTimer);
@@ -319,6 +321,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
     this.cancelPendingFileRequest();
     this.cancelPendingExports();
     this.cancelPendingDeletions();
+    this.cancelPendingPlaylistAdds();
     this.fileRequestGeneration++;
 
     if (this.filterChangeTimer !== null) {
@@ -359,6 +362,12 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   private cancelPendingDeletions(): void {
     this.deleteRequests.forEach(request => request.unsubscribe());
     this.deleteRequests.clear();
+    this.downloading_content = {};
+  }
+
+  private cancelPendingPlaylistAdds(): void {
+    this.playlistAddRequests.forEach(request => request.unsubscribe());
+    this.playlistAddRequests.clear();
     this.downloading_content = {};
   }
 
@@ -403,7 +412,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   // downloading
 
   downloadFile(file: DatabaseFile): void {
-    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid)) return;
+    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid) || this.playlistAddRequests.has(file.uid)) return;
 
     const type = (file.isAudio ? 'audio' : 'video') as FileType;
     const ext = type === 'audio' ? '.mp3' : '.mp4';
@@ -479,7 +488,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
     const file = args.file;
     const blacklistMode = args.blacklistMode;
 
-    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid)) return;
+    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid) || this.playlistAddRequests.has(file.uid)) return;
 
     if (file.sub_id) {
       this.deleteSubscriptionFile(file, blacklistMode);
@@ -489,7 +498,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   }
 
   deleteNormalFile(file: DatabaseFile, blacklistMode = false): void {
-    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid)) return;
+    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid) || this.playlistAddRequests.has(file.uid)) return;
     this.startDeleteRequest(file, this.postsService.deleteFile(file.uid, blacklistMode));
   }
 
@@ -510,7 +519,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   }
 
   private startSubscriptionDelete(file: DatabaseFile, deleteForever: boolean): void {
-    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid)) return;
+    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid) || this.playlistAddRequests.has(file.uid)) return;
     this.startDeleteRequest(file, this.postsService.deleteSubscriptionFile(file.uid, deleteForever));
   }
 
@@ -552,22 +561,42 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
     this.getAllFiles(true);
   }
 
-  // TODO: Add translation support for these snackbars
-  addFileToPlaylist(info_obj) {
+  addFileToPlaylist(info_obj): void {
     const file = info_obj['file'];
     const playlist_id = info_obj['playlist_id'];
-    const playlist = this.playlists.find(potential_playlist => potential_playlist['id'] === playlist_id);
-    this.postsService.addFileToPlaylist(playlist_id, file['uid']).subscribe(res => {
-      if (res['success']) {
-        this.postsService.openSnackBar(`Successfully added ${file.title} to ${playlist.title}!`);
-        this.postsService.playlists_changed.next(true);
-      } else {
-        this.postsService.openSnackBar(`Failed to add ${file.title} to ${playlist.title}! Unknown error.`);
-      }
-    }, err => {
-      console.error(err);
-      this.postsService.openSnackBar(`Failed to add ${file.title} to ${playlist.title}! See browser console for error.`);
+    const playlistExists = this.playlists?.some(playlist => playlist['id'] === playlist_id);
+    if (!file?.uid || !playlist_id || !playlistExists || this.exportRequests.has(file.uid) ||
+      this.deleteRequests.has(file.uid) || this.playlistAddRequests.has(file.uid)) return;
+
+    const requestedUid = file.uid;
+    this.downloading_content[requestedUid] = true;
+    const request = this.postsService.addFileToPlaylist(playlist_id, requestedUid).subscribe({
+      next: res => {
+        if (res?.success) {
+          this.postsService.openSnackBar($localize`:@@playlist-add-success:File added to playlist.`);
+          this.postsService.playlists_changed.next(true);
+        } else {
+          this.showPlaylistAddFailure();
+        }
+      },
+      error: () => this.showPlaylistAddFailure()
     });
+    if (!request.closed) {
+      this.playlistAddRequests.set(requestedUid, request);
+    }
+    request.add(() => {
+      if (this.playlistAddRequests.get(requestedUid) === request) {
+        this.playlistAddRequests.delete(requestedUid);
+      }
+      delete this.downloading_content[requestedUid];
+    });
+  }
+
+  private showPlaylistAddFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@playlist-add-failed:Could not add file to playlist. Try again.`,
+      $localize`Dismiss`
+    );
   }
 
   // sorting and filtering

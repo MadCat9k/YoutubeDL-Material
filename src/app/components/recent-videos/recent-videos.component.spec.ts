@@ -34,6 +34,7 @@ describe('RecentVideosComponent', () => {
         'downloadFileFromServer',
         'deleteFile',
         'deleteSubscriptionFile',
+        'addFileToPlaylist',
         'openSnackBar'
       ]),
       {
@@ -493,6 +494,102 @@ describe('RecentVideosComponent', () => {
 
     expect(response.observers.length).toBe(0);
     expect(component.removeFileCard).not.toHaveBeenCalled();
+    expect(component.downloading_content['file-1']).toBeUndefined();
+  });
+
+  it('adds a file to a playlist once and reports confirmed success', () => {
+    const response = new Subject<any>();
+    const file = {uid: 'file-1', id: 'Synthetic video'} as DatabaseFile;
+    component.playlists = [{id: 'playlist-1', title: 'Synthetic playlist'}];
+    postsService.addFileToPlaylist.and.returnValue(response);
+    spyOn(postsService.playlists_changed, 'next');
+
+    component.addFileToPlaylist({file, playlist_id: 'playlist-1'});
+    component.addFileToPlaylist({file, playlist_id: 'playlist-1'});
+
+    expect(postsService.addFileToPlaylist).toHaveBeenCalledOnceWith('playlist-1', 'file-1');
+    expect(component.downloading_content['file-1']).toBeTrue();
+
+    response.next({success: true});
+    response.complete();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('File added to playlist.');
+    expect(postsService.playlists_changed.next).toHaveBeenCalledOnceWith(true);
+    expect(component.downloading_content['file-1']).toBeUndefined();
+  });
+
+  it('reports rejected and failed playlist additions without raw errors', () => {
+    component.playlists = [{id: 'playlist-1'}, {id: 'playlist-2'}];
+    spyOn(postsService.playlists_changed, 'next');
+    postsService.addFileToPlaylist.and.returnValues(
+      of({success: false}),
+      throwError(() => new Error('synthetic playlist failure'))
+    );
+
+    component.addFileToPlaylist({
+      file: {uid: 'file-1'} as DatabaseFile,
+      playlist_id: 'playlist-1'
+    });
+    component.addFileToPlaylist({
+      file: {uid: 'file-2'} as DatabaseFile,
+      playlist_id: 'playlist-2'
+    });
+
+    expect(postsService.openSnackBar.calls.allArgs()).toEqual([
+      ['Could not add file to playlist. Try again.', 'Dismiss'],
+      ['Could not add file to playlist. Try again.', 'Dismiss']
+    ]);
+    expect(postsService.playlists_changed.next).not.toHaveBeenCalled();
+  });
+
+  it('prevents playlist additions from overlapping another file action', () => {
+    const deleteResponse = new Subject<boolean>();
+    const file = {uid: 'file-1'} as DatabaseFile;
+    component.playlists = [{id: 'playlist-1'}];
+    postsService.deleteFile.and.returnValue(deleteResponse);
+
+    component.deleteNormalFile(file);
+    component.addFileToPlaylist({file, playlist_id: 'playlist-1'});
+
+    expect(postsService.addFileToPlaylist).not.toHaveBeenCalled();
+    deleteResponse.complete();
+  });
+
+  it('cancels a pending playlist addition when the subscription input changes', () => {
+    const response = new Subject<any>();
+    component.playlists = [{id: 'playlist-1'}];
+    postsService.addFileToPlaylist.and.returnValue(response);
+    fixture.componentRef.setInput('sub_id', 'subscriptionA');
+    fixture.detectChanges();
+
+    component.addFileToPlaylist({
+      file: {uid: 'file-1'} as DatabaseFile,
+      playlist_id: 'playlist-1'
+    });
+
+    fixture.componentRef.setInput('sub_id', 'subscriptionB');
+    fixture.detectChanges();
+    response.next({success: true});
+
+    expect(response.observers.length).toBe(0);
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.downloading_content['file-1']).toBeUndefined();
+  });
+
+  it('cancels a pending playlist addition when the component is destroyed', () => {
+    const response = new Subject<any>();
+    component.playlists = [{id: 'playlist-1'}];
+    postsService.addFileToPlaylist.and.returnValue(response);
+
+    component.addFileToPlaylist({
+      file: {uid: 'file-1'} as DatabaseFile,
+      playlist_id: 'playlist-1'
+    });
+    fixture.destroy();
+    response.next({success: true});
+
+    expect(response.observers.length).toBe(0);
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
     expect(component.downloading_content['file-1']).toBeUndefined();
   });
 });

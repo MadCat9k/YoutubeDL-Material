@@ -879,6 +879,29 @@ Verification:
 - existing translated delete success, failure, and acknowledgement messages are
   reused.
 
+#### Add-to-playlist feedback (2026-10-27)
+
+- Adding a library file to a custom playlist now waits for a confirmed API
+  result and reports a concise localized success or retry message.
+- Rejected and failed requests no longer expose raw errors or direct users to the
+  browser console.
+- Repeated additions for the same file are ignored while work is active, and an
+  add cannot overlap an export or deletion for that file.
+- Subscription changes and component destruction cancel pending additions so a
+  stale response cannot show feedback or refresh playlists in a replacement
+  view.
+
+Verification:
+
+- focused Recent Videos component suite: 29 passing in Chrome Headless, covering
+  confirmed, rejected, failed, duplicate, conflicting-action, and
+  subscription-replacement add-to-playlist paths plus existing library actions;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  add-to-playlist success and failure messages; non-English locales use safe
+  English fallbacks until translated;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
@@ -1331,6 +1354,12 @@ Verification:
   `2026.10.26` executable, and a 5-second subscription scan that discovered 189
   entries and queued 0, while the prior healthy container was retained for
   rollback;
+- validation image at commit `9325741` rebuilt from a clean commit archive and
+  redeployed on port `18084`; after resolving a port collision with a running
+  rollback container, the new container remained healthy with HTTP 200, zero
+  restarts, all five isolated volumes attached, persisted yt-dlp `2026.10.26`
+  executable, and a 4-second subscription scan that discovered 189 entries and
+  queued 0. Both replaced containers were retained for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section
   copy, category-action names, top-bar navigation names, and player action names

@@ -4744,6 +4744,12 @@
       <trans-unit id="server-restart-failed" datatype="html">
         <source>Server restart failed. Try again.</source>
       </trans-unit>
+      <trans-unit id="playlist-add-success" datatype="html">
+        <source>File added to playlist.</source>
+      </trans-unit>
+      <trans-unit id="playlist-add-failed" datatype="html">
+        <source>Could not add file to playlist. Try again.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>
