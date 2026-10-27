@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, ElementRef, ViewChild, ViewChildren, QueryList } from '@angular/core';
 import {PostsService} from '../posts.services';
 import { Observable, Subject, Subscription } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import {UntypedFormControl, Validators} from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -183,6 +184,8 @@ export class MainComponent implements OnInit, OnDestroy {
   config_reloaded_subscription: Subscription = null;
   args_changed_subscription: Subscription = null;
   current_download_request: Subscription = null;
+  format_requests = new Map<string, Subscription>();
+  format_request_urls = new Set<string>();
   export_requests = new Map<string, Subscription>();
   export_cleanup_requests = new Set<Subscription>();
   polling_stopped = false;
@@ -320,8 +323,11 @@ export class MainComponent implements OnInit, OnDestroy {
     this.config_reloaded_subscription?.unsubscribe();
     this.args_changed_subscription?.unsubscribe();
     this.current_download_request?.unsubscribe();
+    this.format_requests.forEach(request => request.unsubscribe());
     this.export_requests.forEach(request => request.unsubscribe());
     this.export_cleanup_requests.forEach(request => request.unsubscribe());
+    this.format_requests.clear();
+    this.format_request_urls.clear();
     this.export_requests.clear();
     this.export_cleanup_requests.clear();
     this.current_download_request = null;
@@ -647,7 +653,7 @@ export class MainComponent implements OnInit, OnDestroy {
     return valid;
   }
 
-  getURLInfo(url: string): void {
+  getURLInfo(url: string, forceRefresh = false): void {
     if (!this.cachedAvailableFormats[url]) {
       this.cachedAvailableFormats[url] = {};
     }
@@ -656,11 +662,27 @@ export class MainComponent implements OnInit, OnDestroy {
       // make it think that formats errored so that users have options
       this.cachedAvailableFormats[url]['formats_loading'] = false;
       this.cachedAvailableFormats[url]['formats_failed'] = true;
+      this.cachedAvailableFormats[url]['formats_request_failed'] = false;
       return;
     }
-    if (!(this.cachedAvailableFormats[url] && this.cachedAvailableFormats[url]['formats'])) {
-      this.cachedAvailableFormats[url]['formats_loading'] = true;
-      this.postsService.getFileFormats(url).subscribe(res => {
+
+    if (this.format_request_urls.has(url)) return;
+    if (!forceRefresh && this.cachedAvailableFormats[url]['formats']) return;
+
+    if (forceRefresh) {
+      delete this.cachedAvailableFormats[url]['formats'];
+    }
+    this.cachedAvailableFormats[url]['formats_loading'] = true;
+    this.cachedAvailableFormats[url]['formats_failed'] = false;
+    this.cachedAvailableFormats[url]['formats_request_failed'] = false;
+    this.format_request_urls.add(url);
+
+    const request = this.postsService.getFileFormats(url)
+      .pipe(finalize(() => {
+        this.format_request_urls.delete(url);
+        this.format_requests.delete(url);
+      }))
+      .subscribe(res => {
         this.cachedAvailableFormats[url]['formats_loading'] = false;
         const infos = res['result'];
         if (!infos || !infos.formats) {
@@ -671,7 +693,15 @@ export class MainComponent implements OnInit, OnDestroy {
       }, () => {
         this.errorFormats(url);
       });
+
+    if (!request.closed) {
+      this.format_requests.set(url, request);
     }
+  }
+
+  retryFormats(url: string): void {
+    if (!url || this.format_request_urls.has(url)) return;
+    this.getURLInfo(url, true);
   }
 
   getSimulatedOutput(): void {
@@ -716,7 +746,7 @@ export class MainComponent implements OnInit, OnDestroy {
   errorFormats(url: string): void {
     this.cachedAvailableFormats[url]['formats_loading'] = false;
     this.cachedAvailableFormats[url]['formats_failed'] = true;
-    console.error('Could not load formats for url ' + url);
+    this.cachedAvailableFormats[url]['formats_request_failed'] = true;
   }
 
   attachToInput(): void {

@@ -45,6 +45,13 @@
                                 <div class="spinner-div" *ngIf="url !== '' && cachedAvailableFormats[url] && cachedAvailableFormats[url]['formats_loading']">
                                     <mat-spinner [diameter]="25"></mat-spinner>
                                 </div>
+                                <div class="format-load-state" role="status" aria-live="polite"
+                                    *ngIf="url && cachedAvailableFormats[url]?.formats_request_failed">
+                                    <span i18n="Format loading failure@@format-load-failed">Could not load available formats. Default quality options are still available.</span>
+                                    <button mat-stroked-button type="button" color="accent" (click)="retryFormats(url)"
+                                        [disabled]="cachedAvailableFormats[url]?.formats_loading"
+                                        i18n="Retry action@@retry-action">Retry</button>
+                                </div>
                             </div>
                         </div>
                     </div>

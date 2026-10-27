@@ -902,6 +902,27 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Format-loading recovery (2026-10-28)
+
+- A failed quality-format lookup now leaves the default quality choices usable
+  and shows a concise inline explanation with a direct Retry action.
+- The failure state no longer writes the complete user-entered URL to the
+  browser console.
+- Repeated lookups for the same URL cannot overlap, and pending lookups are
+  cancelled when the Home component is destroyed.
+- Playlist URLs continue to use the intentional fallback quality list without
+  being presented as a network failure.
+
+Verification:
+
+- focused Main component suite: 16 passing in Chrome Headless, including
+  successful loading, duplicate prevention, failure recovery, retry, and
+  teardown coverage;
+- all 31 tracked XLF files contain the stable format-loading failure message;
+  non-English locales use a safe English fallback until translated;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
@@ -1360,6 +1381,11 @@ Verification:
   restarts, all five isolated volumes attached, persisted yt-dlp `2026.10.26`
   executable, and a 4-second subscription scan that discovered 189 entries and
   queued 0. Both replaced containers were retained for rollback;
+- validation image at commit `f157382` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 4-second subscription scan that discovered 189
+  entries and queued 0, while the prior container was retained for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section
   copy, category-action names, top-bar navigation names, and player action names

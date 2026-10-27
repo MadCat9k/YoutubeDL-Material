@@ -4750,6 +4750,9 @@
       <trans-unit id="playlist-add-failed" datatype="html">
         <source>Could not add file to playlist. Try again.</source>
       </trans-unit>
+      <trans-unit id="format-load-failed" datatype="html">
+        <source>Could not load available formats. Default quality options are still available.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

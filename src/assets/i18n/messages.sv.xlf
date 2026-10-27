@@ -3876,6 +3876,10 @@
         <source>Could not add file to playlist. Try again.</source>
         <target state="new">Could not add file to playlist. Try again.</target>
       </trans-unit>
+      <trans-unit id="format-load-failed" datatype="html">
+        <source>Could not load available formats. Default quality options are still available.</source>
+        <target state="new">Could not load available formats. Default quality options are still available.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

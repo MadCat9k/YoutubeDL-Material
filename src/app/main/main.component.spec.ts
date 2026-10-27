@@ -15,6 +15,7 @@ describe('MainComponent', () => {
   beforeEach(() => {
     postsService = jasmine.createSpyObj<PostsService>('PostsService', [
       'getCurrentDownload',
+      'getFileFormats',
       'openSnackBar',
       'downloadFileFromServer',
       'downloadPlaylistFromServer',
@@ -103,6 +104,58 @@ describe('MainComponent', () => {
 
     expect(response.observers.length).toBe(0);
     expect(component.current_download_request_in_flight).toBe(false);
+  });
+
+  it('loads available formats and prevents duplicate requests', () => {
+    const response = new Subject<any>();
+    const parsedFormats = {video: [{key: 'Synthetic 720p'}], audio: []};
+    postsService.getFileFormats.and.returnValue(response);
+    spyOn(component, 'getAudioAndVideoFormats').and.returnValue(parsedFormats as any);
+
+    component.getURLInfo('https://example.invalid/synthetic-video');
+    component.getURLInfo('https://example.invalid/synthetic-video');
+
+    expect(postsService.getFileFormats).toHaveBeenCalledTimes(1);
+    expect(component.cachedAvailableFormats['https://example.invalid/synthetic-video']['formats_loading']).toBe(true);
+
+    response.next({result: {formats: [{format_id: 'synthetic'}]}});
+    response.complete();
+
+    expect(component.cachedAvailableFormats['https://example.invalid/synthetic-video']['formats']).toBe(parsedFormats);
+    expect(component.cachedAvailableFormats['https://example.invalid/synthetic-video']['formats_loading']).toBe(false);
+  });
+
+  it('keeps fallback qualities available and retries a failed format request', () => {
+    postsService.getFileFormats.and.returnValues(
+      throwError(() => new Error('synthetic format failure')),
+      of({result: {formats: [{format_id: 'synthetic'}]}} as any)
+    );
+    spyOn(component, 'getAudioAndVideoFormats').and.returnValue({video: [], audio: []} as any);
+    const url = 'https://example.invalid/synthetic-video';
+
+    component.getURLInfo(url);
+
+    expect(component.cachedAvailableFormats[url]['formats_failed']).toBe(true);
+    expect(component.cachedAvailableFormats[url]['formats_request_failed']).toBe(true);
+
+    component.retryFormats(url);
+
+    expect(postsService.getFileFormats).toHaveBeenCalledTimes(2);
+    expect(component.cachedAvailableFormats[url]['formats_request_failed']).toBe(false);
+    expect(component.cachedAvailableFormats[url]['formats']).toEqual({video: [], audio: []});
+  });
+
+  it('cancels pending format requests when destroyed', () => {
+    const response = new Subject<any>();
+    const url = 'https://example.invalid/synthetic-video';
+    postsService.getFileFormats.and.returnValue(response);
+
+    component.getURLInfo(url);
+    component.ngOnDestroy();
+
+    expect(response.observers.length).toBe(0);
+    expect(component.format_requests.size).toBe(0);
+    expect(component.format_request_urls.size).toBe(0);
   });
 
   it('downloads a file and removes its server copy in download-only mode', () => {
