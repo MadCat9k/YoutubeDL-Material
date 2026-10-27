@@ -40,7 +40,11 @@ failure modes:
 
 The fork instead installs `curl-cffi` while building the image and applies the
 `YTDLP_IMPERSONATE` setting whenever the backend launches yt-dlp. The application
-remains responsible for updating the real yt-dlp binary.
+remains responsible for updating the real yt-dlp binary. Its updater selects the
+official standalone executable for `linux/amd64` or `linux/arm64`, retries
+transient transfers, rejects HTTP failures, validates the temporary executable,
+and replaces the live target only after validation. This avoids coupling the
+persisted downloader to Ubuntu 22.04's Python version.
 
 ## Data safety
 

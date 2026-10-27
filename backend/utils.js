@@ -363,6 +363,11 @@ exports.fetchFile = async (url, path, file_label) => {
     var len = null;
     const res = await fetch(url);
 
+    if (!res.ok) {
+        if (res.body) res.body.destroy();
+        throw new Error(`Failed to download ${file_label}: HTTP ${res.status}`);
+    }
+
     len = parseInt(res.headers.get("Content-Length"), 10);
 
     var bar = new ProgressBar(`  Downloading ${file_label} [:bar] :percent :etas`, {

@@ -9,6 +9,8 @@ The original Compose and startup script review is in
 
 - Apply yt-dlp browser impersonation reliably, even when the application updates
   its yt-dlp binary during startup.
+- Keep yt-dlp updates compatible with the image runtime by selecting the official
+  standalone Linux binary for the container architecture.
 - Diagnose and fix thumbnails that disappear after download.
 - Reload the file list when navigating directly between subscriptions.
 - Verify and preserve opening a video in a new browser tab.
@@ -86,7 +88,10 @@ rollback.
 
 The application still owns `/app/appdata/bin/yt-dlp` and may update it at
 startup. The fork injects `--impersonate chrome` at process invocation time,
-so no wrapper-repatch loop is required. `curl-cffi` is installed in the image.
+so no wrapper-repatch loop is required. On `linux/amd64` and `linux/arm64`, the
+updater selects yt-dlp's matching standalone release binary, validates it before
+an atomic replacement, and leaves an existing working binary in place if the
+download fails. `curl-cffi` is installed in the image.
 
 ## Rollback
 

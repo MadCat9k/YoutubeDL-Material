@@ -11,6 +11,8 @@ const config_api = require('./config.js');
 const { addRuntimeArgs } = require('./runtime-args');
 
 const is_windows = process.platform === 'win32';
+const YTDLP_RELEASE_BASE_URL = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download';
+const DOWNLOAD_ATTEMPTS = 3;
 
 exports.addRuntimeArgs = addRuntimeArgs;
 
@@ -24,9 +26,22 @@ exports.youtubedl_forks = {
         'tags_url': 'https://api.github.com/repos/blackjack4494/yt-dlc/tags'
     },
     'yt-dlp': {
-        'download_url': 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp',
+        'download_url': `${YTDLP_RELEASE_BASE_URL}/yt-dlp`,
         'tags_url': 'https://api.github.com/repos/yt-dlp/yt-dlp/tags'
     }
+}
+
+exports.getYoutubeDLDownloadURL = (youtubedl_fork, platform = process.platform, arch = process.arch) => {
+    if (youtubedl_fork !== 'yt-dlp') {
+        return exports.youtubedl_forks[youtubedl_fork]['download_url'] + (platform === 'win32' ? '.exe' : '');
+    }
+
+    if (platform === 'win32') return `${YTDLP_RELEASE_BASE_URL}/yt-dlp.exe`;
+    if (platform !== 'linux') return `${YTDLP_RELEASE_BASE_URL}/yt-dlp`;
+    if (arch === 'x64') return `${YTDLP_RELEASE_BASE_URL}/yt-dlp_linux`;
+    if (arch === 'arm64') return `${YTDLP_RELEASE_BASE_URL}/yt-dlp_linux_aarch64`;
+
+    throw new Error(`Unsupported Linux architecture for yt-dlp: ${arch}`);
 }
 
 exports.runYoutubeDL = async (url, args, customDownloadHandler = null) => {
@@ -92,48 +107,81 @@ exports.checkForYoutubeDLUpdate = async () => {
     const selected_fork = config_api.getConfigItem('ytdl_default_downloader');
     const output_file_path = getYoutubeDLPath();
     // get current version
-    let current_app_details_exists = fs.existsSync(CONSTS.DETAILS_BIN_PATH);
-    if (!current_app_details_exists[selected_fork]) {
+    let current_app_details = {};
+    try {
+        if (fs.existsSync(CONSTS.DETAILS_BIN_PATH)) current_app_details = fs.readJSONSync(CONSTS.DETAILS_BIN_PATH);
+    } catch (_) {
+        logger.warn(`Failed to read youtube-dl binary details at location '${CONSTS.DETAILS_BIN_PATH}'. Regenerating file...`);
+    }
+    if (!current_app_details[selected_fork]) {
         logger.warn(`Failed to get youtube-dl binary details at location '${CONSTS.DETAILS_BIN_PATH}'. Generating file...`);
         updateDetailsJSON(CONSTS.OUTDATED_YOUTUBEDL_VERSION, selected_fork, output_file_path);
+        current_app_details = fs.readJSONSync(CONSTS.DETAILS_BIN_PATH);
     }
-    const current_app_details = JSON.parse(fs.readFileSync(CONSTS.DETAILS_BIN_PATH));
     const current_version = current_app_details[selected_fork]['version'];
     const current_fork = current_app_details[selected_fork]['downloader'];
 
     const latest_version = await exports.getLatestUpdateVersion(selected_fork);
+    const binary_valid = fs.existsSync(output_file_path) && await exports.validateYoutubeDLBinary(output_file_path);
     // if the binary does not exist, or default_downloader doesn't match existing fork, or if the fork has been updated, redownload
-    // TODO: don't redownload if fork already exists
-    if (!fs.existsSync(output_file_path) || current_fork !== selected_fork || !current_version || current_version !== latest_version) {
+    if (!binary_valid || current_fork !== selected_fork || !current_version || (latest_version && current_version !== latest_version)) {
         logger.warn(`Updating ${selected_fork} binary to '${output_file_path}', downloading...`);
-        await exports.updateYoutubeDL(latest_version);
+        await exports.updateYoutubeDL(latest_version || current_version || CONSTS.OUTDATED_YOUTUBEDL_VERSION);
     }
 }
 
 exports.updateYoutubeDL = async (latest_update_version, custom_output_path = null) => {
     await fs.ensureDir(path.join('appdata', 'bin'));
     const default_downloader = config_api.getConfigItem('ytdl_default_downloader');
-    await downloadLatestYoutubeDLBinaryGeneric(default_downloader, latest_update_version, custom_output_path);
+    return await downloadLatestYoutubeDLBinaryGeneric(default_downloader, latest_update_version, custom_output_path);
 }
 
 async function downloadLatestYoutubeDLBinaryGeneric(youtubedl_fork, new_version, custom_output_path = null) {
-    const file_ext = is_windows ? '.exe' : '';
-
-    // build the URL
-    const download_url = `${exports.youtubedl_forks[youtubedl_fork]['download_url']}${file_ext}`;
+    const download_url = exports.getYoutubeDLDownloadURL(youtubedl_fork);
     const output_path = custom_output_path || getYoutubeDLPath(youtubedl_fork);
+    const temporary_output_path = `${output_path}.download-${process.pid}-${Date.now()}`;
 
     try {
-        await utils.fetchFile(download_url, output_path, `${youtubedl_fork} ${new_version}`);
-        fs.chmod(output_path, 0o777);
+        for (let attempt = 1; attempt <= DOWNLOAD_ATTEMPTS; attempt++) {
+            try {
+                await utils.fetchFile(download_url, temporary_output_path, `${youtubedl_fork} ${new_version}`);
+                break;
+            } catch (error) {
+                await fs.remove(temporary_output_path);
+                if (attempt === DOWNLOAD_ATTEMPTS) throw error;
+                logger.warn(`Failed to download ${youtubedl_fork} (attempt ${attempt} of ${DOWNLOAD_ATTEMPTS}); retrying...`);
+                await utils.wait(250 * attempt);
+            }
+        }
+        await fs.chmod(temporary_output_path, 0o777);
+        if (!(await exports.validateYoutubeDLBinary(temporary_output_path))) {
+            throw new Error(`Downloaded ${youtubedl_fork} binary failed executable validation.`);
+        }
+        if (is_windows) {
+            await fs.move(temporary_output_path, output_path, {overwrite: true});
+        } else {
+            await fs.rename(temporary_output_path, output_path);
+        }
 
         updateDetailsJSON(new_version, youtubedl_fork, output_path);
+        return true;
     } catch (e) {
         logger.error(`Failed to download new ${youtubedl_fork} version: ${new_version}`);
         logger.error(e);
-        return;
+        return false;
+    } finally {
+        await fs.remove(temporary_output_path);
     }
-} 
+}
+
+exports.validateYoutubeDLBinary = async (binary_path) => {
+    try {
+        const result = await execa(binary_path, ['--version'], {timeout: 30000});
+        return !!result.stdout.trim();
+    } catch (_) {
+        return false;
+    }
+}
 
 exports.getLatestUpdateVersion = async (youtubedl_fork) => {
     const tags_url = exports.youtubedl_forks[youtubedl_fork]['tags_url'];
@@ -159,7 +207,12 @@ exports.getLatestUpdateVersion = async (youtubedl_fork) => {
 
 function updateDetailsJSON(new_version, fork, output_path) {
     const file_ext = is_windows ? '.exe' : '';
-    const details_json = fs.existsSync(CONSTS.DETAILS_BIN_PATH) ? fs.readJSONSync(CONSTS.DETAILS_BIN_PATH) : {};
+    let details_json = {};
+    try {
+        if (fs.existsSync(CONSTS.DETAILS_BIN_PATH)) details_json = fs.readJSONSync(CONSTS.DETAILS_BIN_PATH);
+    } catch (_) {
+        logger.warn(`Replacing invalid youtube-dl binary details at '${CONSTS.DETAILS_BIN_PATH}'.`);
+    }
     if (!details_json[fork]) details_json[fork] = {};
     const fork_json = details_json[fork];
     fork_json['version'] = new_version;
