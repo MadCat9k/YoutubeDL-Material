@@ -5,12 +5,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 
 import { PostsService } from 'app/posts.services';
-import { YoutubeSearchService } from 'app/youtube-search.service';
+import { Result, YoutubeSearchService } from 'app/youtube-search.service';
 import { MainComponent } from './main.component';
 
 describe('MainComponent', () => {
   let component: MainComponent;
   let postsService: jasmine.SpyObj<PostsService>;
+  let youtubeSearch: jasmine.SpyObj<YoutubeSearchService>;
 
   beforeEach(() => {
     postsService = jasmine.createSpyObj<PostsService>('PostsService', [
@@ -21,9 +22,11 @@ describe('MainComponent', () => {
       'downloadPlaylistFromServer',
       'deleteFile'
     ]);
+    youtubeSearch = jasmine.createSpyObj<YoutubeSearchService>('YoutubeSearchService', ['search', 'ValidURL']);
+    youtubeSearch.ValidURL.and.returnValue(false);
     component = new MainComponent(
       postsService,
-      {} as YoutubeSearchService,
+      youtubeSearch,
       {} as MatSnackBar,
       {} as Router,
       {} as MatDialog,
@@ -156,6 +159,74 @@ describe('MainComponent', () => {
     expect(response.observers.length).toBe(0);
     expect(component.format_requests.size).toBe(0);
     expect(component.format_request_urls.size).toBe(0);
+  });
+
+  it('recovers from a failed search without ending future searches', () => {
+    youtubeSearch.search.and.returnValues(
+      throwError(() => new Error('synthetic search failure')),
+      of([{title: 'Synthetic result'}] as Result[])
+    );
+    component.url = 'synthetic search';
+
+    component.searchVideos('synthetic search');
+
+    expect(component.search_failed).toBe(true);
+    expect(component.results_showing).toBe(false);
+
+    component.retrySearch();
+
+    expect(youtubeSearch.search).toHaveBeenCalledTimes(2);
+    expect(component.search_failed).toBe(false);
+    expect(component.results_showing).toBe(true);
+    expect(component.results[0].title).toBe('Synthetic result');
+  });
+
+  it('cancels a replaced search so stale results cannot overwrite the view', () => {
+    const firstResponse = new Subject<Result[]>();
+    const secondResponse = new Subject<Result[]>();
+    youtubeSearch.search.and.returnValues(firstResponse, secondResponse);
+    component.url = 'second synthetic search';
+
+    component.searchVideos('first synthetic search');
+    component.searchVideos('second synthetic search');
+
+    expect(firstResponse.observers.length).toBe(0);
+    firstResponse.next([{title: 'Stale result'}] as Result[]);
+    secondResponse.next([{title: 'Current result'}] as Result[]);
+
+    expect(component.results[0].title).toBe('Current result');
+  });
+
+  it('skips search requests for URLs and cancels active searches when destroyed', () => {
+    const response = new Subject<Result[]>();
+    youtubeSearch.search.and.returnValue(response);
+    component.url = 'synthetic search';
+
+    component.searchVideos('synthetic search');
+    component.ngOnDestroy();
+
+    expect(response.observers.length).toBe(0);
+    expect(component.search_request).toBeNull();
+
+    youtubeSearch.ValidURL.and.returnValue(true);
+    component.searchVideos('https://example.invalid/synthetic-video');
+    expect(youtubeSearch.search).toHaveBeenCalledTimes(1);
+    expect(component.results_loading).toBe(false);
+  });
+
+  it('cancels search work and clears failed state when the input changes', () => {
+    const response = new Subject<Result[]>();
+    youtubeSearch.search.and.returnValue(response);
+    component.url = 'synthetic search';
+    component.searchVideos('synthetic search');
+    component.search_failed = true;
+
+    component.inputChanged('replacement synthetic search');
+
+    expect(response.observers.length).toBe(0);
+    expect(component.search_failed).toBe(false);
+    expect(component.results_loading).toBe(false);
+    expect(component.results_showing).toBe(false);
   });
 
   it('downloads a file and removes its server copy in download-only mode', () => {

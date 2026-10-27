@@ -75,6 +75,11 @@
                             </mat-card>
                         </span>
                     </div>
+                    <div class="search-load-state" role="status" aria-live="polite" *ngIf="search_failed">
+                        <span i18n="YouTube search failure@@youtube-search-failed">Could not load search results. Check the connection and try again.</span>
+                        <button mat-stroked-button type="button" color="accent" (click)="retrySearch()"
+                            [disabled]="results_loading" i18n="Retry action@@retry-action">Retry</button>
+                    </div>
                 </form>
                 <br/>
                 <mat-checkbox [disabled]="autoplay && !!current_download" (change)="videoModeChanged($event)" [(ngModel)]="audioOnly" style="float: left; margin-top: -12px; margin-left: 4px;">

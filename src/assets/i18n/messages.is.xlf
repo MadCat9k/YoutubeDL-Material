@@ -4916,6 +4916,10 @@
         <source>Could not load available formats. Default quality options are still available.</source>
         <target state="new">Could not load available formats. Default quality options are still available.</target>
       </trans-unit>
+      <trans-unit id="youtube-search-failed" datatype="html">
+        <source>Could not load search results. Check the connection and try again.</source>
+        <target state="new">Could not load search results. Check the connection and try again.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

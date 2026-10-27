@@ -923,6 +923,31 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Home search recovery (2026-10-28)
+
+- A failed YouTube search now shows a concise inline connection message with a
+  direct Retry action instead of silently hiding results and ending the input
+  listener.
+- Search failures no longer write raw request errors to the browser console;
+  typing or pasting a replacement query, or retrying, can recover without
+  reloading the page.
+- A replacement query cancels the prior request so late results cannot overwrite
+  the current search, while URL input bypasses search without leaving a loading
+  state behind.
+- Input listeners and active searches are released when Home is destroyed, and
+  clearing the input clears stale search failure state.
+
+Verification:
+
+- focused Main component suite: 20 passing in Chrome Headless, including search
+  failure recovery, retry, replacement cancellation, URL bypass, input clearing,
+  and teardown coverage plus existing Home workflows;
+- all 31 tracked XLF files passed XML validation and contain the stable Home
+  search failure message; non-English locales use a safe English fallback until
+  translated;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
@@ -1385,6 +1410,11 @@ Verification:
   redeployed on port `18084`; the container remained healthy with HTTP 200,
   zero restarts, all five isolated volumes attached, persisted yt-dlp
   `2026.10.26` executable, and a 4-second subscription scan that discovered 189
+  entries and queued 0, while the prior container was retained for rollback;
+- validation image at commit `fc3cd56` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 3-second subscription scan that discovered 189
   entries and queued 0, while the prior container was retained for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section

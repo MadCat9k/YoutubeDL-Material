@@ -75,6 +75,8 @@ export class MainComponent implements OnInit, OnDestroy {
   results_loading = false;
   results_showing = true;
   results = [];
+  search_failed = false;
+  last_search_query = '';
 
   playlists = {'audio': [], 'video': []};
   playlist_thumbnails = {};
@@ -184,6 +186,8 @@ export class MainComponent implements OnInit, OnDestroy {
   config_reloaded_subscription: Subscription = null;
   args_changed_subscription: Subscription = null;
   current_download_request: Subscription = null;
+  search_input_subscription: Subscription = null;
+  search_request: Subscription = null;
   format_requests = new Map<string, Subscription>();
   format_request_urls = new Set<string>();
   export_requests = new Map<string, Subscription>();
@@ -323,6 +327,8 @@ export class MainComponent implements OnInit, OnDestroy {
     this.config_reloaded_subscription?.unsubscribe();
     this.args_changed_subscription?.unsubscribe();
     this.current_download_request?.unsubscribe();
+    this.search_input_subscription?.unsubscribe();
+    this.search_request?.unsubscribe();
     this.format_requests.forEach(request => request.unsubscribe());
     this.export_requests.forEach(request => request.unsubscribe());
     this.export_cleanup_requests.forEach(request => request.unsubscribe());
@@ -331,6 +337,8 @@ export class MainComponent implements OnInit, OnDestroy {
     this.export_requests.clear();
     this.export_cleanup_requests.clear();
     this.current_download_request = null;
+    this.search_input_subscription = null;
+    this.search_request = null;
     this.current_download_request_in_flight = false;
     if (this.interval_id) { clearTimeout(this.interval_id) }
   }
@@ -613,11 +621,18 @@ export class MainComponent implements OnInit, OnDestroy {
 
   inputChanged(new_val: string): void {
     this.selectedQuality = '';
-    if (new_val === '' || !new_val) {
+    if (new_val !== this.last_search_query) {
+      this.search_request?.unsubscribe();
+      this.search_request = null;
+      this.search_failed = false;
+      this.results_loading = false;
       this.results_showing = false;
+    }
+    if (new_val === '' || !new_val) {
+      this.last_search_query = '';
     } else {
       if (this.ValidURL(new_val)) {
-        this.results_showing = false;
+        this.last_search_query = '';
       }
     }
   }
@@ -750,32 +765,58 @@ export class MainComponent implements OnInit, OnDestroy {
   }
 
   attachToInput(): void {
-    Observable.fromEvent(this.urlInput.nativeElement, 'keyup')
+    this.search_input_subscription?.unsubscribe();
+    this.search_input_subscription = Observable.fromEvent(this.urlInput.nativeElement, 'input')
       .map((e: any) => e.target.value)           // extract the value of input
       .filter((text: string) => text.length > 1) // filter out if empty
       .debounceTime(250)                         // only once every 250ms
-      .do(() => this.results_loading = true)         // enable loading
-      .map((query: string) => this.youtubeSearch.search(query))
-      .switch()                                  // act on the return of the search
-      .subscribe(
-        (results: Result[]) => {
+      .subscribe((query: string) => this.searchVideos(query));
+  }
+
+  searchVideos(query: string): void {
+    this.search_request?.unsubscribe();
+    this.search_request = null;
+    this.search_failed = false;
+    this.results_showing = false;
+
+    if (!query || this.youtubeSearch.ValidURL(query)) {
+      this.last_search_query = '';
+      this.results_loading = false;
+      return;
+    }
+
+    this.last_search_query = query;
+    this.results_loading = true;
+    let request: Subscription = null;
+    request = this.youtubeSearch.search(query)
+      .pipe(finalize(() => {
+        if (this.search_request === request) {
+          this.search_request = null;
+        }
+      }))
+      .subscribe({
+        next: (results: Result[]) => {
           this.results_loading = false;
           if (this.url !== '' && results && results.length > 0) {
             this.results = results;
             this.results_showing = true;
-          } else {
-            this.results_showing = false;
           }
         },
-        (err: any) => {
-          console.log(err)
+        error: () => {
           this.results_loading = false;
           this.results_showing = false;
-        },
-        () => { // on completion
-          this.results_loading = false;
+          this.search_failed = true;
         }
-      );
+      });
+
+    if (!request.closed) {
+      this.search_request = request;
+    }
+  }
+
+  retrySearch(): void {
+    if (!this.search_failed || !this.last_search_query) return;
+    this.searchVideos(this.last_search_query);
   }
 
   argsChanged(): void {
