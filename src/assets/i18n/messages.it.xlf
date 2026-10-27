@@ -3370,6 +3370,14 @@
         <source>Could not download playlist. Try again.</source>
         <target state="new">Could not download playlist. Try again.</target>
       </trans-unit>
+      <trans-unit id="file-download-success" datatype="html">
+        <source>File download started.</source>
+        <target state="new">File download started.</target>
+      </trans-unit>
+      <trans-unit id="file-download-failed" datatype="html">
+        <source>Could not download file. Try again.</source>
+        <target state="new">Could not download file. Try again.</target>
+      </trans-unit>
       <trans-unit id="task-settings-save-success" datatype="html">
         <source>Task settings saved.</source>
         <target state="new">Task settings saved.</target>

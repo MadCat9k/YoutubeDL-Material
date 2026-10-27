@@ -785,6 +785,29 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Player export feedback (2026-10-27)
+
+- Player playlist and single-file exports now snapshot the owning route state,
+  prevent duplicate or conflicting export requests, and restore the action when
+  each request settles.
+- Successful exports announce that the browser download started. Request and
+  local save failures show localized retry guidance instead of silently ending
+  the spinner.
+- Route replacement and component destruction cancel pending exports, so an old
+  player response cannot save a file or show feedback for the new route.
+
+Verification:
+
+- focused Player component suite: 14 passing in Chrome Headless, covering
+  successful playlist and file exports, request and local-save failures,
+  overlapping-action prevention, route replacement, and existing media lifecycle
+  behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable file
+  download success and failure messages; existing playlist export messages are
+  reused;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
@@ -1212,6 +1235,13 @@ Verification:
   and HTTP 200, and its startup subscription scan completed in 5 seconds with
   189 discovered entries and 0 queued, while the prior container was retained
   for rollback;
+- validation image at commit `94a8c94` rebuilt from a clean commit archive and
+  redeployed on port `18084`; it repaired the persisted Python-incompatible
+  downloader with the official standalone yt-dlp `2026.10.26`, exposed Chrome
+  impersonation targets, and completed subscription scans with 189 discovered
+  entries and 0 queued both before and after a deliberate restart. The container
+  remained healthy with HTTP 200, zero restarts, and all five isolated volumes
+  attached, while the replaced container was retained for comparison;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section
   copy, category-action names, top-bar navigation names, and player action names

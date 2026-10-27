@@ -3727,6 +3727,12 @@
       <trans-unit id="playlist-download-failed" datatype="html">
         <source>Could not download playlist. Try again.</source>
       </trans-unit>
+      <trans-unit id="file-download-success" datatype="html">
+        <source>File download started.</source>
+      </trans-unit>
+      <trans-unit id="file-download-failed" datatype="html">
+        <source>Could not download file. Try again.</source>
+      </trans-unit>
       <trans-unit id="task-settings-save-success" datatype="html">
         <source>Task settings saved.</source>
       </trans-unit>

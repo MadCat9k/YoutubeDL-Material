@@ -1,7 +1,7 @@
 import { ChangeDetectorRef } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 
 import { PostsService } from 'app/posts.services';
 import { PlayerComponent } from './player.component';
@@ -145,6 +145,110 @@ describe('PlayerComponent', () => {
     expect(loaded.observers.length).toBe(0);
     expect(ended.observers.length).toBe(0);
     expect(component.save_volume_timer).toBeNull();
+  });
+
+  it('downloads a playlist and announces the result', () => {
+    const archiveBlob = new Blob(['synthetic playlist archive']);
+    component.playlist_id = 'playlist-a';
+    component.db_playlist = {name: 'Synthetic playlist'} as any;
+    postsService.downloadPlaylistFromServer.and.returnValue(of(archiveBlob));
+    spyOn(component, 'savePlaylistArchive');
+
+    component.downloadContent();
+
+    expect(postsService.downloadPlaylistFromServer).toHaveBeenCalledOnceWith('playlist-a', null);
+    expect(component.savePlaylistArchive).toHaveBeenCalledOnceWith(archiveBlob, 'Synthetic playlist');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Playlist download started.');
+    expect(component.downloading).toBeFalse();
+  });
+
+  it('reports playlist request and local save failures', () => {
+    component.playlist_id = 'playlist-a';
+    component.db_playlist = {name: 'Synthetic playlist'} as any;
+    postsService.downloadPlaylistFromServer.and.returnValues(
+      throwError(() => new Error('synthetic request failure')),
+      of(new Blob(['synthetic playlist archive']))
+    );
+    spyOn(component, 'savePlaylistArchive').and.throwError('synthetic save failure');
+
+    component.downloadContent();
+    component.downloadContent();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledTimes(2);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not download playlist. Try again.',
+      'Dismiss'
+    );
+    expect(component.downloading).toBeFalse();
+  });
+
+  it('downloads a media file and announces the result', () => {
+    const fileBlob = new Blob(['synthetic media file']);
+    component.uid = 'file-a';
+    component.playlist = [{title: 'Synthetic file', type: 'audio/mp3'} as any];
+    postsService.downloadFileFromServer.and.returnValue(of(fileBlob));
+    spyOn(component, 'saveMediaFile');
+
+    component.downloadFile();
+
+    expect(postsService.downloadFileFromServer).toHaveBeenCalledOnceWith('file-a', null);
+    expect(component.saveMediaFile).toHaveBeenCalledOnceWith(fileBlob, 'Synthetic file.mp3');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('File download started.');
+    expect(component.downloading).toBeFalse();
+  });
+
+  it('reports file request and local save failures', () => {
+    component.uid = 'file-a';
+    component.playlist = [{title: 'Synthetic file', type: 'video/mp4'} as any];
+    postsService.downloadFileFromServer.and.returnValues(
+      throwError(() => new Error('synthetic request failure')),
+      of(new Blob(['synthetic media file']))
+    );
+    spyOn(component, 'saveMediaFile').and.throwError('synthetic save failure');
+
+    component.downloadFile();
+    component.downloadFile();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledTimes(2);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not download file. Try again.',
+      'Dismiss'
+    );
+    expect(component.downloading).toBeFalse();
+  });
+
+  it('prevents overlapping player downloads', () => {
+    const response = new Subject<Blob>();
+    component.playlist_id = 'playlist-a';
+    component.db_playlist = {name: 'Synthetic playlist'} as any;
+    component.uid = 'file-a';
+    component.playlist = [{title: 'Synthetic file', type: 'video/mp4'} as any];
+    postsService.downloadPlaylistFromServer.and.returnValue(response);
+
+    component.downloadContent();
+    component.downloadContent();
+    component.downloadFile();
+
+    expect(postsService.downloadPlaylistFromServer).toHaveBeenCalledTimes(1);
+    expect(postsService.downloadFileFromServer).not.toHaveBeenCalled();
+    expect(component.downloading).toBeTrue();
+  });
+
+  it('cancels a player download when route state is replaced', () => {
+    const response = new Subject<Blob>();
+    component.playlist_id = 'playlist-a';
+    component.db_playlist = {name: 'Synthetic playlist'} as any;
+    postsService.downloadPlaylistFromServer.and.returnValue(response);
+    spyOn(component, 'savePlaylistArchive');
+
+    component.downloadContent();
+    component.resetRouteState();
+    response.next(new Blob(['late synthetic response']));
+
+    expect(response.observers.length).toBe(0);
+    expect(component.savePlaylistArchive).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.downloading).toBeFalse();
   });
 });
 

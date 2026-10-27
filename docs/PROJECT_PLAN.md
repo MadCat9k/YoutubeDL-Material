@@ -501,8 +501,13 @@ Verification:
 - focused updater, runtime-argument, and subscription-scan suites: 11 passing;
 - full backend suite: 96 passing, 30 pending, and 2 host-environment failures
   caused by FFmpeg not being installed on the development host;
-- the container runtime still requires a clean image rebuild and a forced
-  persisted-binary repair check on both supported architecture paths.
+- validation image at commit `94a8c94` repaired the persisted incompatible
+  downloader with yt-dlp `2026.10.26`; Chrome impersonation targets were
+  available, the subscription scan found 189 entries in 5 seconds, and a
+  deliberate restart reused the validated binary and completed the same scan in
+  3 seconds. The container remained healthy with HTTP 200 and all five isolated
+  persistent volumes attached. The `linux/arm64` selection remains covered by
+  focused tests and still needs runtime observation on the Synology target.
 
 ## Delivery sequence
 
