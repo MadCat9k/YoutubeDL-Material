@@ -3,7 +3,7 @@ import { PostsService } from 'app/posts.services';
 import { Router } from '@angular/router';
 import { DatabaseFile, FileType, FileTypeFilter, Sort } from '../../../api-types';
 import { MatPaginator } from '@angular/material/paginator';
-import { Subject, Subscription } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, skip, take, takeUntil } from 'rxjs/operators';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MatChipListboxChange } from '@angular/material/chips';
@@ -87,6 +87,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   private playlistRequest: Subscription = null;
   private exportRequests = new Map<string, Subscription>();
   private exportCleanupRequests = new Set<Subscription>();
+  private deleteRequests = new Map<string, Subscription>();
   private fileRequestGeneration = 0;
   private filterChangeTimer: number = null;
 
@@ -188,6 +189,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
     this.destroy$.complete();
     this.cancelPendingFileRequest();
     this.cancelPendingExports();
+    this.cancelPendingDeletions();
     this.playlistRequest?.unsubscribe();
     if (this.filterChangeTimer !== null) {
       window.clearTimeout(this.filterChangeTimer);
@@ -316,6 +318,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   private resetSubscriptionState(): void {
     this.cancelPendingFileRequest();
     this.cancelPendingExports();
+    this.cancelPendingDeletions();
     this.fileRequestGeneration++;
 
     if (this.filterChangeTimer !== null) {
@@ -350,6 +353,12 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
     this.exportCleanupRequests.forEach(request => request.unsubscribe());
     this.exportRequests.clear();
     this.exportCleanupRequests.clear();
+    this.downloading_content = {};
+  }
+
+  private cancelPendingDeletions(): void {
+    this.deleteRequests.forEach(request => request.unsubscribe());
+    this.deleteRequests.clear();
     this.downloading_content = {};
   }
 
@@ -394,7 +403,7 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   // downloading
 
   downloadFile(file: DatabaseFile): void {
-    if (!file?.uid || this.exportRequests.has(file.uid)) return;
+    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid)) return;
 
     const type = (file.isAudio ? 'audio' : 'video') as FileType;
     const ext = type === 'audio' ? '.mp3' : '.mp4';
@@ -470,6 +479,8 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
     const file = args.file;
     const blacklistMode = args.blacklistMode;
 
+    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid)) return;
+
     if (file.sub_id) {
       this.deleteSubscriptionFile(file, blacklistMode);
     } else {
@@ -478,16 +489,8 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   }
 
   deleteNormalFile(file: DatabaseFile, blacklistMode = false): void {
-    this.postsService.deleteFile(file.uid, blacklistMode).subscribe(result => {
-      if (result) {
-        this.postsService.openSnackBar($localize`Delete success!`, $localize`OK.`);
-        this.removeFileCard(file);
-      } else {
-        this.postsService.openSnackBar($localize`Delete failed!`, $localize`OK.`);
-      }
-    }, () => {
-      this.postsService.openSnackBar($localize`Delete failed!`, $localize`OK.`);
-    });
+    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid)) return;
+    this.startDeleteRequest(file, this.postsService.deleteFile(file.uid, blacklistMode));
   }
 
   deleteSubscriptionFile(file: DatabaseFile, blacklistMode = false): void {
@@ -499,22 +502,53 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   }
 
   deleteAndRedownload(file: DatabaseFile): void {
-    this.postsService.deleteSubscriptionFile(file.uid, false).subscribe(() => {
-      this.postsService.openSnackBar($localize`Successfully deleted file: ` + file.id);
-      this.removeFileCard(file);
-    });
+    this.startSubscriptionDelete(file, false);
   }
 
   deleteForever(file: DatabaseFile): void {
-    this.postsService.deleteSubscriptionFile(file.uid, true).subscribe(() => {
-      this.postsService.openSnackBar($localize`Successfully deleted file: ` + file.id);
-      this.removeFileCard(file);
+    this.startSubscriptionDelete(file, true);
+  }
+
+  private startSubscriptionDelete(file: DatabaseFile, deleteForever: boolean): void {
+    if (!file?.uid || this.exportRequests.has(file.uid) || this.deleteRequests.has(file.uid)) return;
+    this.startDeleteRequest(file, this.postsService.deleteSubscriptionFile(file.uid, deleteForever));
+  }
+
+  private startDeleteRequest(file: DatabaseFile, response: Observable<any>): void {
+    const requestedUid = file.uid;
+    this.downloading_content[requestedUid] = true;
+    const request = response.subscribe({
+      next: result => {
+        const deleted = typeof result === 'boolean' ? result : result?.success === true;
+        if (deleted) {
+          this.postsService.openSnackBar($localize`Delete success!`, $localize`OK.`);
+          this.removeFileCard(file);
+        } else {
+          this.showDeleteFailure();
+        }
+      },
+      error: () => this.showDeleteFailure()
+    });
+    if (!request.closed) {
+      this.deleteRequests.set(requestedUid, request);
+    }
+    request.add(() => {
+      if (this.deleteRequests.get(requestedUid) === request) {
+        this.deleteRequests.delete(requestedUid);
+      }
+      delete this.downloading_content[requestedUid];
     });
   }
 
+  private showDeleteFailure(): void {
+    this.postsService.openSnackBar($localize`Delete failed!`, $localize`OK.`);
+  }
+
   removeFileCard(file_to_remove: DatabaseFile): void {
-    const index = this.paged_data.map(e => e.uid).indexOf(file_to_remove.uid);
-    this.paged_data.splice(index, 1);
+    const index = this.paged_data?.map(e => e.uid).indexOf(file_to_remove.uid) ?? -1;
+    if (index !== -1) {
+      this.paged_data.splice(index, 1);
+    }
     this.getAllFiles(true);
   }
 

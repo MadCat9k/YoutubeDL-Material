@@ -856,6 +856,29 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Recent Videos deletion feedback (2026-10-27)
+
+- Normal and subscription-file deletion now wait for an explicit successful API
+  result before removing a card or reporting success.
+- Rejected and failed deletions keep the file visible and show the existing
+  localized failure message instead of silently succeeding.
+- Repeated deletion requests for the same file are ignored while work is active,
+  and export and deletion actions cannot overlap for one file.
+- Subscription changes and component destruction cancel pending deletion work,
+  preventing stale responses from removing cards or showing feedback in a
+  replacement view.
+- A successful response safely refreshes the current list even if polling or
+  pagination already removed the original card.
+
+Verification:
+
+- focused Recent Videos component suite: 24 passing in Chrome Headless, covering
+  confirmed, rejected, and failed normal-file deletions, both subscription-file
+  deletion modes, duplicate prevention, subscription replacement, teardown, and
+  the existing library and export behavior;
+- existing translated delete success, failure, and acknowledgement messages are
+  reused.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
@@ -1300,6 +1323,12 @@ Verification:
   redeployed on port `18084`; the container remained healthy with HTTP 200,
   zero restarts, all five isolated volumes attached, persisted yt-dlp
   `2026.10.26` executable, and a 4-second subscription scan that discovered 189
+  entries and queued 0, while the prior healthy container was retained for
+  rollback;
+- validation image at commit `c829742` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 5-second subscription scan that discovered 189
   entries and queued 0, while the prior healthy container was retained for
   rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section

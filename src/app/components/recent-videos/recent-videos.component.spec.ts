@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { LocationStrategy } from '@angular/common';
-import { BehaviorSubject, of, Subject } from 'rxjs';
+import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 
 import { PostsService } from 'app/posts.services';
 import { DatabaseFile } from 'api-types';
@@ -33,6 +33,7 @@ describe('RecentVideosComponent', () => {
         'getPlaylists',
         'downloadFileFromServer',
         'deleteFile',
+        'deleteSubscriptionFile',
         'openSnackBar'
       ]),
       {
@@ -396,6 +397,102 @@ describe('RecentVideosComponent', () => {
 
     expect(response.observers.length).toBe(0);
     expect(component.saveExportedFile).not.toHaveBeenCalled();
+    expect(component.downloading_content['file-1']).toBeUndefined();
+  });
+
+  it('deletes a normal file once and reports confirmed success', () => {
+    const response = new Subject<boolean>();
+    const file = {uid: 'file-1', id: 'Synthetic video', isAudio: false} as DatabaseFile;
+    postsService.deleteFile.and.returnValue(response);
+    spyOn(component, 'removeFileCard');
+
+    component.deleteNormalFile(file);
+    component.deleteNormalFile(file);
+
+    expect(postsService.deleteFile).toHaveBeenCalledOnceWith('file-1', false);
+    expect(component.downloading_content['file-1']).toBeTrue();
+
+    response.next(true);
+    response.complete();
+
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Delete success!', 'OK.');
+    expect(component.removeFileCard).toHaveBeenCalledOnceWith(file);
+    expect(component.downloading_content['file-1']).toBeUndefined();
+  });
+
+  it('keeps normal files visible after rejected or failed deletions', () => {
+    const firstFile = {uid: 'file-1', id: 'First', isAudio: false} as DatabaseFile;
+    const secondFile = {uid: 'file-2', id: 'Second', isAudio: false} as DatabaseFile;
+    postsService.deleteFile.and.returnValues(
+      of(false),
+      throwError(() => new Error('synthetic delete failure'))
+    );
+    spyOn(component, 'removeFileCard');
+
+    component.deleteNormalFile(firstFile);
+    component.deleteNormalFile(secondFile, true);
+
+    expect(postsService.openSnackBar.calls.allArgs()).toEqual([
+      ['Delete failed!', 'OK.'],
+      ['Delete failed!', 'OK.']
+    ]);
+    expect(component.removeFileCard).not.toHaveBeenCalled();
+  });
+
+  it('checks subscription-file deletion results before removing the card', () => {
+    const successfulFile = {uid: 'file-1', id: 'First', sub_id: 'subscriptionA'} as DatabaseFile;
+    const rejectedFile = {uid: 'file-2', id: 'Second', sub_id: 'subscriptionA'} as DatabaseFile;
+    postsService.deleteSubscriptionFile.and.returnValues(
+      of({success: true}),
+      of({success: false})
+    );
+    spyOn(component, 'removeFileCard');
+
+    component.deleteAndRedownload(successfulFile);
+    component.deleteForever(rejectedFile);
+
+    expect(postsService.deleteSubscriptionFile.calls.allArgs()).toEqual([
+      ['file-1', false],
+      ['file-2', true]
+    ]);
+    expect(component.removeFileCard).toHaveBeenCalledOnceWith(successfulFile);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Delete success!', 'OK.');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Delete failed!', 'OK.');
+  });
+
+  it('cancels a pending deletion when the subscription input changes', () => {
+    const response = new Subject<any>();
+    postsService.deleteSubscriptionFile.and.returnValue(response);
+    spyOn(component, 'removeFileCard');
+    fixture.componentRef.setInput('sub_id', 'subscriptionA');
+    fixture.detectChanges();
+
+    component.deleteAndRedownload({
+      uid: 'file-1',
+      id: 'Synthetic video',
+      sub_id: 'subscriptionA'
+    } as DatabaseFile);
+
+    fixture.componentRef.setInput('sub_id', 'subscriptionB');
+    fixture.detectChanges();
+    response.next({success: true});
+
+    expect(response.observers.length).toBe(0);
+    expect(component.removeFileCard).not.toHaveBeenCalled();
+    expect(component.downloading_content['file-1']).toBeUndefined();
+  });
+
+  it('cancels a pending deletion when the component is destroyed', () => {
+    const response = new Subject<boolean>();
+    postsService.deleteFile.and.returnValue(response);
+    spyOn(component, 'removeFileCard');
+
+    component.deleteNormalFile({uid: 'file-1', id: 'Synthetic video'} as DatabaseFile);
+    fixture.destroy();
+    response.next(true);
+
+    expect(response.observers.length).toBe(0);
+    expect(component.removeFileCard).not.toHaveBeenCalled();
     expect(component.downloading_content['file-1']).toBeUndefined();
   });
 });
