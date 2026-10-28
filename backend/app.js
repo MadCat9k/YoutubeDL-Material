@@ -4,11 +4,10 @@ const { promisify } = require('util');
 const auth_api = require('./authentication/auth');
 const path = require('path');
 const compression = require('compression');
-const multer  = require('multer');
 const express = require("express");
+const rateLimit = require('express-rate-limit');
 const bodyParser = require("body-parser");
 const archiver = require('archiver');
-const unzipper = require('unzipper');
 const db_api = require('./db');
 const utils = require('./utils')
 const low = require('lowdb')
@@ -22,6 +21,7 @@ const session = require('express-session');
 
 const logger = require('./logger');
 const config_api = require('./config.js');
+const cookie_upload = require('./cookie-upload');
 const downloader_api = require('./downloader');
 const tasks_api = require('./tasks');
 const subscriptions_api = require('./subscriptions');
@@ -31,7 +31,10 @@ const youtubedl_api = require('./youtube-dl');
 const archive_api = require('./archive');
 const files_api = require('./files');
 const media_paths = require('./media-paths');
+const security_logging = require('./security-logging');
 const thumbnails_api = require('./thumbnails');
+const update_archive_api = require('./update-archive');
+const xml_safety = require('./xml-safety');
 const notifications_api = require('./notifications');
 
 var app = express();
@@ -318,66 +321,27 @@ async function updateServer(tag) {
 }
 
 async function downloadReleaseFiles(tag) {
-    tag = tag ? tag : await getLatestVersion();
-    return new Promise(async resolve => {
-        logger.info('Downloading new files...')
+    tag = update_archive_api.validateReleaseTag(tag || await getLatestVersion());
+    logger.info('Downloading new files...')
 
-        // downloads the latest release zip file
-        await downloadReleaseZip(tag);
+    await downloadReleaseZip(tag);
 
-        // deletes contents of public dir
-        fs.removeSync(path.join(__dirname, 'public'));
-        fs.mkdirSync(path.join(__dirname, 'public'));
-
-        let replace_ignore_list = ['youtubedl-material/appdata/default.json',
-                                    'youtubedl-material/appdata/db.json',
-                                    'youtubedl-material/appdata/users.json',
-                                    'youtubedl-material/appdata/*']
-        logger.info(`Installing update ${tag}...`)
-
-        // downloads new package.json and adds new public dir files from the downloaded zip
-        fs.createReadStream(path.join(__dirname, `youtubedl-material-release-${tag}.zip`)).pipe(unzipper.Parse())
-        .on('entry', function (entry) {
-            var fileName = entry.path;
-            var is_dir = fileName.substring(fileName.length-1, fileName.length) === '/'
-            if (!is_dir && fileName.includes('youtubedl-material/public/')) {
-                // get public folder files
-                const actualFileName = fileName.replace('youtubedl-material/public/', '');
-                if (actualFileName.length !== 0 && actualFileName.substring(actualFileName.length-1, actualFileName.length) !== '/') {
-                    fs.ensureDirSync(path.join(__dirname, 'public', path.dirname(actualFileName)));
-                    entry.pipe(fs.createWriteStream(path.join(__dirname, 'public', actualFileName)));
-                } else {
-                    entry.autodrain();
-                }
-            } else if (!is_dir && !replace_ignore_list.includes(fileName)) {
-                // get package.json
-                const actualFileName = fileName.replace('youtubedl-material/', '');
-                logger.verbose('Downloading file ' + actualFileName);
-                entry.pipe(fs.createWriteStream(path.join(__dirname, actualFileName)));
-            } else {
-                entry.autodrain();
-            }
-        })
-        .on('close', function () {
-            resolve(true);
-        });
-    });
+    logger.info(`Installing update ${tag}...`)
+    const archivePath = path.join(__dirname, `youtubedl-material-release-${tag}.zip`);
+    await update_archive_api.extractReleaseArchive(archivePath, __dirname);
+    return true;
 }
 
 async function downloadReleaseZip(tag) {
-    return new Promise(async resolve => {
-        // get name of zip file, which depends on the version
-        const latest_release_link = `https://github.com/Tzahi12345/YoutubeDL-Material/releases/download/${tag}/`;
-        const tag_without_v = tag.substring(1, tag.length);
-        const zip_file_name = `youtubedl-material-${tag_without_v}.zip`
-        const latest_zip_link = latest_release_link + zip_file_name;
-        let output_path = path.join(__dirname, `youtubedl-material-release-${tag}.zip`);
+    const validatedTag = update_archive_api.validateReleaseTag(tag);
+    const latest_release_link = `https://github.com/Tzahi12345/YoutubeDL-Material/releases/download/${validatedTag}/`;
+    const tag_without_v = validatedTag.substring(1);
+    const zip_file_name = `youtubedl-material-${tag_without_v}.zip`
+    const latest_zip_link = latest_release_link + zip_file_name;
+    const output_path = path.join(__dirname, `youtubedl-material-release-${validatedTag}.zip`);
 
-        // download zip from release
-        await utils.fetchFile(latest_zip_link, output_path, 'update ' + tag);
-        resolve(true);
-    });
-
+    await utils.fetchFile(latest_zip_link, output_path, 'update ' + validatedTag);
+    return true;
 }
 
 async function installDependencies() {
@@ -619,7 +583,7 @@ app.use(function(req, res, next) {
     } else if (req.path.includes('/api/stream/') || req.path.includes('/api/thumbnail/') || req.path.includes('/api/rss') || req.path.includes('/api/telegramRequest')) {
         next();
     } else {
-        logger.verbose(`Rejecting request - invalid API use for endpoint: ${req.path}. API key received: ${req.query.apiKey}`);
+        logger.verbose(security_logging.getRejectedApiRequestLogMessage(req.query.apiKey));
         req.socket.end();
     }
 });
@@ -1370,9 +1334,9 @@ app.post('/api/deleteAllFiles', optionalJwt, async (req, res) => {
     const regex = true;
     if (text_search) {
         if (regex) {
-            filter_obj['title'] = {$regex: `.*${text_search}.*`, $options: 'i'};
+            filter_obj['title'] = db_api.filterCondition('$regex', `.*${text_search}.*`, 'i');
         } else {
-            filter_obj['$text'] = { $search: utils.createEdgeNGrams(text_search) };
+            filter_obj['$text'] = db_api.filterCondition('$text', utils.createEdgeNGrams(text_search));
         }
     }
 
@@ -1430,9 +1394,16 @@ app.post('/api/downloadFileFromServer', optionalJwt, async (req, res) => {
         file_path_to_download = await utils.createContainerZipFile(sub['name'], sub_files_to_download);
     } else {
         const file_obj = await files_api.getVideo(uid, uuid, sub_id)
-        file_path_to_download = file_obj.path;
+        file_path_to_download = file_obj && file_obj.path;
     }
-    if (!path.isAbsolute(file_path_to_download)) file_path_to_download = path.join(__dirname, file_path_to_download);
+    const allowed_roots = zip_file_generated
+        ? [path.join(__dirname, 'appdata', 'temp')]
+        : media_paths.getConfiguredMediaRoots();
+    file_path_to_download = media_paths.resolveExistingMediaFile(file_path_to_download, allowed_roots);
+    if (!file_path_to_download) {
+        res.sendStatus(404);
+        return;
+    }
     res.sendFile(file_path_to_download, function (err) {
         if (err) {
           logger.error(err);
@@ -1510,23 +1481,28 @@ app.post('/api/deleteArchiveItems', optionalJwt, async (req, res) => {
     });
 });
 
-var upload_multer = multer({ dest: __dirname + '/appdata/' });
-app.post('/api/uploadCookies', upload_multer.single('cookies'), async (req, res) => {
-    const new_path = path.join(__dirname, 'appdata', 'cookies.txt');
-
-    if (await fs.pathExists(req.file.path)) {
-        await fs.rename(req.file.path, new_path);
-    } else {
-        res.sendStatus(500);
+const appdata_root = path.join(__dirname, 'appdata');
+const upload_cookies = cookie_upload.createCookieUploader(appdata_root);
+const upload_cookies_limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false
+});
+app.post('/api/uploadCookies', upload_cookies_limiter, optionalJwt, function(req, res, next) {
+    upload_cookies(req, res, function(error) {
+        if (!error) return next();
+        logger.warn('Rejected cookies file upload.');
+        res.sendStatus(error.code === 'LIMIT_FILE_SIZE' ? 413 : 400);
+    });
+}, async (req, res) => {
+    const success = await cookie_upload.installUploadedCookieFile(req.file, appdata_root);
+    if (!success) {
+        logger.warn('Failed to install cookies file.');
+        res.sendStatus(400);
         return;
     }
-
-    if (await fs.pathExists(new_path)) {
-        res.send({success: true});
-    } else {
-        res.sendStatus(500);
-    }
-
+    res.send({success: true});
 });
 
 // Updater API calls
@@ -1756,6 +1732,7 @@ app.post('/api/resetTasks', optionalJwt, async (req, res) => {
 
 app.post('/api/getTask', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
+    if (!tasks_api.isKnownTaskKey(task_key)) return res.sendStatus(400);
     const task = await db_api.getRecord('tasks', {key: task_key});
     if (task['schedule']) task['next_invocation'] = tasks_api.TASKS[task_key]['job'].nextInvocation().getTime();
     res.send({task: task});
@@ -1763,6 +1740,7 @@ app.post('/api/getTask', optionalJwt, async (req, res) => {
 
 app.post('/api/runTask', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
+    if (!tasks_api.isKnownTaskKey(task_key)) return res.sendStatus(400);
     const task = await db_api.getRecord('tasks', {key: task_key});
 
     let success = true;
@@ -1774,6 +1752,7 @@ app.post('/api/runTask', optionalJwt, async (req, res) => {
 
 app.post('/api/confirmTask', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
+    if (!tasks_api.isKnownTaskKey(task_key)) return res.sendStatus(400);
     const task = await db_api.getRecord('tasks', {key: task_key});
 
     let success = true;
@@ -1787,14 +1766,15 @@ app.post('/api/updateTaskSchedule', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
     const new_schedule = req.body.new_schedule;
   
-    await tasks_api.updateTaskSchedule(task_key, new_schedule);
+    const success = await tasks_api.updateTaskSchedule(task_key, new_schedule);
 
-    res.send({success: true});
+    res.send({success: success});
 });
 
 app.post('/api/updateTaskData', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
     const new_data = req.body.new_data;
+    if (!tasks_api.isKnownTaskKey(task_key)) return res.sendStatus(400);
   
     const success = await db_api.updateRecord('tasks', {key: task_key}, {data: new_data});
 
@@ -1804,6 +1784,7 @@ app.post('/api/updateTaskData', optionalJwt, async (req, res) => {
 app.post('/api/updateTaskOptions', optionalJwt, async (req, res) => {
     const task_key = req.body.task_key;
     const new_options = req.body.new_options;
+    if (!tasks_api.isKnownTaskKey(task_key)) return res.sendStatus(400);
   
     const success = await db_api.updateRecord('tasks', {key: task_key}, {options: new_options});
 
@@ -2109,7 +2090,7 @@ app.get('/api/rss', async function (req, res) {
             contributor: [],
             date: file.timestamp,
             // https://stackoverflow.com/a/45415677/8088021
-            image: file.thumbnailURL.replace('&', '&amp;')
+            image: xml_safety.escapeAmpersands(file.thumbnailURL)
         });
       });
     res.send(feed.rss2());

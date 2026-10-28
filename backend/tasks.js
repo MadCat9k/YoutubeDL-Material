@@ -77,7 +77,14 @@ const defaultOptions = {
     }
 }
 
+function isKnownTaskKey(task_key) {
+    return typeof task_key === 'string' && Object.prototype.hasOwnProperty.call(TASKS, task_key);
+}
+
+exports.isKnownTaskKey = isKnownTaskKey;
+
 function scheduleJob(task_key, schedule) {
+    if (!isKnownTaskKey(task_key) || !schedule || typeof schedule !== 'object') return null;
     // schedule has to be converted from our format to one node-schedule can consume
     let converted_schedule = null;
     if (schedule['type'] === 'timestamp') {
@@ -162,18 +169,20 @@ exports.setupTasks = async () => {
 }
 
 exports.executeTask = async (task_key) => {
-    if (!TASKS[task_key]) {
+    if (!isKnownTaskKey(task_key)) {
         logger.error(`Task ${task_key} does not exist!`);
-        return;
+        return false;
     }
     logger.verbose(`Executing task ${task_key}`);
     await exports.executeRun(task_key);
     if (!TASKS[task_key]['confirm']) return;
     await exports.executeConfirm(task_key);
     logger.verbose(`Finished executing ${task_key}`);
+    return true;
 }
 
 exports.executeRun = async (task_key) => {
+    if (!isKnownTaskKey(task_key)) return false;
     logger.verbose(`Running task ${task_key}`);
     await db_api.updateRecord('tasks', {key: task_key}, {error: null})
     // don't set running to true when backup up DB as it will be stick "running" if restored
@@ -187,9 +196,11 @@ exports.executeRun = async (task_key) => {
     if (task_obj['options'] && task_obj['options']['auto_confirm']) {
         exports.executeConfirm(task_key);
     }
+    return true;
 }
 
 exports.executeConfirm = async (task_key) => {
+    if (!isKnownTaskKey(task_key)) return false;
     logger.verbose(`Confirming task ${task_key}`);
     await db_api.updateRecord('tasks', {key: task_key}, {error: null})
     if (!TASKS[task_key]['confirm']) {
@@ -205,6 +216,7 @@ exports.executeConfirm = async (task_key) => {
 }
 
 exports.updateTaskSchedule = async (task_key, schedule) => {
+    if (!isKnownTaskKey(task_key)) return false;
     logger.verbose(`Updating schedule for task ${task_key}`);
     await db_api.updateRecord('tasks', {key: task_key}, {schedule: schedule});
     if (TASKS[task_key]['job']) {
@@ -214,6 +226,7 @@ exports.updateTaskSchedule = async (task_key, schedule) => {
     if (schedule) {
         TASKS[task_key]['job'] = scheduleJob(task_key, schedule);
     }
+    return true;
 }
 
 // missing files check
@@ -265,7 +278,7 @@ async function checkForAutoDeleteFiles() {
         return null;
     }
     const delete_older_than_timestamp = Date.now() - task_obj['options']['threshold_days']*86400*1000;
-    const files = (await db_api.getRecords('files', {registered: {$lt: delete_older_than_timestamp}}))
+    const files = (await db_api.getRecords('files', {registered: db_api.filterCondition('$lt', delete_older_than_timestamp)}))
     const files_to_remove = files.map(file => {return {uid: file.uid, sub_id: file.sub_id}});
     return {files_to_remove: files_to_remove};
 }

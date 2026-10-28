@@ -8,6 +8,7 @@ const { v4: uuid } = require('uuid');
 const bcrypt = require('bcryptjs');
 const fs = require('fs-extra');
 const path = require('path');
+const user_paths = require('../user-paths');
 
 var LocalStrategy = require('passport-local').Strategy;
 var LdapStrategy = require('passport-ldapauth');
@@ -108,6 +109,10 @@ exports.passport.deserializeUser(function(user, done) {
  **************************************/
 
 exports.registerUser = async (userid, username, plaintextPassword) => {
+  if (!user_paths.isValidUserID(userid)) {
+    logger.error('Registration failed: User ID is invalid.');
+    return null;
+  }
   const hash = await bcrypt.hash(plaintextPassword, saltRounds);
   const new_user = generateUserObject(userid, username, hash);
   // check if user exists
@@ -130,7 +135,11 @@ exports.registerUser = async (userid, username, plaintextPassword) => {
 exports.deleteUser = async (uid) => {
   let success = false;
   let usersFileFolder = config_api.getConfigItem('ytdl_users_base_path');
-  const user_folder = path.join(__dirname, usersFileFolder, uid);
+  const user_folder = user_paths.resolveUserDirectory(uid, usersFileFolder, __dirname);
+  if (!user_folder) {
+      logger.error('Could not delete user because its storage path is invalid.');
+      return false;
+  }
   const user_db_obj = await db_api.getRecord('users', {uid: uid});
   if (user_db_obj) {
       // user exists, let's delete
@@ -188,6 +197,10 @@ exports.passport.use(new LdapStrategy(getLDAPConfiguration,
     if (!ldap_enabled) return done(null, false);
 
     const user_uid = user.uid;
+    if (!user_paths.isValidUserID(user_uid)) {
+      logger.error('LDAP login failed: User ID is invalid.');
+      return done(null, false);
+    }
     let db_user = await db_api.getRecord('users', {uid: user_uid});
     if (!db_user) {
       // generate DB user
