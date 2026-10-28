@@ -186,9 +186,58 @@ Acceptance criteria:
 6. **Information architecture:** Settings navigation/search, drawer organization,
    notifications, and shared responsive components.
 
+## Closeout status
+
+**Closed on 2026-10-28.** The six delivery phases are complete. Further UI/UX
+work is not an automatic continuation of this plan; it requires a new, bounded
+request with its own acceptance criteria.
+
+The closeout review confirmed:
+
+- accurate download state labels, responsive Tasks and Downloads layouts, and
+  persistent discovery controls;
+- completion-aware polling, stale-response protection, teardown, visible
+  connection failures, and recoverable action feedback across the primary
+  workflows;
+- staged subscription creation and scanning feedback, including progress and
+  cancellation;
+- responsive Settings navigation and single-scroll ownership, searchable and
+  grouped settings, organized drawer subscriptions, and actionable
+  notifications;
+- accessible names and visible focus treatment for the reviewed primary
+  controls, with announced snackbar or live-region feedback for the primary
+  mutation workflows.
+
+Closeout verification:
+
+- representative frontend suites for Downloads, Recent Videos, Tasks,
+  Notifications, Settings, and Subscription: 162 tests passed in Chrome
+  Headless;
+- production frontend build passed with only the inherited `file-saver`
+  CommonJS optimization warning and the existing custom-file-label selector
+  warning;
+- live Settings accessibility-tree review exposed labelled navigation, search,
+  section selection, form controls, and Save/Cancel actions;
+- validation container `YouTube-Downloader-Test` was healthy on port `18084`,
+  returned HTTP 200, had zero restarts, and retained all five persistent mounts.
+
+The following ideas are deliberately deferred rather than incomplete plan work:
+
+- queue position, concurrency limit, speed, and ETA presentation where the
+  backend can provide reliable values;
+- a pre-queue subscription import preview where extractor behavior makes one
+  reliable and inexpensive;
+- a dedicated automated accessibility/contrast/touch-target audit beyond the
+  focused behavioral tests and manual reviews already completed;
+- optional sticky discovery controls, broader shared-style consolidation, and
+  sanitized diagnostic identifiers/details.
+
+Deferred items are not release blockers. Dependency modernization, framework
+upgrades, and the other items listed under Out of scope remain separate projects.
+
 ## Implementation progress
 
-### Phase 1 started (2026-10-09)
+### Phase 1 completed (started 2026-10-09)
 
 - Downloads waiting for a worker are labelled `Queued`, with the existing
   localization key updated in every locale that previously translated the old
@@ -225,8 +274,9 @@ Verification:
 - localization extraction confirmed that the queued state retains its stable
   message identifier and new accessible labels reuse existing translations.
 
-Remaining Phase 1 work includes visible keyboard-focus review, live-region
-announcements, broader accessibility testing, and actionable error messages.
+Subsequent Phase 1 follow-ups below completed the planned focus review and added
+announced, actionable feedback to the primary workflows. A broader formal
+accessibility audit is deferred in the closeout status above.
 
 #### Subscription removal feedback (2026-10-21)
 
@@ -1065,7 +1115,7 @@ Verification:
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.
 
-### Phase 2 started (2026-10-09)
+### Phase 2 completed (started 2026-10-09)
 
 - Tasks use a compact card presentation below 650 pixels while retaining the
   sortable table at wider viewports.
@@ -1084,7 +1134,7 @@ The rebuilt validation container was checked at 455 and 1280 CSS-pixel widths.
 Tasks use cards without horizontal overflow at 455 pixels and return to the
 desktop table at 1280 pixels.
 
-### Phase 3 started (2026-10-09)
+### Phase 3 completed (started 2026-10-09)
 
 - Downloads polling now schedules the next refresh only after the current
   request finishes, preventing overlapping one-second requests.
@@ -1169,7 +1219,7 @@ The periodic network-refresh audit is complete for the current Phase 3 scope.
 Normal-state live verification is complete; forced backend-failure presentation
 remains covered by focused tests rather than a destructive live outage exercise.
 
-### Phase 4 started (2026-10-10)
+### Phase 4 completed (started 2026-10-10)
 
 - Subscription creation now exposes an in-dialog creating state, prevents
   duplicate submissions, and cancels the active request if the dialog closes.
@@ -1214,7 +1264,7 @@ Verification:
   check status messages. Non-English locales retain safe English fallbacks until
   those new messages are translated.
 
-### Phase 5 started (2026-10-12)
+### Phase 5 completed (started 2026-10-12)
 
 - Downloads can now be searched by title or subscription name and filtered by
   queued, active, paused, completed, failed, or cancelled status.
@@ -1274,7 +1324,7 @@ Verification:
   discovery and clear-completed messages. Non-English locales use safe English
   fallbacks until translated.
 
-### Phase 6 started (2026-10-12)
+### Phase 6 completed (started 2026-10-12)
 
 - Settings replaces the horizontally scrolling eight-tab header with a compact
   section selector below 650 pixels while retaining the existing desktop tabs,
