@@ -4029,6 +4029,10 @@
         <source>Could not upload cookies. Check the file and try again.</source>
         <target state="new">Could not upload cookies. Check the file and try again.</target>
       </trans-unit>
+      <trans-unit id="registration-failed" datatype="html">
+        <source>Could not register the user. The name may already be in use or registration may be disabled.</source>
+        <target state="new">Could not register the user. The name may already be in use or registration may be disabled.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

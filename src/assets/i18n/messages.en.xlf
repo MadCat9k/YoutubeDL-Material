@@ -4759,6 +4759,9 @@
       <trans-unit id="cookies-upload-failed" datatype="html">
         <source>Could not upload cookies. Check the file and try again.</source>
       </trans-unit>
+      <trans-unit id="registration-failed" datatype="html">
+        <source>Could not register the user. The name may already be in use or registration may be disabled.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

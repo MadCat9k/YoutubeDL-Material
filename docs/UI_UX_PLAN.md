@@ -989,6 +989,30 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Login and registration recovery (2026-10-28)
+
+- Login and registration now ignore repeated activation while their request is
+  active, preventing duplicate authentication work.
+- Clicking either registration password field no longer submits an incomplete
+  form; pressing Enter retains the expected keyboard submission behavior.
+- Registration failures preserve the entered form and show a concise localized
+  explanation without exposing raw server responses, paths, or other diagnostic
+  content.
+- Initialization, login, and registration requests are released when the page
+  is destroyed so late responses cannot update a page that has been left.
+
+Verification:
+
+- focused Login component suite: 5 passing in Chrome Headless, covering
+  initialization teardown, duplicate login and registration prevention,
+  confirmed login, sanitized retryable registration failure, request teardown,
+  click behavior, and Enter submission;
+- all 31 tracked XLF files passed XML validation and include the stable
+  registration-failure message; non-English locales use a safe English fallback
+  until translated;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
