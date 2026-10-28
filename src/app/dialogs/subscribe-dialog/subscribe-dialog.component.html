@@ -75,18 +75,20 @@
             </div>
         </div>
     </div>
-    <div class="subscription-feedback subscription-progress" *ngIf="subscribing" role="status" aria-live="polite">
-        <mat-spinner aria-hidden="true" [diameter]="24"></mat-spinner>
-        <span i18n="Subscription creation progress@@subscription-create-progress">Creating subscription…</span>
-    </div>
     <div class="subscription-feedback subscription-error" *ngIf="subscriptionError" role="alert">
         <mat-icon aria-hidden="true">error_outline</mat-icon>
         <span>{{subscriptionError}}</span>
     </div>
 </mat-dialog-content>
 
-<mat-dialog-actions>
+<mat-dialog-actions class="subscription-actions">
     <button mat-button mat-dialog-close><ng-container i18n="Subscribe cancel button">Cancel</ng-container></button>
     <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-    <button mat-button [disabled]="!url || !url.trim() || subscribing" type="submit" (click)="subscribeClicked()"><ng-container i18n="Subscribe button">Subscribe</ng-container></button>
+    <button class="subscribe-button" mat-button [disabled]="!url || !url.trim() || subscribing" [attr.aria-busy]="subscribing" type="submit" (click)="subscribeClicked()">
+        <ng-container *ngIf="!subscribing" i18n="Subscribe button">Subscribe</ng-container>
+        <span class="subscription-progress" *ngIf="subscribing" role="status" aria-live="polite">
+            <mat-spinner aria-hidden="true" [diameter]="18"></mat-spinner>
+            <span i18n="Subscription creation progress@@subscription-create-progress">Creating subscription…</span>
+        </span>
+    </button>
 </mat-dialog-actions>
