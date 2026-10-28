@@ -1,15 +1,17 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PostsService } from 'app/posts.services';
+import { Subscription } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-share-media-dialog',
   templateUrl: './share-media-dialog.component.html',
   styleUrls: ['./share-media-dialog.component.scss']
 })
-export class ShareMediaDialogComponent implements OnInit {
+export class ShareMediaDialogComponent implements OnInit, OnDestroy {
 
   uid = null;
   uuid = null;
@@ -19,6 +21,8 @@ export class ShareMediaDialogComponent implements OnInit {
   is_playlist = null;
   current_timestamp = null
   timestamp_enabled = false;
+  sharingPending = false;
+  sharingRequest: Subscription = null;
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: any, public router: Router, private snackBar: MatSnackBar,
               public postsService: PostsService) { }
@@ -38,6 +42,12 @@ export class ShareMediaDialogComponent implements OnInit {
       }
       this.share_url = this.default_share_url;
     }
+  }
+
+  ngOnDestroy(): void {
+    this.sharingRequest?.unsubscribe();
+    this.sharingRequest = null;
+    this.sharingPending = false;
   }
 
   timestampInputChanged(change) {
@@ -62,29 +72,65 @@ export class ShareMediaDialogComponent implements OnInit {
   }
 
   sharingChanged(event) {
-    if (event.checked) {
-      this.postsService.enableSharing(this.uid, this.is_playlist).subscribe(res => {
-        if (res['success']) {
-          this.postsService.openSnackBar($localize`Sharing enabled.`);
-          this.sharing_enabled = true;
-        } else {
-          this.postsService.openSnackBar($localize`Failed to enable sharing.`);
-        }
-      }, err => {
-        this.postsService.openSnackBar($localize`Failed to enable sharing - server error.`);
-      });
-    } else {
-      this.postsService.disableSharing(this.uid, this.is_playlist).subscribe(res => {
-        if (res['success']) {
-          this.postsService.openSnackBar($localize`Sharing disabled.`);
-          this.sharing_enabled = false;
-        } else {
-          this.postsService.openSnackBar($localize`Failed to disable sharing.`);
-        }
-      }, err => {
-        this.postsService.openSnackBar($localize`Failed to disable sharing - server error.`);
-      });
+    if (this.sharingPending) {
+      this.restoreSharingCheckbox(event);
+      return;
     }
+
+    const requestedState = Boolean(event.checked);
+    const request$ = requestedState
+      ? this.postsService.enableSharing(this.uid, this.is_playlist)
+      : this.postsService.disableSharing(this.uid, this.is_playlist);
+
+    this.sharingPending = true;
+    let request: Subscription = null;
+    request = request$.pipe(
+      finalize(() => {
+        if (this.sharingRequest === request) {
+          this.sharingRequest = null;
+          this.sharingPending = false;
+        }
+      })
+    ).subscribe({
+      next: res => {
+        if (!res || !res['success']) {
+          this.restoreSharingCheckbox(event);
+          this.showSharingFailure(requestedState, false);
+          return;
+        }
+
+        this.sharing_enabled = requestedState;
+        if (event?.source) event.source.checked = requestedState;
+        this.postsService.openSnackBar(requestedState ? $localize`Sharing enabled.` : $localize`Sharing disabled.`);
+      },
+      error: () => {
+        this.restoreSharingCheckbox(event);
+        this.showSharingFailure(requestedState, true);
+      }
+    });
+
+    if (!request.closed) {
+      this.sharingRequest = request;
+    } else {
+      this.sharingPending = false;
+    }
+  }
+
+  private restoreSharingCheckbox(event): void {
+    if (event?.source) event.source.checked = Boolean(this.sharing_enabled);
+  }
+
+  private showSharingFailure(requestedState: boolean, serverError: boolean): void {
+    if (requestedState) {
+      this.postsService.openSnackBar(serverError
+        ? $localize`Failed to enable sharing - server error.`
+        : $localize`Failed to enable sharing.`);
+      return;
+    }
+
+    this.postsService.openSnackBar(serverError
+      ? $localize`Failed to disable sharing - server error.`
+      : $localize`Failed to disable sharing.`);
   }
 
   public openSnackBar(message: string, action: string = '') {

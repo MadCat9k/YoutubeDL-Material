@@ -970,6 +970,25 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Sharing toggle feedback (2026-10-28)
+
+- File and playlist sharing now changes its confirmed state only after the API
+  accepts the request.
+- The sharing checkbox is disabled while work is active, and repeated activation
+  cannot create overlapping enable/disable requests.
+- Rejected or failed requests restore the confirmed checkbox state, retain the
+  existing localized failure feedback, and remain available for retry.
+- Closing the share dialog cancels active sharing work so a late response cannot
+  update the closed dialog.
+
+Verification:
+
+- focused share-media dialog suite: 4 passing in Chrome Headless, covering
+  confirmed enable/disable state, duplicate prevention, rejected and failed
+  requests, retryability, and teardown;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
