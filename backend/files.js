@@ -9,6 +9,9 @@ const utils = require('./utils')
 const logger = require('./logger');
 const media_paths = require('./media-paths');
 
+const DURATION_MISMATCH_MIN_SECONDS = 2;
+const DURATION_MISMATCH_RATIO = 0.02;
+
 exports.registerFileDB = async (file_path, type, user_uid = null, category = null, sub_id = null, cropFileSettings = null, file_object = null) => {
     if (!file_object) file_object = generateFileObject(file_path, type);
     if (!file_object) {
@@ -29,10 +32,18 @@ exports.registerFileDB = async (file_path, type, user_uid = null, category = nul
         file_object['duration'] = (cropFileSettings.cropFileEnd || file_object.duration) - cropFileSettings.cropFileStart;
     }
 
+    const duration_result = await applyMediaDuration(file_object);
+
     if (user_uid) file_object['user_uid'] = user_uid;
     if (sub_id) file_object['sub_id'] = sub_id;
 
     const file_obj = await registerFileDBManual(file_object);
+
+    if (!duration_result.verified) {
+        logger.warn(`Could not verify finished media duration for file ${file_obj.uid}.`);
+    } else if (duration_result.mismatched) {
+        logger.warn(`Finished media duration differs from extractor metadata for file ${file_obj.uid}.`);
+    }
 
     // remove metadata JSON if needed
     if (!config_api.getConfigItem('ytdl_include_metadata')) {
@@ -41,6 +52,106 @@ exports.registerFileDB = async (file_path, type, user_uid = null, category = nul
 
     return file_obj;
 }
+
+function durationDiffers(expected_duration, actual_duration) {
+    if (!Number.isFinite(expected_duration) || expected_duration <= 0) return false;
+    const tolerance = Math.max(DURATION_MISMATCH_MIN_SECONDS, expected_duration * DURATION_MISMATCH_RATIO);
+    return Math.abs(expected_duration - actual_duration) > tolerance;
+}
+
+async function applyMediaDuration(file_object, media_roots = media_paths.getConfiguredMediaRoots(), probe = utils.probeMediaDuration) {
+    const resolved_path = file_object && media_paths.resolveExistingMediaFile(file_object.path, media_roots);
+    if (!resolved_path) return {verified: false, mismatched: false};
+
+    let actual_duration = null;
+    try {
+        actual_duration = await probe(resolved_path);
+    } catch (_) {
+        return {verified: false, mismatched: false};
+    }
+
+    if (!Number.isFinite(actual_duration) || actual_duration <= 0) {
+        return {verified: false, mismatched: false};
+    }
+
+    const expected_duration = typeof file_object.duration === 'string'
+        ? utils.durationStringToNumber(file_object.duration)
+        : Number(file_object.duration);
+    const mismatched = file_object.duration_verified
+        ? !!file_object.duration_mismatch
+        : durationDiffers(expected_duration, actual_duration);
+    file_object.duration = actual_duration;
+    file_object.duration_verified = true;
+    file_object.duration_mismatch = mismatched;
+
+    return {verified: true, mismatched};
+}
+
+exports.repairMediaDurations = async (
+    files = null,
+    media_roots = media_paths.getConfiguredMediaRoots(),
+    probe = utils.probeMediaDuration
+) => {
+    const records = files || await db_api.getRecords('files');
+    const updates = {};
+    const summary = {checked: records.length, updated: 0, mismatched: 0, failed: 0, playlists_updated: 0};
+
+    for (const file of records) {
+        const previous_duration = file.duration;
+        const previous_verified = file.duration_verified;
+        const previous_mismatch = file.duration_mismatch;
+        const result = await applyMediaDuration(file, media_roots, probe);
+        if (!result.verified) {
+            summary.failed++;
+            logger.warn(`Could not verify finished media duration for file ${file.uid}.`);
+            continue;
+        }
+
+        if (result.mismatched) {
+            summary.mismatched++;
+            logger.warn(`Repaired media duration differs from extractor metadata for file ${file.uid}.`);
+        }
+
+        if (previous_duration !== file.duration
+            || previous_verified !== file.duration_verified
+            || previous_mismatch !== file.duration_mismatch) {
+            updates[file.uid] = {
+                duration: file.duration,
+                duration_verified: file.duration_verified,
+                duration_mismatch: file.duration_mismatch
+            };
+            summary.updated++;
+        }
+    }
+
+    if (Object.keys(updates).length > 0) {
+        await db_api.bulkUpdateRecordsByKey('files', 'uid', updates);
+        if (!files) {
+            summary.playlists_updated = await repairPlaylistDurations(Object.keys(updates));
+        }
+    }
+
+    return summary;
+}
+
+exports.applyMediaDuration = applyMediaDuration;
+
+async function repairPlaylistDurations(updated_file_uids) {
+    const updated_uid_set = new Set(updated_file_uids);
+    const playlists = await db_api.getRecords('playlists');
+    let updated_count = 0;
+
+    for (const playlist of playlists) {
+        if (!(playlist.uids || []).some(uid => updated_uid_set.has(uid))) continue;
+        const duration = await exports.calculatePlaylistDuration(playlist);
+        await db_api.updateRecord('playlists', {id: playlist.id}, {duration});
+        updated_count++;
+    }
+
+    return updated_count;
+}
+
+exports.repairPlaylistDurations = repairPlaylistDurations;
 
 async function registerFileDBManual(file_object) {
     // add additional info

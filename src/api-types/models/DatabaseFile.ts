@@ -17,6 +17,14 @@ export type DatabaseFile = {
      * In seconds
      */
     duration: number;
+    /**
+     * Whether duration was read from the finished media file
+     */
+    duration_verified?: boolean;
+    /**
+     * Whether extractor metadata differed materially from the finished media file
+     */
+    duration_mismatch?: boolean;
     url: string;
     uploader: string;
     /**

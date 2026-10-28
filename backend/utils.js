@@ -1,6 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
+const execa = require('execa');
 const archiver = require('archiver');
 const fetch = require('node-fetch');
 const ProgressBar = require('progress');
@@ -229,6 +230,29 @@ exports.durationStringToNumber = (dur_str) => {
       num_sum += parseInt(dur_str_parts[i])*(60**(dur_str_parts.length-1-i));
     }
     return num_sum;
+}
+
+exports.probeMediaDuration = async (file_path) => {
+    try {
+        const {stdout} = await execa('ffprobe', [
+            '-v', 'error',
+            '-show_entries', 'format=duration:stream=duration',
+            '-of', 'json',
+            file_path
+        ], {timeout: 15000});
+        const metadata = JSON.parse(stdout);
+        const format_duration = Number(metadata.format && metadata.format.duration);
+        const stream_durations = (metadata.streams || [])
+            .map(stream => Number(stream.duration))
+            .filter(duration => Number.isFinite(duration) && duration > 0);
+        const duration = Number.isFinite(format_duration) && format_duration > 0
+            ? format_duration
+            : Math.max(0, ...stream_durations);
+
+        return Number.isFinite(duration) && duration > 0 ? duration : null;
+    } catch (_) {
+        return null;
+    }
 }
 
 exports.getMatchingCategoryFiles = (category, files) => {

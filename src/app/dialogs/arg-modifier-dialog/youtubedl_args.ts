@@ -60,7 +60,7 @@ const download = [
     {'key': '-R', 'alt': '--retries', 'description': 'Number of retries (default is 10), or "infinite".'},
     {'key': '--fragment-retries', 'description': 'Number of retries for a fragment (default is 10), or "infinite" (DASH, hlsnative and ISM)'},
     {'key': '--skip-unavailable-fragments', 'description': 'Skip unavailable fragments (DASH, hlsnative and ISM)'},
-    {'key': '--abort-on-unavailable-fragment', 'description': 'Abort downloading when some fragment is not available'},
+    {'key': '--abort-on-unavailable-fragments', 'description': 'Abort downloading when a fragment is not available'},
     {'key': '--keep-fragments', 'description': 'Keep downloaded fragments on disk after downloading is finished; fragments are erased by default'},
     {'key': '--buffer-size', 'description': 'Size of download buffer (e.g. 1024 or 16K) (default is 1024)'},
     {'key': '--no-resize-buffer', 'description': 'Do not automatically adjust the buffer size. By default, the buffer size is automatically resized from an initial value of SIZE.'},

@@ -31,6 +31,11 @@ const TASKS = {
         title: 'Import missing DB records',
         job: null
     },
+    repair_media_durations: {
+        run: files_api.repairMediaDurations,
+        title: 'Repair media durations',
+        job: null
+    },
     duplicate_files_check: {
         run: checkForDuplicateFiles,
         confirm: removeDuplicates,
