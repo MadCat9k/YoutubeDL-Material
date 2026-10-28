@@ -16,8 +16,23 @@
     padding: 12px;
 }
 
+.subscription-actions {
+    flex-wrap: wrap;
+}
+
+.subscribe-button {
+    min-width: 96px;
+}
+
 .subscription-progress {
-    color: inherit;
+    align-items: center;
+    display: inline-flex;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.subscription-progress mat-spinner {
+    flex: 0 0 auto;
 }
 
 .subscription-error {
