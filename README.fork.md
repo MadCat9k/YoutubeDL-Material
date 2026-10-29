@@ -5,15 +5,53 @@ stabilize the Synology deployment described in [docs/PROJECT_PLAN.md](docs/PROJE
 The original Compose and startup script review is in
 [docs/COMPOSE_REVIEW.md](docs/COMPOSE_REVIEW.md).
 
-## Current scope
+## What this fork changes
 
-- Apply yt-dlp browser impersonation reliably, even when the application updates
-  its yt-dlp binary during startup.
-- Keep yt-dlp updates compatible with the image runtime by selecting the official
-  standalone Linux binary for the container architecture.
-- Diagnose and fix thumbnails that disappear after download.
-- Reload the file list when navigating directly between subscriptions.
-- Verify and preserve opening a video in a new browser tab.
+This fork keeps the upstream application and data model while concentrating on
+reliable operation on the existing Synology installation:
+
+- **Container and downloader reliability:** multi-architecture image builds for
+  `linux/amd64` and `linux/arm64`, invocation-time yt-dlp impersonation, and
+  validated architecture-specific standalone yt-dlp updates that preserve an
+  existing working binary when an update fails.
+- **Thumbnail and media integrity:** stale thumbnail-path repair, safe local and
+  remote thumbnail fallbacks, generated video previews, finished-file duration
+  verification, and an idempotent maintenance task for existing duration data.
+- **Subscription reliability:** route-safe list refreshes, bounded flat-playlist
+  discovery, sanitized scan progress, rollback-safe creation, and deletion that
+  reports success only after the requested work completes.
+- **Recoverable workflows:** visible retryable results for archive, export,
+  playlist, sharing, authentication, cookie, category, task, and library
+  operations instead of silent or premature success.
+- **Responsive and accessible UI:** mobile-friendly Downloads, Tasks, Settings,
+  and subscription views; reliable polling and stale-response protection;
+  persistent discovery controls; accessible control names; and announced
+  success, progress, and failure feedback.
+- **Navigation:** subscription changes update reused Angular components safely,
+  while Ctrl/Cmd-click, middle-click, and menu actions open player routes that
+  respect root and reverse-proxy subpath hosting.
+
+Detailed implementation evidence, verification results, and remaining risks are
+recorded in [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md) and
+[docs/UI_UX_PLAN.md](docs/UI_UX_PLAN.md).
+
+## Status and limitations
+
+The functional stabilization and six-phase UI/UX plan are complete. Focused
+frontend and backend suites, production frontend builds, two-platform cache-only
+image builds, and an isolated validation container have exercised the changed
+areas. These checks do not replace validation on the target Synology NAS.
+
+- The application still uses the inherited Node.js 16 stack, which is end of
+  life, and the inherited dependency advisories have not been modernized.
+- Runtime observation of the `linux/arm64` image on the target NAS is still
+  required; cache-only Buildx validation proves image assembly, not runtime
+  health or bind-mount permissions.
+- Production migration still requires an isolated test using copied data,
+  followed by a fresh backup and a controlled cutover. Do not run old and new
+  containers against the same writable mounts.
+- This fork is maintained for the deployment described here. The upstream
+  project remains the source for general project documentation and support.
 
 ## Test deployment
 
