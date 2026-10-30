@@ -66,7 +66,7 @@ export class MainComponent implements OnInit, OnDestroy {
   customDownloadingAgent = null;
 
   // cache
-  cachedAvailableFormats = {};
+  cachedAvailableFormats = new Map<string, any>();
   cachedFileManagerEnabled = localStorage.getItem('cached_filemanager_enabled') === 'true';
 
   // youtube api
@@ -453,8 +453,8 @@ export class MainComponent implements OnInit, OnDestroy {
 
   getSelectedAudioFormat(): string {
     if (typeof this.selectedQuality === 'string') { return null; }
-    const cachedFormatsExists = this.cachedAvailableFormats[this.url] && this.cachedAvailableFormats[this.url]['formats'];
-    if (cachedFormatsExists) {
+    const cachedFormats = this.cachedAvailableFormats.get(this.url)?.formats;
+    if (cachedFormats) {
       return this.selectedQuality['format_id'];
     } else {
       return null;
@@ -463,7 +463,7 @@ export class MainComponent implements OnInit, OnDestroy {
 
   getSelectedVideoFormat(): string {
     if (typeof this.selectedQuality === 'string') { return null; }
-    const cachedFormats = this.cachedAvailableFormats[this.url] && this.cachedAvailableFormats[this.url]['formats'];
+    const cachedFormats = this.cachedAvailableFormats.get(this.url)?.formats;
     if (cachedFormats) {
       if (this.selectedQuality) {
         let selected_video_format = this.selectedQuality['format_id'];
@@ -669,27 +669,29 @@ export class MainComponent implements OnInit, OnDestroy {
   }
 
   getURLInfo(url: string, forceRefresh = false): void {
-    if (!this.cachedAvailableFormats[url]) {
-      this.cachedAvailableFormats[url] = {};
+    let cachedFormats = this.cachedAvailableFormats.get(url);
+    if (!cachedFormats) {
+      cachedFormats = {};
+      this.cachedAvailableFormats.set(url, cachedFormats);
     }
     // if url is a youtube playlist, skip getting url info
     if (url.includes('playlist')) {
       // make it think that formats errored so that users have options
-      this.cachedAvailableFormats[url]['formats_loading'] = false;
-      this.cachedAvailableFormats[url]['formats_failed'] = true;
-      this.cachedAvailableFormats[url]['formats_request_failed'] = false;
+      cachedFormats.formats_loading = false;
+      cachedFormats.formats_failed = true;
+      cachedFormats.formats_request_failed = false;
       return;
     }
 
     if (this.format_request_urls.has(url)) return;
-    if (!forceRefresh && this.cachedAvailableFormats[url]['formats']) return;
+    if (!forceRefresh && cachedFormats.formats) return;
 
     if (forceRefresh) {
-      delete this.cachedAvailableFormats[url]['formats'];
+      delete cachedFormats.formats;
     }
-    this.cachedAvailableFormats[url]['formats_loading'] = true;
-    this.cachedAvailableFormats[url]['formats_failed'] = false;
-    this.cachedAvailableFormats[url]['formats_request_failed'] = false;
+    cachedFormats.formats_loading = true;
+    cachedFormats.formats_failed = false;
+    cachedFormats.formats_request_failed = false;
     this.format_request_urls.add(url);
 
     const request = this.postsService.getFileFormats(url)
@@ -698,13 +700,13 @@ export class MainComponent implements OnInit, OnDestroy {
         this.format_requests.delete(url);
       }))
       .subscribe(res => {
-        this.cachedAvailableFormats[url]['formats_loading'] = false;
+        cachedFormats.formats_loading = false;
         const infos = res['result'];
         if (!infos || !infos.formats) {
           this.errorFormats(url);
           return;
         }
-        this.cachedAvailableFormats[url]['formats'] = this.getAudioAndVideoFormats(infos.formats);
+        cachedFormats.formats = this.getAudioAndVideoFormats(infos.formats);
       }, () => {
         this.errorFormats(url);
       });
@@ -759,9 +761,11 @@ export class MainComponent implements OnInit, OnDestroy {
   }
 
   errorFormats(url: string): void {
-    this.cachedAvailableFormats[url]['formats_loading'] = false;
-    this.cachedAvailableFormats[url]['formats_failed'] = true;
-    this.cachedAvailableFormats[url]['formats_request_failed'] = true;
+    const cachedFormats = this.cachedAvailableFormats.get(url);
+    if (!cachedFormats) return;
+    cachedFormats.formats_loading = false;
+    cachedFormats.formats_failed = true;
+    cachedFormats.formats_request_failed = true;
   }
 
   attachToInput(): void {

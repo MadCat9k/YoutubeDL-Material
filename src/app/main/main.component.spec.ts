@@ -119,13 +119,13 @@ describe('MainComponent', () => {
     component.getURLInfo('https://example.invalid/synthetic-video');
 
     expect(postsService.getFileFormats).toHaveBeenCalledTimes(1);
-    expect(component.cachedAvailableFormats['https://example.invalid/synthetic-video']['formats_loading']).toBe(true);
+    expect(component.cachedAvailableFormats.get('https://example.invalid/synthetic-video').formats_loading).toBe(true);
 
     response.next({result: {formats: [{format_id: 'synthetic'}]}});
     response.complete();
 
-    expect(component.cachedAvailableFormats['https://example.invalid/synthetic-video']['formats']).toBe(parsedFormats);
-    expect(component.cachedAvailableFormats['https://example.invalid/synthetic-video']['formats_loading']).toBe(false);
+    expect(component.cachedAvailableFormats.get('https://example.invalid/synthetic-video').formats).toBe(parsedFormats);
+    expect(component.cachedAvailableFormats.get('https://example.invalid/synthetic-video').formats_loading).toBe(false);
   });
 
   it('keeps fallback qualities available and retries a failed format request', () => {
@@ -138,14 +138,24 @@ describe('MainComponent', () => {
 
     component.getURLInfo(url);
 
-    expect(component.cachedAvailableFormats[url]['formats_failed']).toBe(true);
-    expect(component.cachedAvailableFormats[url]['formats_request_failed']).toBe(true);
+    expect(component.cachedAvailableFormats.get(url).formats_failed).toBe(true);
+    expect(component.cachedAvailableFormats.get(url).formats_request_failed).toBe(true);
 
     component.retryFormats(url);
 
     expect(postsService.getFileFormats).toHaveBeenCalledTimes(2);
-    expect(component.cachedAvailableFormats[url]['formats_request_failed']).toBe(false);
-    expect(component.cachedAvailableFormats[url]['formats']).toEqual({video: [], audio: []});
+    expect(component.cachedAvailableFormats.get(url).formats_request_failed).toBe(false);
+    expect(component.cachedAvailableFormats.get(url).formats).toEqual({video: [], audio: []});
+  });
+
+  it('keeps user-controlled format cache keys out of Object.prototype', () => {
+    const response = new Subject<any>();
+    postsService.getFileFormats.and.returnValue(response);
+
+    component.getURLInfo('__proto__');
+
+    expect((Object.prototype as any).formats_loading).toBeUndefined();
+    expect(component.cachedAvailableFormats.get('__proto__').formats_loading).toBe(true);
   });
 
   it('cancels pending format requests when destroyed', () => {
