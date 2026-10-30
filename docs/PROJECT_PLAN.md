@@ -479,6 +479,75 @@ Verification:
   deliberate restart, with a verified appdata/users archive and the previous
   container retained for rollback.
 
+## yt-dlp standalone updater compatibility (2026-10-27)
+
+- A validation restart exposed that current yt-dlp releases no longer run on
+  Python 3.10, while the Ubuntu 22.04 image still supplies Python 3.10. The web
+  server remained healthy, but the persisted generic `yt-dlp` zipapp failed
+  before subscription discovery could begin.
+- The updater now selects yt-dlp's official standalone `yt-dlp_linux` binary on
+  `linux/amd64` and `yt-dlp_linux_aarch64` on `linux/arm64`. Unsupported Linux
+  architectures fail explicitly instead of receiving a known-incompatible
+  artifact.
+- Downloads use a temporary file, reject HTTP error responses, retry transient
+  failures, and must execute `--version` successfully before an atomic rename.
+  A failed update therefore cannot overwrite an existing working downloader.
+- Startup validates the persisted downloader even when its recorded version is
+  current, allowing a later deployment to repair the incompatible binary left
+  by the discovered failure.
+
+Verification:
+
+- focused updater, runtime-argument, and subscription-scan suites: 11 passing;
+- full backend suite: 96 passing, 30 pending, and 2 host-environment failures
+  caused by FFmpeg not being installed on the development host;
+- validation image at commit `94a8c94` repaired the persisted incompatible
+  downloader with yt-dlp `2026.10.26`; Chrome impersonation targets were
+  available, the subscription scan found 189 entries in 5 seconds, and a
+  deliberate restart reused the validated binary and completed the same scan in
+  3 seconds. The container remained healthy with HTTP 200 and all five isolated
+  persistent volumes attached. The `linux/arm64` selection remains covered by
+  focused tests and still needs runtime observation on the Synology target.
+
+## Finished-media duration integrity (2026-10-28)
+
+- The database previously copied extractor duration metadata without comparing
+  it with the finished media file. A local validation scan found 21 of 600 MP4
+  records outside a two-percent tolerance; 15 were more than ten percent short
+  and four contained less than half of the extractor-reported duration.
+- New registrations now resolve the finished file inside a configured media
+  root and read its duration with FFprobe after download post-processing and
+  optional cropping. The measured duration becomes the stored and displayed
+  value. Material differences are marked and logged by file UID without paths,
+  titles, or source URLs.
+- The idempotent `Repair media durations` maintenance task probes existing
+  records, updates duration and verification state in one bulk file-record
+  write, refreshes affected custom-playlist totals, and leaves missing,
+  outside-root, or unreadable files unchanged for a later retry. The same code
+  path supports local JSON and MongoDB storage.
+- yt-dlp invocations now add `--abort-on-unavailable-fragments` by default so a
+  fragmented HLS download does not silently succeed after missing segments. An
+  explicit user fragment policy still wins, matching the existing impersonation
+  argument precedence.
+- The repair records mismatches but deliberately does not delete or
+  automatically redownload media. A complete preview manifest can have no
+  unavailable fragment, so authenticated cookies or a different source format
+  may still be needed before manually redownloading an affected item.
+
+Verification:
+
+- focused media-duration and runtime-argument suites: 10 passing, covering
+  finished-file precedence, tolerance, configured-root containment, idempotent
+  bulk repair, playlist totals, sanitized logging, and explicit fragment-policy
+  precedence;
+- full backend suite: 102 passing and 30 pending; three host-environment
+  failures remain because the development host lacks FFmpeg and restricts the
+  updater's local test server;
+- focused Tasks frontend suite: 23 passing in Chrome Headless;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning and existing custom-file-label selector warning;
+- cache-only image assembly passed for both `linux/amd64` and `linux/arm64`.
+
 ## Delivery sequence
 
 1. Baseline and startup hardening (included in this initial scaffold).

@@ -170,17 +170,17 @@
                 <div class="row">
                     <div class="col-12 mt-3">
                         <h5 class="settings-section-heading">{{downloaderSectionLabels.categories}}</h5>
-                        <div *ngIf="postsService.categories && postsService.categories.length > 0" cdkDropList class="category-list" (cdkDropListDropped)="dropCategory($event)">
+                        <div *ngIf="postsService.categories && postsService.categories.length > 0" cdkDropList [cdkDropListDisabled]="categoryActionPending" class="category-list" (cdkDropListDropped)="dropCategory($event)">
                             <div class="category-box" *ngFor="let category of postsService.categories" cdkDrag>
                                 <div class="category-custom-placeholder" *cdkDragPlaceholder></div>
                                 {{category['name']}}
                                 <span style="float: right">
-                                    <button mat-icon-button (click)="openEditCategoryDialog(category)" [attr.aria-label]="settingsActionLabels.editCategory"><mat-icon>edit</mat-icon></button>
-                                    <button mat-icon-button (click)="deleteCategory(category)" [attr.aria-label]="settingsActionLabels.deleteCategory"><mat-icon>cancel</mat-icon></button>
+                                    <button mat-icon-button [disabled]="categoryActionPending" (click)="openEditCategoryDialog(category)" [attr.aria-label]="settingsActionLabels.editCategory"><mat-icon>edit</mat-icon></button>
+                                    <button mat-icon-button [disabled]="categoryActionPending" (click)="deleteCategory(category)" [attr.aria-label]="settingsActionLabels.deleteCategory"><mat-icon>cancel</mat-icon></button>
                                 </span>
                             </div>
                         </div>
-                        <button style="margin-top: 10px;" mat-mini-fab (click)="openAddCategoryDialog()" [attr.aria-label]="settingsActionLabels.addCategory"><mat-icon>add</mat-icon></button>
+                        <button style="margin-top: 10px;" mat-mini-fab [disabled]="categoryActionPending" (click)="openAddCategoryDialog()" [attr.aria-label]="settingsActionLabels.addCategory"><mat-icon>add</mat-icon></button>
                     </div>
                     <div class="col-12 mt-2 mb-2">
                         <mat-checkbox [(ngModel)]="new_config['Extra']['allow_playlist_categorization']" matTooltip="With this setting enabled, if a single video matches a category, the entire playlist will receive that category." i18n-matTooltip="Allow playlist categorization setting tooltip"><ng-container i18n="Allow playlist categorization setting label">Allow playlist categorization</ng-container></mat-checkbox>

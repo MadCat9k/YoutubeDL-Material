@@ -2647,6 +2647,12 @@ components:
         duration:
           type: number
           description: In seconds
+        duration_verified:
+          type: boolean
+          description: Whether duration was read from the finished media file
+        duration_mismatch:
+          type: boolean
+          description: Whether extractor metadata differed materially from the finished media file
         url:
           type: string
         uploader:
@@ -2811,6 +2817,7 @@ components:
       - backup_local_db
       - missing_files_check
       - missing_db_records
+      - repair_media_durations
       - duplicate_files_check
       - youtubedl_update_check
       - delete_old_files

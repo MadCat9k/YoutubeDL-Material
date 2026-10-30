@@ -1,7 +1,7 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 
 import { PostsService } from 'app/posts.services';
 import { SubscriptionComponent } from './subscription.component';
@@ -31,7 +31,9 @@ describe('SubscriptionComponent', () => {
       jasmine.createSpyObj<PostsService>('PostsService', [
         'getSubscription',
         'checkSubscription',
-        'cancelCheckSubscription'
+        'cancelCheckSubscription',
+        'downloadSubFromServer',
+        'openSnackBar'
       ]),
       {
         service_initialized: new BehaviorSubject(true),
@@ -223,6 +225,89 @@ describe('SubscriptionComponent', () => {
 
     expect(postsService.checkSubscription).not.toHaveBeenCalled();
     expect(postsService.cancelCheckSubscription).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it('downloads subscription media and announces the result', () => {
+    const archiveBlob = new Blob(['synthetic archive']);
+    component.id = 'subscriptionA';
+    component.subscription = {id: 'subscriptionA', name: 'Synthetic subscription'} as any;
+    postsService.downloadSubFromServer.and.returnValue(of(archiveBlob));
+    spyOn(component, 'saveSubscriptionArchive');
+
+    component.downloadContent();
+
+    expect(postsService.downloadSubFromServer).toHaveBeenCalledOnceWith('subscriptionA');
+    expect(component.saveSubscriptionArchive).toHaveBeenCalledOnceWith(archiveBlob, 'Synthetic subscription');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Subscription download started.');
+    expect(component.downloading).toBeFalse();
+    fixture.destroy();
+  });
+
+  it('reports a failed subscription media request and restores the action', () => {
+    component.id = 'subscriptionA';
+    component.subscription = {id: 'subscriptionA', name: 'Synthetic subscription'} as any;
+    postsService.downloadSubFromServer.and.returnValue(throwError(() => new Error('synthetic failure')));
+    spyOn(component, 'saveSubscriptionArchive');
+
+    component.downloadContent();
+
+    expect(component.saveSubscriptionArchive).not.toHaveBeenCalled();
+    expect(component.downloading).toBeFalse();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not download subscription. Try again.',
+      'Dismiss'
+    );
+    fixture.destroy();
+  });
+
+  it('reports a local subscription media save failure', () => {
+    component.id = 'subscriptionA';
+    component.subscription = {id: 'subscriptionA', name: 'Synthetic subscription'} as any;
+    postsService.downloadSubFromServer.and.returnValue(of(new Blob(['synthetic archive'])));
+    spyOn(component, 'saveSubscriptionArchive').and.throwError('synthetic save failure');
+
+    component.downloadContent();
+
+    expect(component.downloading).toBeFalse();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not download subscription. Try again.',
+      'Dismiss'
+    );
+    fixture.destroy();
+  });
+
+  it('starts only one subscription media request while pending', () => {
+    const response = new Subject<Blob>();
+    component.id = 'subscriptionA';
+    component.subscription = {id: 'subscriptionA', name: 'Synthetic subscription'} as any;
+    postsService.downloadSubFromServer.and.returnValue(response);
+
+    component.downloadContent();
+    component.downloadContent();
+
+    expect(postsService.downloadSubFromServer).toHaveBeenCalledTimes(1);
+    expect(component.downloading).toBeTrue();
+    fixture.destroy();
+  });
+
+  it('cancels a pending subscription media request when the route changes', () => {
+    const response = new Subject<Blob>();
+    routeParams.next({id: 'subscriptionA'});
+    subscriptionResponses.subscriptionA.next({
+      subscription: {id: 'subscriptionA', name: 'Synthetic subscription', videos: [], downloading: false}
+    });
+    postsService.downloadSubFromServer.and.returnValue(response);
+    spyOn(component, 'saveSubscriptionArchive');
+    component.downloadContent();
+
+    routeParams.next({id: 'subscriptionB'});
+    response.next(new Blob(['synthetic archive']));
+
+    expect(response.observers.length).toBe(0);
+    expect(component.saveSubscriptionArchive).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.downloading).toBeFalse();
     fixture.destroy();
   });
 });

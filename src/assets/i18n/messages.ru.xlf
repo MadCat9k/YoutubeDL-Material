@@ -2590,6 +2590,114 @@
         </context-group>
         <note priority="1" from="description">Restart server button</note>
       </trans-unit>
+      <trans-unit id="archive-delete-failed" datatype="html">
+        <source>Could not delete archive items. Try again.</source>
+        <target state="new">Could not delete archive items. Try again.</target>
+      </trans-unit>
+      <trans-unit id="archive-import-failed" datatype="html">
+        <source>Could not import archive. Check the file and try again.</source>
+        <target state="new">Could not import archive. Check the file and try again.</target>
+      </trans-unit>
+      <trans-unit id="archive-download-success" datatype="html">
+        <source>Archive download started.</source>
+        <target state="new">Archive download started.</target>
+      </trans-unit>
+      <trans-unit id="archive-download-failed" datatype="html">
+        <source>Could not download archive. Try again.</source>
+        <target state="new">Could not download archive. Try again.</target>
+      </trans-unit>
+      <trans-unit id="archive-list-loading" datatype="html">
+        <source>Loading archives...</source>
+        <target state="new">Loading archives...</target>
+      </trans-unit>
+      <trans-unit id="archive-list-load-failed" datatype="html">
+        <source>Could not load archives. Try again.</source>
+        <target state="new">Could not load archives. Try again.</target>
+      </trans-unit>
+      <trans-unit id="subscription-download-success" datatype="html">
+        <source>Subscription download started.</source>
+        <target state="new">Subscription download started.</target>
+      </trans-unit>
+      <trans-unit id="subscription-download-failed" datatype="html">
+        <source>Could not download subscription. Try again.</source>
+        <target state="new">Could not download subscription. Try again.</target>
+      </trans-unit>
+      <trans-unit id="playlist-download-success" datatype="html">
+        <source>Playlist download started.</source>
+        <target state="new">Playlist download started.</target>
+      </trans-unit>
+      <trans-unit id="playlist-download-failed" datatype="html">
+        <source>Could not download playlist. Try again.</source>
+        <target state="new">Could not download playlist. Try again.</target>
+      </trans-unit>
+      <trans-unit id="file-download-success" datatype="html">
+        <source>File download started.</source>
+        <target state="new">File download started.</target>
+      </trans-unit>
+      <trans-unit id="file-download-failed" datatype="html">
+        <source>Could not download file. Try again.</source>
+        <target state="new">Could not download file. Try again.</target>
+      </trans-unit>
+      <trans-unit id="file-download-cleanup-failed" datatype="html">
+        <source>File downloaded, but the server copy could not be removed.</source>
+        <target state="new">File downloaded, but the server copy could not be removed.</target>
+      </trans-unit>
+      <trans-unit id="task-settings-save-success" datatype="html">
+        <source>Task settings saved.</source>
+        <target state="new">Task settings saved.</target>
+      </trans-unit>
+      <trans-unit id="task-settings-save-failed" datatype="html">
+        <source>Could not save task settings. Try again.</source>
+        <target state="new">Could not save task settings. Try again.</target>
+      </trans-unit>
+      <trans-unit id="task-schedule-success" datatype="html">
+        <source>Task schedule updated.</source>
+        <target state="new">Task schedule updated.</target>
+      </trans-unit>
+      <trans-unit id="task-schedule-failed" datatype="html">
+        <source>Could not update task schedule. Try again.</source>
+        <target state="new">Could not update task schedule. Try again.</target>
+      </trans-unit>
+      <trans-unit id="task-run-failed" datatype="html">
+        <source>Could not run task. Try again.</source>
+        <target state="new">Could not run task. Try again.</target>
+      </trans-unit>
+      <trans-unit id="task-confirm-failed" datatype="html">
+        <source>Could not confirm task. Try again.</source>
+        <target state="new">Could not confirm task. Try again.</target>
+      </trans-unit>
+      <trans-unit id="tasks-reset-failed" datatype="html">
+        <source>Could not reset tasks. Try again.</source>
+        <target state="new">Could not reset tasks. Try again.</target>
+      </trans-unit>
+      <trans-unit id="category-order-save-success" datatype="html">
+        <source>Category order saved.</source>
+        <target state="new">Category order saved.</target>
+      </trans-unit>
+      <trans-unit id="category-order-save-failed" datatype="html">
+        <source>Could not save category order. Previous order restored. Try again.</source>
+        <target state="new">Could not save category order. Previous order restored. Try again.</target>
+      </trans-unit>
+      <trans-unit id="category-delete-failed" datatype="html">
+        <source>Could not delete category. Try again.</source>
+        <target state="new">Could not delete category. Try again.</target>
+      </trans-unit>
+      <trans-unit id="category-create-success" datatype="html">
+        <source>Category created.</source>
+        <target state="new">Category created.</target>
+      </trans-unit>
+      <trans-unit id="category-create-failed" datatype="html">
+        <source>Could not create category. Try again.</source>
+        <target state="new">Could not create category. Try again.</target>
+      </trans-unit>
+      <trans-unit id="category-update-success" datatype="html">
+        <source>Category updated.</source>
+        <target state="new">Category updated.</target>
+      </trans-unit>
+      <trans-unit id="category-update-failed" datatype="html">
+        <source>Could not update category. Try again.</source>
+        <target state="new">Could not update category. Try again.</target>
+      </trans-unit>
       <trans-unit id="api-key-generation-success" datatype="html">
         <source>New API key generated.</source>
         <target state="new">New API key generated.</target>
@@ -5661,6 +5769,30 @@
       <trans-unit id="server-restart-failed" datatype="html">
         <source>Server restart failed. Try again.</source>
         <target state="new">Server restart failed. Try again.</target>
+      </trans-unit>
+      <trans-unit id="playlist-add-success" datatype="html">
+        <source>File added to playlist.</source>
+        <target state="new">File added to playlist.</target>
+      </trans-unit>
+      <trans-unit id="playlist-add-failed" datatype="html">
+        <source>Could not add file to playlist. Try again.</source>
+        <target state="new">Could not add file to playlist. Try again.</target>
+      </trans-unit>
+      <trans-unit id="format-load-failed" datatype="html">
+        <source>Could not load available formats. Default quality options are still available.</source>
+        <target state="new">Could not load available formats. Default quality options are still available.</target>
+      </trans-unit>
+      <trans-unit id="youtube-search-failed" datatype="html">
+        <source>Could not load search results. Check the connection and try again.</source>
+        <target state="new">Could not load search results. Check the connection and try again.</target>
+      </trans-unit>
+      <trans-unit id="cookies-upload-failed" datatype="html">
+        <source>Could not upload cookies. Check the file and try again.</source>
+        <target state="new">Could not upload cookies. Check the file and try again.</target>
+      </trans-unit>
+      <trans-unit id="registration-failed" datatype="html">
+        <source>Could not register the user. The name may already be in use or registration may be disabled.</source>
+        <target state="new">Could not register the user. The name may already be in use or registration may be disabled.</target>
       </trans-unit>
     </body>
   </file>

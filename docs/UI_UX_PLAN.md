@@ -186,9 +186,58 @@ Acceptance criteria:
 6. **Information architecture:** Settings navigation/search, drawer organization,
    notifications, and shared responsive components.
 
+## Closeout status
+
+**Closed on 2026-10-28.** The six delivery phases are complete. Further UI/UX
+work is not an automatic continuation of this plan; it requires a new, bounded
+request with its own acceptance criteria.
+
+The closeout review confirmed:
+
+- accurate download state labels, responsive Tasks and Downloads layouts, and
+  persistent discovery controls;
+- completion-aware polling, stale-response protection, teardown, visible
+  connection failures, and recoverable action feedback across the primary
+  workflows;
+- staged subscription creation and scanning feedback, including progress and
+  cancellation;
+- responsive Settings navigation and single-scroll ownership, searchable and
+  grouped settings, organized drawer subscriptions, and actionable
+  notifications;
+- accessible names and visible focus treatment for the reviewed primary
+  controls, with announced snackbar or live-region feedback for the primary
+  mutation workflows.
+
+Closeout verification:
+
+- representative frontend suites for Downloads, Recent Videos, Tasks,
+  Notifications, Settings, and Subscription: 162 tests passed in Chrome
+  Headless;
+- production frontend build passed with only the inherited `file-saver`
+  CommonJS optimization warning and the existing custom-file-label selector
+  warning;
+- live Settings accessibility-tree review exposed labelled navigation, search,
+  section selection, form controls, and Save/Cancel actions;
+- validation container `YouTube-Downloader-Test` was healthy on port `18084`,
+  returned HTTP 200, had zero restarts, and retained all five persistent mounts.
+
+The following ideas are deliberately deferred rather than incomplete plan work:
+
+- queue position, concurrency limit, speed, and ETA presentation where the
+  backend can provide reliable values;
+- a pre-queue subscription import preview where extractor behavior makes one
+  reliable and inexpensive;
+- a dedicated automated accessibility/contrast/touch-target audit beyond the
+  focused behavioral tests and manual reviews already completed;
+- optional sticky discovery controls, broader shared-style consolidation, and
+  sanitized diagnostic identifiers/details.
+
+Deferred items are not release blockers. Dependency modernization, framework
+upgrades, and the other items listed under Out of scope remain separate projects.
+
 ## Implementation progress
 
-### Phase 1 started (2026-10-09)
+### Phase 1 completed (started 2026-10-09)
 
 - Downloads waiting for a worker are labelled `Queued`, with the existing
   localization key updated in every locale that previously translated the old
@@ -225,8 +274,9 @@ Verification:
 - localization extraction confirmed that the queued state retains its stable
   message identifier and new accessible labels reuse existing translations.
 
-Remaining Phase 1 work includes visible keyboard-focus review, live-region
-announcements, broader accessibility testing, and actionable error messages.
+Subsequent Phase 1 follow-ups below completed the planned focus review and added
+announced, actionable feedback to the primary workflows. A broader formal
+accessibility audit is deferred in the closeout status above.
 
 #### Subscription removal feedback (2026-10-21)
 
@@ -484,6 +534,535 @@ Verification:
 - production frontend build passed with the inherited `file-saver` CommonJS
   warning.
 
+#### Category-order feedback (2026-10-24)
+
+- Category reordering now submits one immutable order snapshot and disables
+  other category actions until the request settles.
+- Successful updates announce completion. Rejected and failed updates restore
+  the previous visible order and show a localized retry cue instead of leaving
+  unsaved ordering on screen.
+- A pending reorder is cancelled and rolled back when Settings is destroyed.
+
+Verification:
+
+- focused Settings component suite: 60 passing in Chrome Headless, including
+  successful, rejected, failed, duplicate, and destroyed category-order paths;
+- all 31 tracked XLF files passed XML validation and contain the stable success
+  and rollback messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Category-deletion feedback (2026-10-24)
+
+- Category deletion now distinguishes cancellation, successful deletion,
+  rejected responses, and failed requests instead of silently ignoring a
+  rejected response.
+- A pending deletion disables category creation, editing, deletion, and
+  reordering so conflicting category changes cannot overlap.
+- Failed deletions restore the controls for retry and show a localized,
+  actionable message. Confirmation and request subscriptions stop when
+  Settings is destroyed.
+
+Verification:
+
+- focused Settings component suite: 66 passing in Chrome Headless, including
+  cancelled, successful, rejected, transport-failed, duplicate, and destroyed
+  category-deletion paths;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  category-deletion failure message;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Category-creation feedback (2026-10-24)
+
+- Category creation now keeps the entered name available after rejected and
+  failed requests, restores the submission controls for retry, and announces
+  both successful creation and actionable failure states.
+- The shared input dialog now locks its input, Cancel, and submit controls while
+  an emitted request is pending, preventing duplicate submissions. Its caller
+  can explicitly restore the populated form after a recoverable failure.
+- Category creation and its dialog emitter stop updating Settings after the
+  component is destroyed, and other category actions remain disabled while the
+  request is pending.
+
+Verification:
+
+- focused Settings and Input Dialog component suites: 75 passing in Chrome
+  Headless, including successful, rejected, transport-failed, duplicate, and
+  destroyed category-creation paths plus dialog pending-state behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  category-creation success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Category-update feedback (2026-10-25)
+
+- Category editing now prevents duplicate saves, disables every form and dialog
+  action while a request is pending, and validates that a category name is
+  present before submission.
+- Successful updates announce completion and record the exact submitted
+  snapshot. Rejected and failed updates preserve the current edits, restore the
+  controls for retry, and show a localized actionable message without logging
+  raw request errors.
+- Active update requests stop when the dialog is destroyed, preventing a late
+  response from refreshing categories or showing stale feedback.
+
+Verification:
+
+- focused Edit Category Dialog component suite: 8 passing in Chrome Headless,
+  including successful, rejected, transport-failed, duplicate, stale-edit, and
+  destroyed-dialog update paths;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  category-update success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Task-action feedback (2026-10-25)
+
+- Running and confirming a task now disable both actions for that task until the
+  request settles, preventing overlapping operations before polling reports the
+  task as busy.
+- Successful actions refresh the task list, and task runs also refresh the
+  available database backups. Rejected and failed requests restore the controls
+  for retry and show localized actionable feedback without logging raw errors.
+- Task reset now prevents duplicate confirmation or reset requests, refreshes
+  tasks and database backups after success, and restores the action after a
+  rejected or failed request.
+- Pending confirmations and task requests stop updating the page after the Tasks
+  component is destroyed.
+
+Verification:
+
+- focused Tasks component suite: 19 passing in Chrome Headless, covering
+  successful, rejected, transport-failed, duplicate, cross-action, reset, and
+  destroyed-component paths alongside the existing responsive and polling
+  behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  task-action failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Task-schedule feedback (2026-10-25)
+
+- Task scheduling now allows only one open schedule dialog or update request per
+  task, and disables that task's Schedule action until the workflow settles.
+- A successful update refreshes the task list and announces completion. Rejected
+  and failed updates restore the action for retry and show localized actionable
+  feedback instead of failing silently.
+- Schedule-dialog and update-request subscriptions stop when the Tasks component
+  is destroyed, preventing late refreshes or feedback after navigation.
+
+Verification:
+
+- focused Tasks component suite: 23 passing in Chrome Headless, covering
+  successful, cancelled, rejected, transport-failed, duplicate, and destroyed
+  schedule workflows alongside the existing task-action, responsive, and polling
+  behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable schedule
+  success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Task-settings feedback (2026-10-25)
+
+- Task Settings now prevent duplicate saves and disable every editable field plus
+  the dialog actions while a save request is pending.
+- Successful saves announce completion and record the exact submitted snapshot,
+  so edits made while the request is pending remain visibly unsaved.
+- Rejected and failed saves preserve the current edits, restore the controls for
+  retry, and show localized actionable feedback instead of reloading and
+  discarding the form.
+- Task loading and save requests stop updating the dialog after it is destroyed.
+
+Verification:
+
+- focused Task Settings component suite: 8 passing in Chrome Headless, covering
+  loading, successful, rejected, transport-failed, duplicate, stale-edit, and
+  destroyed-dialog paths;
+- all 31 tracked XLF files passed XML validation and contain the stable task
+  settings success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Archive-deletion feedback (2026-10-25)
+
+- Archive deletion now waits for an explicit successful response before changing
+  the visible archive list or clearing its selection.
+- Successful deletion removes only the confirmed extractor-and-ID records. This
+  corrects the previous inverted local filter, which could retain the selected
+  row while removing unrelated rows from the same extractor.
+- Rejected and failed deletions preserve both the archive list and selection for
+  retry, show localized actionable feedback, and no longer produce a false local
+  success state.
+- Confirmation and deletion controls prevent duplicate work, remain disabled
+  while the workflow is pending, and stop updating after the component is
+  destroyed.
+
+Verification:
+
+- focused Archive Viewer component suite: 6 passing in Chrome Headless, covering
+  exact-record deletion, rejected and transport-failed requests, duplicate
+  confirmation and request prevention, and destroyed-component behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable archive
+  deletion failure message;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Archive-import feedback (2026-10-26)
+
+- Archive import now accepts only the first selected file, snapshots its target
+  file type and subscription, and prevents duplicate submissions while the file
+  or request is pending.
+- Successful imports refresh the archive list only after the server confirms the
+  operation. Rejected requests, transport failures, and local file-read failures
+  preserve the selected file for retry and show localized actionable feedback.
+- Import target controls stay disabled while work is pending, and late file or
+  request results cannot update a destroyed component.
+
+Verification:
+
+- focused Archive Viewer component suite: 12 passing in Chrome Headless,
+  including successful, rejected, transport-failed, duplicate, and
+  destroyed-component import paths alongside the deletion coverage;
+- all 31 tracked XLF files passed XML validation and contain the stable archive
+  import failure message;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Archive-download feedback (2026-10-26)
+
+- Archive export now snapshots the selected file type and subscription, disables
+  its action while the request is pending, and ignores repeated activation.
+- Successful exports announce that the browser download started. Request and
+  local save failures restore the action and show a localized retry cue instead
+  of failing silently.
+- Pending export requests stop updating or saving files after Archive Viewer is
+  destroyed.
+
+Verification:
+
+- focused Archive Viewer component suite: 17 passing in Chrome Headless,
+  covering successful, request-failed, local-save-failed, duplicate, and
+  destroyed-component export paths alongside import and deletion coverage;
+- all 31 tracked XLF files passed XML validation and contain the stable archive
+  download success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Archive-list loading and recovery (2026-10-26)
+
+- Archive Viewer now distinguishes initial/loading, empty, populated, and failed
+  list states instead of showing an empty message before retrieval or silently
+  retaining stale content after a request failure.
+- Failed and invalid responses show sanitized guidance with a direct Retry
+  action. Destructive and export actions stay disabled until a valid list is
+  available.
+- Filter changes cancel the previous list request, clear stale selection, and
+  guard the result so an older response cannot overwrite the newest filter.
+  Pending requests stop updating after the component is destroyed.
+
+Verification:
+
+- focused Archive Viewer component suite: 22 passing in Chrome Headless,
+  covering successful empty retrieval, transport and invalid-response failures,
+  superseded requests, and destroyed-component list loading alongside the
+  import, export, and deletion coverage;
+- all 31 tracked XLF files passed XML validation and contain the stable archive
+  loading and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Subscription archive-export feedback (2026-10-27)
+
+- Archive export from Subscription Information now prevents duplicate requests
+  and conflicting unsubscribe actions while the export is pending.
+- Successful exports announce that the browser download started. Request and
+  local save failures restore the action and show the same localized retry cue
+  as Archive Viewer.
+- Closing or destroying the dialog cancels pending export work, preventing a
+  late response from saving a file or showing stale feedback.
+
+Verification:
+
+- focused Subscription Information dialog suite: 10 passing in Chrome Headless,
+  covering successful, request-failed, local-save-failed, duplicate,
+  cross-action, and destroyed-dialog export paths alongside subscription-removal
+  coverage;
+- the existing archive download success and failure translations are reused in
+  all 31 tracked locale catalogs;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Subscription media-export feedback (2026-10-27)
+
+- Full subscription media export now snapshots the subscription identity and
+  name, prevents duplicate requests, and restores its action when the request
+  settles.
+- Successful exports announce that the browser download started. Request and
+  local save failures show localized retry guidance instead of writing raw
+  errors to the browser console.
+- Route changes and component destruction cancel pending export requests, so a
+  response for an older subscription cannot save a file or show stale feedback.
+
+Verification:
+
+- focused Subscription component suite: 13 passing in Chrome Headless, covering
+  successful, request-failed, local-save-failed, duplicate, route-replacement,
+  polling, and manual-check behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  subscription download success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Custom-playlist export feedback (2026-10-27)
+
+- Custom-playlist export now blocks duplicate requests for the same playlist
+  while still allowing different playlists to export independently.
+- Successful exports announce that the browser download started. Request and
+  local save failures restore the affected action and show localized retry
+  guidance.
+- Pending exports and the component's other observable work are cancelled when
+  the Custom Playlists view is destroyed, preventing late responses from saving
+  files or updating a view that is no longer active.
+
+Verification:
+
+- focused Custom Playlists component suite: 7 passing in Chrome Headless,
+  covering successful, request-failed, local-save-failed, duplicate,
+  concurrent-playlist, and destroyed-component export paths;
+- all 31 tracked XLF files passed XML validation and contain the stable playlist
+  download success and failure messages;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Player export feedback (2026-10-27)
+
+- Player playlist and single-file exports now snapshot the owning route state,
+  prevent duplicate or conflicting export requests, and restore the action when
+  each request settles.
+- Successful exports announce that the browser download started. Request and
+  local save failures show localized retry guidance instead of silently ending
+  the spinner.
+- Route replacement and component destruction cancel pending exports, so an old
+  player response cannot save a file or show feedback for the new route.
+
+Verification:
+
+- focused Player component suite: 14 passing in Chrome Headless, covering
+  successful playlist and file exports, request and local-save failures,
+  overlapping-action prevention, route replacement, and existing media lifecycle
+  behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable file
+  download success and failure messages; existing playlist export messages are
+  reused;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Home export feedback (2026-10-27)
+
+- Home's download-only completion path now exports playlists with their actual
+  playlist ID instead of the nonexistent file-style `uid` property.
+- File and playlist exports prevent duplicate requests, announce successful
+  browser downloads, and show localized retry guidance for request or local save
+  failures.
+- A file is removed from the server only after the browser save starts
+  successfully. Cleanup failure now reports that the downloaded file is safe but
+  its server copy remains, rather than silently consuming storage.
+- Pending exports and post-download cleanup requests are cancelled when Home is
+  destroyed, preventing late saves, deletions, or feedback.
+
+Verification:
+
+- focused Main component suite: 13 passing in Chrome Headless, covering the
+  playlist-ID repair, file and playlist export success and failure, local-save
+  protection, cleanup failure, duplicate prevention, teardown, and existing
+  progress polling behavior;
+- all 31 tracked XLF files passed XML validation and contain the stable cleanup
+  failure message; existing file and playlist export messages are reused;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Recent Videos export feedback (2026-10-27)
+
+- Direct exports from Recent Videos now prevent duplicate requests for the same
+  file while allowing different files to export independently.
+- Successful exports announce that the browser download started. Request and
+  local-save failures show localized retry guidance instead of leaving a card
+  blurred without an explanation.
+- For download-only files, the server copy is removed only after the browser save
+  starts successfully. Cleanup failure reports that the downloaded file is safe
+  but its server copy remains.
+- Subscription changes and component destruction cancel pending exports and
+  cleanup work, preventing an old response from saving, deleting, refreshing, or
+  showing feedback in a replacement view.
+
+Verification:
+
+- focused Recent Videos component suite: 19 passing in Chrome Headless, covering
+  export success, request and local-save failure, cleanup success and failure,
+  duplicate prevention, subscription replacement, teardown, and the existing
+  navigation, filtering, pagination, and stale-response behavior;
+- existing stable file-download and cleanup-failure translations are reused;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Recent Videos deletion feedback (2026-10-27)
+
+- Normal and subscription-file deletion now wait for an explicit successful API
+  result before removing a card or reporting success.
+- Rejected and failed deletions keep the file visible and show the existing
+  localized failure message instead of silently succeeding.
+- Repeated deletion requests for the same file are ignored while work is active,
+  and export and deletion actions cannot overlap for one file.
+- Subscription changes and component destruction cancel pending deletion work,
+  preventing stale responses from removing cards or showing feedback in a
+  replacement view.
+- A successful response safely refreshes the current list even if polling or
+  pagination already removed the original card.
+
+Verification:
+
+- focused Recent Videos component suite: 24 passing in Chrome Headless, covering
+  confirmed, rejected, and failed normal-file deletions, both subscription-file
+  deletion modes, duplicate prevention, subscription replacement, teardown, and
+  the existing library and export behavior;
+- existing translated delete success, failure, and acknowledgement messages are
+  reused.
+
+#### Add-to-playlist feedback (2026-10-27)
+
+- Adding a library file to a custom playlist now waits for a confirmed API
+  result and reports a concise localized success or retry message.
+- Rejected and failed requests no longer expose raw errors or direct users to the
+  browser console.
+- Repeated additions for the same file are ignored while work is active, and an
+  add cannot overlap an export or deletion for that file.
+- Subscription changes and component destruction cancel pending additions so a
+  stale response cannot show feedback or refresh playlists in a replacement
+  view.
+
+Verification:
+
+- focused Recent Videos component suite: 29 passing in Chrome Headless, covering
+  confirmed, rejected, failed, duplicate, conflicting-action, and
+  subscription-replacement add-to-playlist paths plus existing library actions;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  add-to-playlist success and failure messages; non-English locales use safe
+  English fallbacks until translated;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Format-loading recovery (2026-10-28)
+
+- A failed quality-format lookup now leaves the default quality choices usable
+  and shows a concise inline explanation with a direct Retry action.
+- The failure state no longer writes the complete user-entered URL to the
+  browser console.
+- Repeated lookups for the same URL cannot overlap, and pending lookups are
+  cancelled when the Home component is destroyed.
+- Playlist URLs continue to use the intentional fallback quality list without
+  being presented as a network failure.
+
+Verification:
+
+- focused Main component suite: 16 passing in Chrome Headless, including
+  successful loading, duplicate prevention, failure recovery, retry, and
+  teardown coverage;
+- all 31 tracked XLF files contain the stable format-loading failure message;
+  non-English locales use a safe English fallback until translated;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Home search recovery (2026-10-28)
+
+- A failed YouTube search now shows a concise inline connection message with a
+  direct Retry action instead of silently hiding results and ending the input
+  listener.
+- Search failures no longer write raw request errors to the browser console;
+  typing or pasting a replacement query, or retrying, can recover without
+  reloading the page.
+- A replacement query cancels the prior request so late results cannot overwrite
+  the current search, while URL input bypasses search without leaving a loading
+  state behind.
+- Input listeners and active searches are released when Home is destroyed, and
+  clearing the input clears stale search failure state.
+
+Verification:
+
+- focused Main component suite: 20 passing in Chrome Headless, including search
+  failure recovery, retry, replacement cancellation, URL bypass, input clearing,
+  and teardown coverage plus existing Home workflows;
+- all 31 tracked XLF files passed XML validation and contain the stable Home
+  search failure message; non-English locales use a safe English fallback until
+  translated;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Cookie upload feedback (2026-10-28)
+
+- Cookie-file uploads now wait for a confirmed successful API result before
+  reporting completion.
+- Rejected and failed uploads show a concise localized retry message instead of
+  exposing raw request errors only in the browser console.
+- The upload action ignores repeated activation while work is active and remains
+  available for retry after failure.
+- Selecting a replacement file or closing the dialog cancels the active request,
+  preventing late feedback from a stale upload.
+
+Verification:
+
+- focused cookie-uploader dialog suite: 4 passing in Chrome Headless, covering
+  accessible naming, confirmed success, duplicate prevention, rejected and
+  failed responses, retryability, and teardown;
+- all 31 tracked XLF files passed XML validation and contain the stable
+  cookie-upload failure message; non-English locales use a safe English fallback
+  until translated;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Sharing toggle feedback (2026-10-28)
+
+- File and playlist sharing now changes its confirmed state only after the API
+  accepts the request.
+- The sharing checkbox is disabled while work is active, and repeated activation
+  cannot create overlapping enable/disable requests.
+- Rejected or failed requests restore the confirmed checkbox state, retain the
+  existing localized failure feedback, and remain available for retry.
+- Closing the share dialog cancels active sharing work so a late response cannot
+  update the closed dialog.
+
+Verification:
+
+- focused share-media dialog suite: 4 passing in Chrome Headless, covering
+  confirmed enable/disable state, duplicate prevention, rejected and failed
+  requests, retryability, and teardown;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
+#### Login and registration recovery (2026-10-28)
+
+- Login and registration now ignore repeated activation while their request is
+  active, preventing duplicate authentication work.
+- Clicking either registration password field no longer submits an incomplete
+  form; pressing Enter retains the expected keyboard submission behavior.
+- Registration failures preserve the entered form and show a concise localized
+  explanation without exposing raw server responses, paths, or other diagnostic
+  content.
+- Initialization, login, and registration requests are released when the page
+  is destroyed so late responses cannot update a page that has been left.
+
+Verification:
+
+- focused Login component suite: 5 passing in Chrome Headless, covering
+  initialization teardown, duplicate login and registration prevention,
+  confirmed login, sanitized retryable registration failure, request teardown,
+  click behavior, and Enter submission;
+- all 31 tracked XLF files passed XML validation and include the stable
+  registration-failure message; non-English locales use a safe English fallback
+  until translated;
+- production frontend build passed with the inherited `file-saver` CommonJS
+  warning.
+
 #### Keyboard focus follow-up (2026-10-18)
 
 - Shared keyboard-focus styling now provides a high-contrast visible outline for
@@ -536,7 +1115,7 @@ Verification:
   Angular Material announcements or polite live regions; the remaining live
   announcement work is limited to workflows that do not use either mechanism.
 
-### Phase 2 started (2026-10-09)
+### Phase 2 completed (started 2026-10-09)
 
 - Tasks use a compact card presentation below 650 pixels while retaining the
   sortable table at wider viewports.
@@ -555,7 +1134,7 @@ The rebuilt validation container was checked at 455 and 1280 CSS-pixel widths.
 Tasks use cards without horizontal overflow at 455 pixels and return to the
 desktop table at 1280 pixels.
 
-### Phase 3 started (2026-10-09)
+### Phase 3 completed (started 2026-10-09)
 
 - Downloads polling now schedules the next refresh only after the current
   request finishes, preventing overlapping one-second requests.
@@ -640,7 +1219,7 @@ The periodic network-refresh audit is complete for the current Phase 3 scope.
 Normal-state live verification is complete; forced backend-failure presentation
 remains covered by focused tests rather than a destructive live outage exercise.
 
-### Phase 4 started (2026-10-10)
+### Phase 4 completed (started 2026-10-10)
 
 - Subscription creation now exposes an in-dialog creating state, prevents
   duplicate submissions, and cancels the active request if the dialog closes.
@@ -685,7 +1264,7 @@ Verification:
   check status messages. Non-English locales retain safe English fallbacks until
   those new messages are translated.
 
-### Phase 5 started (2026-10-12)
+### Phase 5 completed (started 2026-10-12)
 
 - Downloads can now be searched by title or subscription name and filtered by
   queued, active, paused, completed, failed, or cancelled status.
@@ -745,7 +1324,7 @@ Verification:
   discovery and clear-completed messages. Non-English locales use safe English
   fallbacks until translated.
 
-### Phase 6 started (2026-10-12)
+### Phase 6 completed (started 2026-10-12)
 
 - Settings replaces the horizontally scrolling eight-tab header with a compact
   section selector below 650 pixels while retaining the existing desktop tabs,
@@ -906,6 +1485,57 @@ Verification:
   the container remained healthy with HTTP 200 and all five persistent volumes
   attached after a deliberate restart, with a verified appdata/users archive
   and the prior container retained for rollback;
+- validation image at commit `492c743` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with zero restarts
+  and HTTP 200, and its startup subscription scan completed in 5 seconds with
+  189 discovered entries and 0 queued, while the prior container was retained
+  for rollback;
+- validation image at commit `94a8c94` rebuilt from a clean commit archive and
+  redeployed on port `18084`; it repaired the persisted Python-incompatible
+  downloader with the official standalone yt-dlp `2026.10.26`, exposed Chrome
+  impersonation targets, and completed subscription scans with 189 discovered
+  entries and 0 queued both before and after a deliberate restart. The container
+  remained healthy with HTTP 200, zero restarts, and all five isolated volumes
+  attached, while the replaced container was retained for comparison;
+- validation image at commit `0772786` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 3-second subscription scan that discovered 189
+  entries and queued 0, while the prior healthy container was retained for
+  rollback;
+- validation image at commit `ff676c0` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 4-second subscription scan that discovered 189
+  entries and queued 0, while the prior healthy container was retained for
+  rollback;
+- validation image at commit `c829742` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 5-second subscription scan that discovered 189
+  entries and queued 0, while the prior healthy container was retained for
+  rollback;
+- validation image at commit `9325741` rebuilt from a clean commit archive and
+  redeployed on port `18084`; after resolving a port collision with a running
+  rollback container, the new container remained healthy with HTTP 200, zero
+  restarts, all five isolated volumes attached, persisted yt-dlp `2026.10.26`
+  executable, and a 4-second subscription scan that discovered 189 entries and
+  queued 0. Both replaced containers were retained for rollback;
+- validation image at commit `f157382` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 4-second subscription scan that discovered 189
+  entries and queued 0, while the prior container was retained for rollback;
+- validation image at commit `fc3cd56` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 3-second subscription scan that discovered 189
+  entries and queued 0, while the prior container was retained for rollback;
+- validation image at commit `83b7278` rebuilt from a clean commit archive and
+  redeployed on port `18084`; the container remained healthy with HTTP 200,
+  zero restarts, all five isolated volumes attached, persisted yt-dlp
+  `2026.10.26` executable, and a 3-second subscription scan that discovered 189
+  entries and queued 0, while the prior container was retained for rollback;
 - all 31 tracked XLF files passed XML validation; existing translated section
   labels are reused by both navigation presentations, while new danger-section
   copy, category-action names, top-bar navigation names, and player action names

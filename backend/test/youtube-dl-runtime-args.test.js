@@ -18,7 +18,7 @@ describe('youtube-dl runtime arguments', function() {
 
         assert.deepStrictEqual(
             addRuntimeArgs(['--dump-json'], 'yt-dlp'),
-            ['--impersonate', 'chrome', '--dump-json']
+            ['--impersonate', 'chrome', '--dump-json', '--abort-on-unavailable-fragments']
         );
     });
 
@@ -27,7 +27,14 @@ describe('youtube-dl runtime arguments', function() {
 
         assert.deepStrictEqual(
             addRuntimeArgs(['--impersonate=safari', '--dump-json'], 'yt-dlp'),
-            ['--impersonate=safari', '--dump-json']
+            ['--impersonate=safari', '--dump-json', '--abort-on-unavailable-fragments']
+        );
+    });
+
+    it('preserves an explicit unavailable-fragment policy', function() {
+        assert.deepStrictEqual(
+            addRuntimeArgs(['--skip-unavailable-fragments', '--dump-json'], 'yt-dlp'),
+            ['--skip-unavailable-fragments', '--dump-json']
         );
     });
 

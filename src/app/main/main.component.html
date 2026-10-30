@@ -22,18 +22,18 @@
                                             Quality
                                         </ng-container>
                                     </mat-label>
-                                    <mat-select [disabled]="url === '' || cachedAvailableFormats[url] && cachedAvailableFormats[url]['formats_loading']" [ngModelOptions]="{standalone: true}" [(ngModel)]="selectedQuality" (ngModelChange)="argsChanged()">
+                                    <mat-select [disabled]="url === '' || cachedAvailableFormats.get(url)?.formats_loading" [ngModelOptions]="{standalone: true}" [(ngModel)]="selectedQuality" (ngModelChange)="argsChanged()">
                                         <mat-option i18n="Best" [value]="''">
                                             Best
                                         </mat-option>
-                                        <ng-container *ngIf="url && cachedAvailableFormats && cachedAvailableFormats[url]?.formats && !cachedAvailableFormats[url]?.formats_failed">
-                                            <ng-container *ngFor="let option of cachedAvailableFormats[url]['formats'][audioOnly ? 'audio' : 'video']">
+                                        <ng-container *ngIf="url && cachedAvailableFormats.get(url)?.formats && !cachedAvailableFormats.get(url)?.formats_failed">
+                                            <ng-container *ngFor="let option of cachedAvailableFormats.get(url).formats[audioOnly ? 'audio' : 'video']">
                                                 <mat-option [matTooltip]="option.expected_filesize ? humanFileSize(option.expected_filesize) : null" *ngIf="option.key !== 'best_audio_format'" [value]="option">
                                                     {{option.key}}
                                                 </mat-option>
                                             </ng-container>
                                         </ng-container>
-                                        <ng-container *ngIf="url && cachedAvailableFormats && cachedAvailableFormats[url]?.formats_failed">
+                                        <ng-container *ngIf="url && cachedAvailableFormats.get(url)?.formats_failed">
                                             <ng-container *ngFor="let option of qualityOptions[audioOnly ? 'audio' : 'video']">
                                                 <mat-option [value]="option.value">
                                                     {{option.label}}
@@ -42,8 +42,15 @@
                                         </ng-container>
                                     </mat-select>
                                 </mat-form-field>
-                                <div class="spinner-div" *ngIf="url !== '' && cachedAvailableFormats[url] && cachedAvailableFormats[url]['formats_loading']">
+                                <div class="spinner-div" *ngIf="url !== '' && cachedAvailableFormats.get(url)?.formats_loading">
                                     <mat-spinner [diameter]="25"></mat-spinner>
+                                </div>
+                                <div class="format-load-state" role="status" aria-live="polite"
+                                    *ngIf="url && cachedAvailableFormats.get(url)?.formats_request_failed">
+                                    <span i18n="Format loading failure@@format-load-failed">Could not load available formats. Default quality options are still available.</span>
+                                    <button mat-stroked-button type="button" color="accent" (click)="retryFormats(url)"
+                                        [disabled]="cachedAvailableFormats.get(url)?.formats_loading"
+                                        i18n="Retry action@@retry-action">Retry</button>
                                 </div>
                             </div>
                         </div>
@@ -67,6 +74,11 @@
                                 </button>
                             </mat-card>
                         </span>
+                    </div>
+                    <div class="search-load-state" role="status" aria-live="polite" *ngIf="search_failed">
+                        <span i18n="YouTube search failure@@youtube-search-failed">Could not load search results. Check the connection and try again.</span>
+                        <button mat-stroked-button type="button" color="accent" (click)="retrySearch()"
+                            [disabled]="results_loading" i18n="Retry action@@retry-action">Retry</button>
                     </div>
                 </form>
                 <br/>

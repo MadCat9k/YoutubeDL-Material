@@ -1,5 +1,13 @@
 # YoutubeDL-Material
 
+> [!IMPORTANT]
+> This repository is a Synology-focused fork of
+> [Tzahi12345/YoutubeDL-Material](https://github.com/Tzahi12345/YoutubeDL-Material),
+> not the upstream project. See [README.fork.md](README.fork.md) for the fork's
+> changes, supported deployment path, current limitations, and rollback guidance.
+> The upstream links and general development instructions below are retained for
+> background and may not describe this fork's images or deployment files.
+
 [![Docker pulls badge](https://img.shields.io/docker/pulls/tzahi12345/youtubedl-material.svg)](https://hub.docker.com/r/tzahi12345/youtubedl-material)
 [![Docker image size badge](https://img.shields.io/docker/image-size/tzahi12345/youtubedl-material?sort=date)](https://hub.docker.com/r/tzahi12345/youtubedl-material)
 [![Heroku deploy badge](https://img.shields.io/badge/%E2%86%91_Deploy_to-Heroku-7056bf.svg)](https://heroku.com/deploy?template=https://github.com/Tzahi12345/YoutubeDL-Material)

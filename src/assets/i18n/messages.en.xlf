@@ -3697,6 +3697,87 @@
         </context-group>
         <note priority="1" from="description">Transfer DB button</note>
       </trans-unit>
+      <trans-unit id="archive-delete-failed" datatype="html">
+        <source>Could not delete archive items. Try again.</source>
+      </trans-unit>
+      <trans-unit id="archive-import-failed" datatype="html">
+        <source>Could not import archive. Check the file and try again.</source>
+      </trans-unit>
+      <trans-unit id="archive-download-success" datatype="html">
+        <source>Archive download started.</source>
+      </trans-unit>
+      <trans-unit id="archive-download-failed" datatype="html">
+        <source>Could not download archive. Try again.</source>
+      </trans-unit>
+      <trans-unit id="archive-list-loading" datatype="html">
+        <source>Loading archives...</source>
+      </trans-unit>
+      <trans-unit id="archive-list-load-failed" datatype="html">
+        <source>Could not load archives. Try again.</source>
+      </trans-unit>
+      <trans-unit id="subscription-download-success" datatype="html">
+        <source>Subscription download started.</source>
+      </trans-unit>
+      <trans-unit id="subscription-download-failed" datatype="html">
+        <source>Could not download subscription. Try again.</source>
+      </trans-unit>
+      <trans-unit id="playlist-download-success" datatype="html">
+        <source>Playlist download started.</source>
+      </trans-unit>
+      <trans-unit id="playlist-download-failed" datatype="html">
+        <source>Could not download playlist. Try again.</source>
+      </trans-unit>
+      <trans-unit id="file-download-success" datatype="html">
+        <source>File download started.</source>
+      </trans-unit>
+      <trans-unit id="file-download-failed" datatype="html">
+        <source>Could not download file. Try again.</source>
+      </trans-unit>
+      <trans-unit id="file-download-cleanup-failed" datatype="html">
+        <source>File downloaded, but the server copy could not be removed.</source>
+      </trans-unit>
+      <trans-unit id="task-settings-save-success" datatype="html">
+        <source>Task settings saved.</source>
+      </trans-unit>
+      <trans-unit id="task-settings-save-failed" datatype="html">
+        <source>Could not save task settings. Try again.</source>
+      </trans-unit>
+      <trans-unit id="task-schedule-success" datatype="html">
+        <source>Task schedule updated.</source>
+      </trans-unit>
+      <trans-unit id="task-schedule-failed" datatype="html">
+        <source>Could not update task schedule. Try again.</source>
+      </trans-unit>
+      <trans-unit id="task-run-failed" datatype="html">
+        <source>Could not run task. Try again.</source>
+      </trans-unit>
+      <trans-unit id="task-confirm-failed" datatype="html">
+        <source>Could not confirm task. Try again.</source>
+      </trans-unit>
+      <trans-unit id="tasks-reset-failed" datatype="html">
+        <source>Could not reset tasks. Try again.</source>
+      </trans-unit>
+      <trans-unit id="category-order-save-success" datatype="html">
+        <source>Category order saved.</source>
+      </trans-unit>
+      <trans-unit id="category-order-save-failed" datatype="html">
+        <source>Could not save category order. Previous order restored. Try again.</source>
+      </trans-unit>
+      <trans-unit id="category-delete-failed" datatype="html">
+        <source>Could not delete category. Try again.</source>
+      </trans-unit>
+      <trans-unit id="category-create-success" datatype="html">
+        <source>Category created.</source>
+      </trans-unit>
+      <trans-unit id="category-create-failed" datatype="html">
+        <source>Could not create category. Try again.</source>
+      </trans-unit>
+      <trans-unit id="category-update-success" datatype="html">
+        <source>Category updated.</source>
+      </trans-unit>
+      <trans-unit id="category-update-failed" datatype="html">
+        <source>Could not update category. Try again.</source>
+      </trans-unit>
       <trans-unit id="api-key-generation-success" datatype="html">
         <source>New API key generated.</source>
       </trans-unit>
@@ -4662,6 +4743,24 @@
       </trans-unit>
       <trans-unit id="server-restart-failed" datatype="html">
         <source>Server restart failed. Try again.</source>
+      </trans-unit>
+      <trans-unit id="playlist-add-success" datatype="html">
+        <source>File added to playlist.</source>
+      </trans-unit>
+      <trans-unit id="playlist-add-failed" datatype="html">
+        <source>Could not add file to playlist. Try again.</source>
+      </trans-unit>
+      <trans-unit id="format-load-failed" datatype="html">
+        <source>Could not load available formats. Default quality options are still available.</source>
+      </trans-unit>
+      <trans-unit id="youtube-search-failed" datatype="html">
+        <source>Could not load search results. Check the connection and try again.</source>
+      </trans-unit>
+      <trans-unit id="cookies-upload-failed" datatype="html">
+        <source>Could not upload cookies. Check the file and try again.</source>
+      </trans-unit>
+      <trans-unit id="registration-failed" datatype="html">
+        <source>Could not register the user. The name may already be in use or registration may be disabled.</source>
       </trans-unit>
     </body>
   </file>

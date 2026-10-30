@@ -359,42 +359,90 @@ export class PlayerComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   downloadContent(): void {
-    if (this.downloading) return;
+    if (!this.db_playlist || this.downloading || this.download_request) return;
+    const requestedPlaylistId = this.playlist_id;
     const zipName = this.db_playlist.name;
+    const requestedUuid = this.uuid;
     const requestGeneration = this.request_generation;
     this.downloading = true;
-    const request = this.postsService.downloadPlaylistFromServer(this.playlist_id, this.uuid).subscribe(res => {
-      if (requestGeneration !== this.request_generation) return;
-      this.downloading = false;
-      const blob: Blob = res;
-      saveAs(blob, zipName + '.zip');
-    }, () => {
-      if (requestGeneration === this.request_generation) this.downloading = false;
-      this.finishDownloadRequest(requestGeneration);
-    }, () => {
-      this.finishDownloadRequest(requestGeneration);
+    const request = this.postsService.downloadPlaylistFromServer(requestedPlaylistId, requestedUuid).subscribe({
+      next: res => {
+        if (requestGeneration !== this.request_generation || requestedPlaylistId !== this.playlist_id) return;
+        try {
+          this.savePlaylistArchive(res as Blob, zipName);
+          this.postsService.openSnackBar($localize`:@@playlist-download-success:Playlist download started.`);
+        } catch (_) {
+          this.showPlaylistDownloadFailure();
+        }
+      },
+      error: () => {
+        if (requestGeneration === this.request_generation && requestedPlaylistId === this.playlist_id) {
+          this.showPlaylistDownloadFailure();
+        }
+      }
     });
     this.download_request = request.closed ? null : request;
+    request.add(() => {
+      if (requestGeneration === this.request_generation) {
+        this.downloading = false;
+        this.finishDownloadRequest(requestGeneration);
+      }
+    });
   }
 
   downloadFile(): void {
-    if (this.downloading) return;
+    if (!this.playlist[0] || !this.uid || this.downloading || this.download_request) return;
+    const requestedUid = this.uid;
+    const requestedUuid = this.uuid;
     const filename = this.playlist[0].title;
     const ext = (this.playlist[0].type === 'audio/mp3') ? '.mp3' : '.mp4';
     const requestGeneration = this.request_generation;
     this.downloading = true;
-    const request = this.postsService.downloadFileFromServer(this.uid, this.uuid).subscribe(res => {
-      if (requestGeneration !== this.request_generation) return;
-      this.downloading = false;
-      const blob: Blob = res;
-      saveAs(blob, filename + ext);
-    }, () => {
-      if (requestGeneration === this.request_generation) this.downloading = false;
-      this.finishDownloadRequest(requestGeneration);
-    }, () => {
-      this.finishDownloadRequest(requestGeneration);
+    const request = this.postsService.downloadFileFromServer(requestedUid, requestedUuid).subscribe({
+      next: res => {
+        if (requestGeneration !== this.request_generation || requestedUid !== this.uid) return;
+        try {
+          this.saveMediaFile(res as Blob, filename + ext);
+          this.postsService.openSnackBar($localize`:@@file-download-success:File download started.`);
+        } catch (_) {
+          this.showFileDownloadFailure();
+        }
+      },
+      error: () => {
+        if (requestGeneration === this.request_generation && requestedUid === this.uid) {
+          this.showFileDownloadFailure();
+        }
+      }
     });
     this.download_request = request.closed ? null : request;
+    request.add(() => {
+      if (requestGeneration === this.request_generation) {
+        this.downloading = false;
+        this.finishDownloadRequest(requestGeneration);
+      }
+    });
+  }
+
+  savePlaylistArchive(blob: Blob, playlistName: string): void {
+    saveAs(blob, playlistName + '.zip');
+  }
+
+  saveMediaFile(blob: Blob, filename: string): void {
+    saveAs(blob, filename);
+  }
+
+  private showPlaylistDownloadFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@playlist-download-failed:Could not download playlist. Try again.`,
+      $localize`Dismiss`
+    );
+  }
+
+  private showFileDownloadFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@file-download-failed:Could not download file. Try again.`,
+      $localize`Dismiss`
+    );
   }
 
   playlistPostCreationHandler(playlistID: string): void {

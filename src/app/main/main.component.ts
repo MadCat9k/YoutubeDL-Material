@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, ElementRef, ViewChild, ViewChildren, QueryList } from '@angular/core';
 import {PostsService} from '../posts.services';
 import { Observable, Subject, Subscription } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import {UntypedFormControl, Validators} from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -65,7 +66,7 @@ export class MainComponent implements OnInit, OnDestroy {
   customDownloadingAgent = null;
 
   // cache
-  cachedAvailableFormats = {};
+  cachedAvailableFormats = new Map<string, any>();
   cachedFileManagerEnabled = localStorage.getItem('cached_filemanager_enabled') === 'true';
 
   // youtube api
@@ -74,6 +75,8 @@ export class MainComponent implements OnInit, OnDestroy {
   results_loading = false;
   results_showing = true;
   results = [];
+  search_failed = false;
+  last_search_query = '';
 
   playlists = {'audio': [], 'video': []};
   playlist_thumbnails = {};
@@ -183,6 +186,12 @@ export class MainComponent implements OnInit, OnDestroy {
   config_reloaded_subscription: Subscription = null;
   args_changed_subscription: Subscription = null;
   current_download_request: Subscription = null;
+  search_input_subscription: Subscription = null;
+  search_request: Subscription = null;
+  format_requests = new Map<string, Subscription>();
+  format_request_urls = new Set<string>();
+  export_requests = new Map<string, Subscription>();
+  export_cleanup_requests = new Set<Subscription>();
   polling_stopped = false;
   current_download_request_in_flight = false;
   currentDownloadConnectionError = false;
@@ -318,7 +327,18 @@ export class MainComponent implements OnInit, OnDestroy {
     this.config_reloaded_subscription?.unsubscribe();
     this.args_changed_subscription?.unsubscribe();
     this.current_download_request?.unsubscribe();
+    this.search_input_subscription?.unsubscribe();
+    this.search_request?.unsubscribe();
+    this.format_requests.forEach(request => request.unsubscribe());
+    this.export_requests.forEach(request => request.unsubscribe());
+    this.export_cleanup_requests.forEach(request => request.unsubscribe());
+    this.format_requests.clear();
+    this.format_request_urls.clear();
+    this.export_requests.clear();
+    this.export_cleanup_requests.clear();
     this.current_download_request = null;
+    this.search_input_subscription = null;
+    this.search_request = null;
     this.current_download_request_in_flight = false;
     if (this.interval_id) { clearTimeout(this.interval_id) }
   }
@@ -333,7 +353,7 @@ export class MainComponent implements OnInit, OnDestroy {
       // if download only mode, just download the file. no redirect
       if (force_view === false && this.downloadOnlyMode && !this.iOS) {
         if (is_playlist) {
-          this.downloadPlaylist(container['uid']);
+          this.downloadPlaylist(container as Playlist);
         } else {
           this.downloadFileFromServer(container as DatabaseFile, type);
         }
@@ -433,8 +453,8 @@ export class MainComponent implements OnInit, OnDestroy {
 
   getSelectedAudioFormat(): string {
     if (typeof this.selectedQuality === 'string') { return null; }
-    const cachedFormatsExists = this.cachedAvailableFormats[this.url] && this.cachedAvailableFormats[this.url]['formats'];
-    if (cachedFormatsExists) {
+    const cachedFormats = this.cachedAvailableFormats.get(this.url)?.formats;
+    if (cachedFormats) {
       return this.selectedQuality['format_id'];
     } else {
       return null;
@@ -443,7 +463,7 @@ export class MainComponent implements OnInit, OnDestroy {
 
   getSelectedVideoFormat(): string {
     if (typeof this.selectedQuality === 'string') { return null; }
-    const cachedFormats = this.cachedAvailableFormats[this.url] && this.cachedAvailableFormats[this.url]['formats'];
+    const cachedFormats = this.cachedAvailableFormats.get(this.url)?.formats;
     if (cachedFormats) {
       if (this.selectedQuality) {
         let selected_video_format = this.selectedQuality['format_id'];
@@ -479,24 +499,106 @@ export class MainComponent implements OnInit, OnDestroy {
   }
 
   downloadFileFromServer(file: DatabaseFile, type: string): void {
-    const ext = type === 'audio' ? 'mp3' : 'mp4'
-    this.postsService.downloadFileFromServer(file.uid).subscribe(res => {
-      const blob: Blob = res;
-      saveAs(blob, decodeURIComponent(file.id) + `.${ext}`);
+    if (!file?.uid) return;
+    const requestKey = `file:${file.uid}`;
+    if (this.export_requests.has(requestKey)) return;
 
-      if (!this.fileManagerEnabled) {
-        // tell server to delete the file once downloaded
-        this.postsService.deleteFile(file.uid).subscribe(() => {});
-      }
+    const requestedUid = file.uid;
+    const ext = type === 'audio' ? 'mp3' : 'mp4';
+    let filename: string;
+    try {
+      filename = decodeURIComponent(file.id) + `.${ext}`;
+    } catch (_) {
+      this.showFileExportFailure();
+      return;
+    }
+
+    const request = this.postsService.downloadFileFromServer(requestedUid).subscribe({
+      next: res => {
+        try {
+          this.saveExportedFile(res as Blob, filename);
+          this.postsService.openSnackBar($localize`:@@file-download-success:File download started.`);
+        } catch (_) {
+          this.showFileExportFailure();
+          return;
+        }
+
+        if (!this.fileManagerEnabled) {
+          this.removeExportedServerFile(requestedUid);
+        }
+      },
+      error: () => this.showFileExportFailure()
     });
+    if (!request.closed) {
+      this.export_requests.set(requestKey, request);
+      request.add(() => this.export_requests.delete(requestKey));
+    }
+  }
+
+  saveExportedFile(blob: Blob, filename: string): void {
+    saveAs(blob, filename);
+  }
+
+  private removeExportedServerFile(uid: string): void {
+    const cleanupRequest = this.postsService.deleteFile(uid).subscribe({
+      next: removed => {
+        if (!removed) this.showFileCleanupFailure();
+      },
+      error: () => this.showFileCleanupFailure()
+    });
+    if (!cleanupRequest.closed) {
+      this.export_cleanup_requests.add(cleanupRequest);
+      cleanupRequest.add(() => this.export_cleanup_requests.delete(cleanupRequest));
+    }
+  }
+
+  private showFileCleanupFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@file-download-cleanup-failed:File downloaded, but the server copy could not be removed.`,
+      $localize`Dismiss`
+    );
+  }
+
+  private showFileExportFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@file-download-failed:Could not download file. Try again.`,
+      $localize`Dismiss`
+    );
   }
 
   downloadPlaylist(playlist: Playlist): void {
-    this.postsService.downloadPlaylistFromServer(playlist.id).subscribe(res => {
-      const blob: Blob = res;
-      saveAs(blob, playlist.name + '.zip');
-    });
+    if (!playlist?.id) return;
+    const requestKey = `playlist:${playlist.id}`;
+    if (this.export_requests.has(requestKey)) return;
 
+    const requestedId = playlist.id;
+    const requestedName = playlist.name;
+    const request = this.postsService.downloadPlaylistFromServer(requestedId).subscribe({
+      next: res => {
+        try {
+          this.saveExportedPlaylist(res as Blob, requestedName);
+          this.postsService.openSnackBar($localize`:@@playlist-download-success:Playlist download started.`);
+        } catch (_) {
+          this.showPlaylistExportFailure();
+        }
+      },
+      error: () => this.showPlaylistExportFailure()
+    });
+    if (!request.closed) {
+      this.export_requests.set(requestKey, request);
+      request.add(() => this.export_requests.delete(requestKey));
+    }
+  }
+
+  saveExportedPlaylist(blob: Blob, playlistName: string): void {
+    saveAs(blob, playlistName + '.zip');
+  }
+
+  private showPlaylistExportFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@playlist-download-failed:Could not download playlist. Try again.`,
+      $localize`Dismiss`
+    );
   }
 
   clearInput(): void {
@@ -519,11 +621,18 @@ export class MainComponent implements OnInit, OnDestroy {
 
   inputChanged(new_val: string): void {
     this.selectedQuality = '';
-    if (new_val === '' || !new_val) {
+    if (new_val !== this.last_search_query) {
+      this.search_request?.unsubscribe();
+      this.search_request = null;
+      this.search_failed = false;
+      this.results_loading = false;
       this.results_showing = false;
+    }
+    if (new_val === '' || !new_val) {
+      this.last_search_query = '';
     } else {
       if (this.ValidURL(new_val)) {
-        this.results_showing = false;
+        this.last_search_query = '';
       }
     }
   }
@@ -559,31 +668,57 @@ export class MainComponent implements OnInit, OnDestroy {
     return valid;
   }
 
-  getURLInfo(url: string): void {
-    if (!this.cachedAvailableFormats[url]) {
-      this.cachedAvailableFormats[url] = {};
+  getURLInfo(url: string, forceRefresh = false): void {
+    let cachedFormats = this.cachedAvailableFormats.get(url);
+    if (!cachedFormats) {
+      cachedFormats = {};
+      this.cachedAvailableFormats.set(url, cachedFormats);
     }
     // if url is a youtube playlist, skip getting url info
     if (url.includes('playlist')) {
       // make it think that formats errored so that users have options
-      this.cachedAvailableFormats[url]['formats_loading'] = false;
-      this.cachedAvailableFormats[url]['formats_failed'] = true;
+      cachedFormats.formats_loading = false;
+      cachedFormats.formats_failed = true;
+      cachedFormats.formats_request_failed = false;
       return;
     }
-    if (!(this.cachedAvailableFormats[url] && this.cachedAvailableFormats[url]['formats'])) {
-      this.cachedAvailableFormats[url]['formats_loading'] = true;
-      this.postsService.getFileFormats(url).subscribe(res => {
-        this.cachedAvailableFormats[url]['formats_loading'] = false;
+
+    if (this.format_request_urls.has(url)) return;
+    if (!forceRefresh && cachedFormats.formats) return;
+
+    if (forceRefresh) {
+      delete cachedFormats.formats;
+    }
+    cachedFormats.formats_loading = true;
+    cachedFormats.formats_failed = false;
+    cachedFormats.formats_request_failed = false;
+    this.format_request_urls.add(url);
+
+    const request = this.postsService.getFileFormats(url)
+      .pipe(finalize(() => {
+        this.format_request_urls.delete(url);
+        this.format_requests.delete(url);
+      }))
+      .subscribe(res => {
+        cachedFormats.formats_loading = false;
         const infos = res['result'];
         if (!infos || !infos.formats) {
           this.errorFormats(url);
           return;
         }
-        this.cachedAvailableFormats[url]['formats'] = this.getAudioAndVideoFormats(infos.formats);
+        cachedFormats.formats = this.getAudioAndVideoFormats(infos.formats);
       }, () => {
         this.errorFormats(url);
       });
+
+    if (!request.closed) {
+      this.format_requests.set(url, request);
     }
+  }
+
+  retryFormats(url: string): void {
+    if (!url || this.format_request_urls.has(url)) return;
+    this.getURLInfo(url, true);
   }
 
   getSimulatedOutput(): void {
@@ -626,38 +761,66 @@ export class MainComponent implements OnInit, OnDestroy {
   }
 
   errorFormats(url: string): void {
-    this.cachedAvailableFormats[url]['formats_loading'] = false;
-    this.cachedAvailableFormats[url]['formats_failed'] = true;
-    console.error('Could not load formats for url ' + url);
+    const cachedFormats = this.cachedAvailableFormats.get(url);
+    if (!cachedFormats) return;
+    cachedFormats.formats_loading = false;
+    cachedFormats.formats_failed = true;
+    cachedFormats.formats_request_failed = true;
   }
 
   attachToInput(): void {
-    Observable.fromEvent(this.urlInput.nativeElement, 'keyup')
+    this.search_input_subscription?.unsubscribe();
+    this.search_input_subscription = Observable.fromEvent(this.urlInput.nativeElement, 'input')
       .map((e: any) => e.target.value)           // extract the value of input
       .filter((text: string) => text.length > 1) // filter out if empty
       .debounceTime(250)                         // only once every 250ms
-      .do(() => this.results_loading = true)         // enable loading
-      .map((query: string) => this.youtubeSearch.search(query))
-      .switch()                                  // act on the return of the search
-      .subscribe(
-        (results: Result[]) => {
+      .subscribe((query: string) => this.searchVideos(query));
+  }
+
+  searchVideos(query: string): void {
+    this.search_request?.unsubscribe();
+    this.search_request = null;
+    this.search_failed = false;
+    this.results_showing = false;
+
+    if (!query || this.youtubeSearch.ValidURL(query)) {
+      this.last_search_query = '';
+      this.results_loading = false;
+      return;
+    }
+
+    this.last_search_query = query;
+    this.results_loading = true;
+    let request: Subscription = null;
+    request = this.youtubeSearch.search(query)
+      .pipe(finalize(() => {
+        if (this.search_request === request) {
+          this.search_request = null;
+        }
+      }))
+      .subscribe({
+        next: (results: Result[]) => {
           this.results_loading = false;
           if (this.url !== '' && results && results.length > 0) {
             this.results = results;
             this.results_showing = true;
-          } else {
-            this.results_showing = false;
           }
         },
-        (err: any) => {
-          console.log(err)
+        error: () => {
           this.results_loading = false;
           this.results_showing = false;
-        },
-        () => { // on completion
-          this.results_loading = false;
+          this.search_failed = true;
         }
-      );
+      });
+
+    if (!request.closed) {
+      this.search_request = request;
+    }
+  }
+
+  retrySearch(): void {
+    if (!this.search_failed || !this.last_search_query) return;
+    this.searchVideos(this.last_search_query);
   }
 
   argsChanged(): void {

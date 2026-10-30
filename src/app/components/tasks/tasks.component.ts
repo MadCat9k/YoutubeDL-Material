@@ -10,7 +10,8 @@ import { PostsService } from 'app/posts.services';
 import { Task, TaskType } from 'api-types';
 import { TaskSettingsComponent } from '../task-settings/task-settings.component';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { Subscription } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
+import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-tasks',
@@ -30,6 +31,12 @@ export class TasksComponent implements OnInit, OnDestroy {
   tasks: Task[] = null;
   tasks_retrieved = false;
   compactView = false;
+  pending_task_actions = new Set<TaskType>();
+  pending_task_confirmations = new Set<TaskType>();
+  pending_task_schedules = new Set<TaskType>();
+  resetting_tasks = false;
+
+  private destroyed = new Subject<void>();
 
   displayedColumns: string[] = ['title', 'last_ran', 'last_confirmed', 'status', 'actions'];
   dataSource = null;
@@ -67,6 +74,8 @@ export class TasksComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.polling_stopped = true;
+    this.destroyed.next();
+    this.destroyed.complete();
     this.initialization_subscription?.unsubscribe();
     this.tasks_request_subscription?.unsubscribe();
     this.tasks_request_subscription = null;
@@ -153,8 +162,11 @@ export class TasksComponent implements OnInit, OnDestroy {
   }
 
   runTask(task_key: TaskType): void {
+    if (this.taskActionPending(task_key)) return;
+
     const taskToRequireDialog = this.TASKS_TO_REQUIRE_DIALOG[task_key];
     if (taskToRequireDialog) {
+      this.pending_task_confirmations.add(task_key);
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
         data: {
           dialogTitle: taskToRequireDialog['dialogTitle'],
@@ -163,10 +175,14 @@ export class TasksComponent implements OnInit, OnDestroy {
           warnSubmitColor: taskToRequireDialog['warnSubmitColor']
         }
       });
-      dialogRef.afterClosed().subscribe(confirmed => {
-        if (confirmed) {
-          this._runTask(task_key);
-        }
+      dialogRef.afterClosed().pipe(
+        takeUntil(this.destroyed),
+        finalize(() => this.pending_task_confirmations.delete(task_key))
+      ).subscribe(confirmed => {
+        if (!confirmed) return;
+
+        this.pending_task_confirmations.delete(task_key);
+        this._runTask(task_key);
       });
       return;
     }
@@ -175,42 +191,92 @@ export class TasksComponent implements OnInit, OnDestroy {
   }
 
   _runTask(task_key: TaskType): void {
-    this.postsService.runTask(task_key).subscribe(res => {
-      this.getTasks();
-      this.getDBBackups();
-      if (res['success']) this.postsService.openSnackBar($localize`Successfully ran task!`);
-      else this.postsService.openSnackBar($localize`Failed to run task!`);
-    }, err => {
-      this.postsService.openSnackBar($localize`Failed to run task!`);
-      console.error(err);
+    if (this.taskActionPending(task_key)) return;
+
+    this.pending_task_actions.add(task_key);
+    this.postsService.runTask(task_key).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.pending_task_actions.delete(task_key))
+    ).subscribe({
+      next: res => {
+        if (res['success']) {
+          this.getTasks();
+          this.getDBBackups();
+          this.postsService.openSnackBar($localize`Successfully ran task!`);
+        } else {
+          this.showTaskActionFailure($localize`:@@task-run-failed:Could not run task. Try again.`);
+        }
+      },
+      error: () => this.showTaskActionFailure($localize`:@@task-run-failed:Could not run task. Try again.`)
     });
   }
 
   confirmTask(task_key: TaskType): void {
-    this.postsService.confirmTask(task_key).subscribe(res => {
-      this.getTasks();
-      if (res['success']) this.postsService.openSnackBar($localize`Successfully confirmed task!`);
-      else this.postsService.openSnackBar($localize`Failed to confirm task!`);
-    }, err => {
-      this.postsService.openSnackBar($localize`Failed to confirm task!`);
-      console.error(err);
+    if (this.taskActionPending(task_key)) return;
+
+    this.pending_task_actions.add(task_key);
+    this.postsService.confirmTask(task_key).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.pending_task_actions.delete(task_key))
+    ).subscribe({
+      next: res => {
+        if (res['success']) {
+          this.getTasks();
+          this.postsService.openSnackBar($localize`Successfully confirmed task!`);
+        } else {
+          this.showTaskActionFailure($localize`:@@task-confirm-failed:Could not confirm task. Try again.`);
+        }
+      },
+      error: () => this.showTaskActionFailure($localize`:@@task-confirm-failed:Could not confirm task. Try again.`)
     });
   }
 
+  taskActionPending(task_key: TaskType): boolean {
+    return this.pending_task_actions.has(task_key) || this.pending_task_confirmations.has(task_key);
+  }
+
+  showTaskActionFailure(message: string): void {
+    this.postsService.openSnackBar(message, $localize`Dismiss`);
+  }
+
   scheduleTask(task: Task): void {
-    // open dialog
+    if (this.taskSchedulePending(task.key)) return;
+
+    this.pending_task_schedules.add(task.key);
+    let updateStarted = false;
     const dialogRef = this.dialog.open(UpdateTaskScheduleDialogComponent, {
       data: {
         task: task
       }
     });
-    dialogRef.afterClosed().subscribe(schedule => {
+    dialogRef.afterClosed().pipe(
+      takeUntil(this.destroyed),
+      finalize(() => {
+        if (!updateStarted) this.pending_task_schedules.delete(task.key);
+      })
+    ).subscribe(schedule => {
       if (schedule || schedule === null) {
-        this.postsService.updateTaskSchedule(task['key'], schedule).subscribe(res => {
-          this.getTasks();
+        updateStarted = true;
+        this.postsService.updateTaskSchedule(task.key, schedule).pipe(
+          takeUntil(this.destroyed),
+          finalize(() => this.pending_task_schedules.delete(task.key))
+        ).subscribe({
+          next: res => {
+            if (res['success']) {
+              this.getTasks();
+              this.postsService.openSnackBar($localize`:@@task-schedule-success:Task schedule updated.`);
+            } else {
+              this.showTaskActionFailure($localize`:@@task-schedule-failed:Could not update task schedule. Try again.`);
+            }
+          },
+          error: () => this.showTaskActionFailure($localize`:@@task-schedule-failed:Could not update task schedule. Try again.`)
         });
       }
     });
+  }
+
+  taskSchedulePending(task_key: TaskType): boolean {
+    return this.pending_task_schedules.has(task_key);
   }
 
   openTaskSettings(task: Task): void {
@@ -237,6 +303,10 @@ export class TasksComponent implements OnInit, OnDestroy {
   }
 
   resetTasks(): void {
+    if (this.resetting_tasks) return;
+
+    this.resetting_tasks = true;
+    let resetStarted = false;
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         dialogTitle: $localize`Reset tasks`,
@@ -245,18 +315,31 @@ export class TasksComponent implements OnInit, OnDestroy {
         warnSubmitColor: true
       }
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.afterClosed().pipe(
+      takeUntil(this.destroyed),
+      finalize(() => {
+        if (!resetStarted) this.resetting_tasks = false;
+      })
+    ).subscribe(confirmed => {
       if (confirmed) {
-        this.postsService.resetTasks().subscribe(res => {
-          if (res['success']) {
-            this.postsService.openSnackBar($localize`Tasks successfully reset!`);
-          } else {
-            this.postsService.openSnackBar($localize`Failed to reset tasks!`);
-          }
-        }, err => {
-          this.postsService.openSnackBar($localize`Failed to reset tasks!`);
-          console.error(err);
+        resetStarted = true;
+        this.postsService.resetTasks().pipe(
+          takeUntil(this.destroyed),
+          finalize(() => this.resetting_tasks = false)
+        ).subscribe({
+          next: res => {
+            if (res['success']) {
+              this.getTasks();
+              this.getDBBackups();
+              this.postsService.openSnackBar($localize`Tasks successfully reset!`);
+            } else {
+              this.showTaskActionFailure($localize`:@@tasks-reset-failed:Could not reset tasks. Try again.`);
+            }
+          },
+          error: () => this.showTaskActionFailure($localize`:@@tasks-reset-failed:Could not reset tasks. Try again.`)
         });
+      } else {
+        this.resetting_tasks = false;
       }
     });
   }

@@ -25,6 +25,11 @@ describe('SettingsComponent', () => {
       getLatestGithubRelease: () => of(null),
       getDBInfo: jasmine.createSpy('getDBInfo').and.returnValue(of({using_local_db: true})),
       generateNewAPIKey: jasmine.createSpy('generateNewAPIKey'),
+      categories: [],
+      updateCategories: jasmine.createSpy('updateCategories'),
+      createCategory: jasmine.createSpy('createCategory'),
+      deleteCategory: jasmine.createSpy('deleteCategory'),
+      reloadCategories: jasmine.createSpy('reloadCategories'),
       killAllDownloads: jasmine.createSpy('killAllDownloads'),
       restartServer: jasmine.createSpy('restartServer').and.returnValue(of({success: true})),
       setConfig: jasmine.createSpy('setConfig'),
@@ -390,6 +395,252 @@ describe('SettingsComponent', () => {
 
     expect(component.initial_config.API.API_key).toBe('old');
     expect(postsService.openSnackBar).not.toHaveBeenCalled();
+  });
+
+  it('persists and announces a reordered category list', () => {
+    postsService.categories = [{uid: 'a'}, {uid: 'b'}];
+    postsService.updateCategories.and.returnValue(of({success: true}));
+
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+
+    expect(postsService.categories.map(category => category.uid)).toEqual(['b', 'a']);
+    expect(postsService.updateCategories).toHaveBeenCalledWith(postsService.categories);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Category order saved.');
+    expect(component.updatingCategories).toBeFalse();
+  });
+
+  it('restores the previous category order after a rejected update', () => {
+    postsService.categories = [{uid: 'a'}, {uid: 'b'}];
+    postsService.updateCategories.and.returnValue(of({success: false}));
+
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+
+    expect(postsService.categories.map(category => category.uid)).toEqual(['a', 'b']);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not save category order. Previous order restored. Try again.',
+      'Dismiss'
+    );
+    expect(component.updatingCategories).toBeFalse();
+  });
+
+  it('restores the previous category order after a failed update request', () => {
+    postsService.categories = [{uid: 'a'}, {uid: 'b'}];
+    postsService.updateCategories.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+
+    expect(postsService.categories.map(category => category.uid)).toEqual(['a', 'b']);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not save category order. Previous order restored. Try again.',
+      'Dismiss'
+    );
+    expect(component.updatingCategories).toBeFalse();
+  });
+
+  it('does not start a second category-order request while one is pending', () => {
+    const response = new Subject<any>();
+    postsService.categories = [{uid: 'a'}, {uid: 'b'}];
+    postsService.updateCategories.and.returnValue(response);
+
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+
+    expect(postsService.updateCategories).toHaveBeenCalledTimes(1);
+    expect(component.updatingCategories).toBeTrue();
+  });
+
+  it('restores category order when a pending update is destroyed', () => {
+    const response = new Subject<any>();
+    postsService.categories = [{uid: 'a'}, {uid: 'b'}];
+    postsService.updateCategories.and.returnValue(response);
+
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+    component.ngOnDestroy();
+
+    expect(postsService.categories.map(category => category.uid)).toEqual(['a', 'b']);
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.updatingCategories).toBeFalse();
+  });
+
+  it('creates a category, closes the input, and opens its editor', () => {
+    const dialogRef = {
+      componentInstance: {setPending: jasmine.createSpy('setPending')},
+      close: jasmine.createSpy('close')
+    };
+    dialog.open.and.returnValue(dialogRef);
+    postsService.createCategory.and.returnValue(of({
+      success: true,
+      new_category: {uid: 'category-a', name: 'Synthetic category'}
+    }));
+
+    component.openAddCategoryDialog();
+    const done = dialog.open.calls.mostRecent().args[1].data.doneEmitter;
+    done.emit('Synthetic category');
+
+    expect(postsService.createCategory).toHaveBeenCalledOnceWith('Synthetic category');
+    expect(postsService.reloadCategories).toHaveBeenCalled();
+    expect(dialogRef.close).toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Category created.');
+    expect(dialog.open).toHaveBeenCalledTimes(2);
+    expect(component.creatingCategory).toBeFalse();
+  });
+
+  it('keeps category input available after a rejected creation', () => {
+    const dialogRef = {
+      componentInstance: {setPending: jasmine.createSpy('setPending')},
+      close: jasmine.createSpy('close')
+    };
+    dialog.open.and.returnValue(dialogRef);
+    postsService.createCategory.and.returnValue(of({success: false}));
+
+    component.openAddCategoryDialog();
+    const done = dialog.open.calls.mostRecent().args[1].data.doneEmitter;
+    done.emit('Synthetic category');
+
+    expect(dialogRef.close).not.toHaveBeenCalled();
+    expect(dialogRef.componentInstance.setPending).toHaveBeenCalledWith(false);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not create category. Try again.',
+      'Dismiss'
+    );
+    expect(component.creatingCategory).toBeFalse();
+  });
+
+  it('keeps category input available after a failed creation request', () => {
+    const dialogRef = {
+      componentInstance: {setPending: jasmine.createSpy('setPending')},
+      close: jasmine.createSpy('close')
+    };
+    dialog.open.and.returnValue(dialogRef);
+    postsService.createCategory.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.openAddCategoryDialog();
+    const done = dialog.open.calls.mostRecent().args[1].data.doneEmitter;
+    done.emit('Synthetic category');
+
+    expect(dialogRef.close).not.toHaveBeenCalled();
+    expect(dialogRef.componentInstance.setPending).toHaveBeenCalledWith(false);
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not create category. Try again.',
+      'Dismiss'
+    );
+    expect(component.creatingCategory).toBeFalse();
+  });
+
+  it('does not submit category creation twice while pending', () => {
+    const response = new Subject<any>();
+    const dialogRef = {
+      componentInstance: {setPending: jasmine.createSpy('setPending')},
+      close: jasmine.createSpy('close')
+    };
+    dialog.open.and.returnValue(dialogRef);
+    postsService.createCategory.and.returnValue(response);
+
+    component.openAddCategoryDialog();
+    const done = dialog.open.calls.mostRecent().args[1].data.doneEmitter;
+    done.emit('Synthetic category');
+    done.emit('Synthetic category');
+
+    expect(postsService.createCategory).toHaveBeenCalledTimes(1);
+    expect(component.categoryActionPending).toBeTrue();
+  });
+
+  it('ignores a pending category creation result after destruction', () => {
+    const response = new Subject<any>();
+    const dialogRef = {
+      componentInstance: {setPending: jasmine.createSpy('setPending')},
+      close: jasmine.createSpy('close')
+    };
+    dialog.open.and.returnValue(dialogRef);
+    postsService.createCategory.and.returnValue(response);
+
+    component.openAddCategoryDialog();
+    const done = dialog.open.calls.mostRecent().args[1].data.doneEmitter;
+    done.emit('Synthetic category');
+    component.ngOnDestroy();
+    response.next({success: true, new_category: {uid: 'category-a'}});
+
+    expect(postsService.reloadCategories).not.toHaveBeenCalled();
+    expect(dialogRef.close).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.creatingCategory).toBeFalse();
+  });
+
+  it('does not delete a category when confirmation is cancelled', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(false)});
+
+    component.deleteCategory({uid: 'category-a', name: 'Synthetic category'} as any);
+
+    expect(postsService.deleteCategory).not.toHaveBeenCalled();
+  });
+
+  it('announces and reloads categories after a successful deletion', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.deleteCategory.and.returnValue(of({success: true}));
+
+    component.deleteCategory({uid: 'category-a', name: 'Synthetic category'} as any);
+
+    expect(postsService.deleteCategory).toHaveBeenCalledOnceWith('category-a');
+    expect(postsService.openSnackBar).toHaveBeenCalledWith('Successfully deleted Synthetic category!');
+    expect(postsService.reloadCategories).toHaveBeenCalled();
+    expect(component.deletingCategoryId).toBeNull();
+  });
+
+  it('allows retry after a rejected category deletion', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.deleteCategory.and.returnValue(of({success: false}));
+
+    component.deleteCategory({uid: 'category-a', name: 'Synthetic category'} as any);
+
+    expect(postsService.reloadCategories).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not delete category. Try again.',
+      'Dismiss'
+    );
+    expect(component.deletingCategoryId).toBeNull();
+  });
+
+  it('allows retry after a failed category deletion request', () => {
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.deleteCategory.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.deleteCategory({uid: 'category-a', name: 'Synthetic category'} as any);
+
+    expect(postsService.reloadCategories).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).toHaveBeenCalledWith(
+      'Could not delete category. Try again.',
+      'Dismiss'
+    );
+    expect(component.deletingCategoryId).toBeNull();
+  });
+
+  it('does not start another category action while deletion is pending', () => {
+    const response = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.deleteCategory.and.returnValue(response);
+    const category = {uid: 'category-a', name: 'Synthetic category'} as any;
+
+    component.deleteCategory(category);
+    component.deleteCategory(category);
+    component.dropCategory({previousIndex: 0, currentIndex: 1} as any);
+
+    expect(postsService.deleteCategory).toHaveBeenCalledTimes(1);
+    expect(postsService.updateCategories).not.toHaveBeenCalled();
+    expect(component.categoryActionPending).toBeTrue();
+  });
+
+  it('ignores a pending category deletion result after destruction', () => {
+    const response = new Subject<any>();
+    dialog.open.and.returnValue({afterClosed: () => of(true)});
+    postsService.deleteCategory.and.returnValue(response);
+
+    component.deleteCategory({uid: 'category-a', name: 'Synthetic category'} as any);
+    component.ngOnDestroy();
+    response.next({success: true});
+
+    expect(postsService.reloadCategories).not.toHaveBeenCalled();
+    expect(postsService.openSnackBar).not.toHaveBeenCalled();
+    expect(component.deletingCategoryId).toBeNull();
   });
 
   it('does not kill downloads when confirmation is cancelled', () => {

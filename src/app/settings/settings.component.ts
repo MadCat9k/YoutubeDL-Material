@@ -36,6 +36,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
   db_transferring = false;
   testing_connection_string = false;
   generatingAPIKey = false;
+  updatingCategories = false;
+  creatingCategory = false;
+  deletingCategoryId: string = null;
   killingAllDownloads = false;
   restartingServer = false;
 
@@ -276,17 +279,53 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.selectSettingsSection(index);
   }
 
-  dropCategory(event: CdkDragDrop<string[]>): void {
-    moveItemInArray(this.postsService.categories, event.previousIndex, event.currentIndex);
-    this.postsService.updateCategories(this.postsService.categories).subscribe(res => {
+  dropCategory(event: CdkDragDrop<Category[]>): void {
+    if (this.categoryActionPending || event.previousIndex === event.currentIndex) return;
 
-    }, () => {
-      this.postsService.openSnackBar($localize`Failed to update categories!`);
+    const previousCategories = [...this.postsService.categories];
+    moveItemInArray(this.postsService.categories, event.previousIndex, event.currentIndex);
+    const submittedCategories = [...this.postsService.categories];
+    let requestSettled = false;
+    this.updatingCategories = true;
+    this.postsService.updateCategories(submittedCategories).pipe(
+      takeUntil(this.destroyed),
+      finalize(() => {
+        if (!requestSettled) this.postsService.categories = previousCategories;
+        this.updatingCategories = false;
+      })
+    ).subscribe({
+      next: res => {
+        requestSettled = true;
+        if (res['success']) {
+          this.postsService.openSnackBar($localize`:@@category-order-save-success:Category order saved.`);
+          return;
+        }
+
+        this.restoreCategoryOrder(previousCategories);
+      },
+      error: () => {
+        requestSettled = true;
+        this.restoreCategoryOrder(previousCategories);
+      }
     });
   }
 
+  private restoreCategoryOrder(previousCategories: Category[]): void {
+    this.postsService.categories = previousCategories;
+    this.postsService.openSnackBar(
+      $localize`:@@category-order-save-failed:Could not save category order. Previous order restored. Try again.`,
+      'Dismiss'
+    );
+  }
+
+  get categoryActionPending(): boolean {
+    return this.updatingCategories || this.creatingCategory || this.deletingCategoryId !== null;
+  }
+
   openAddCategoryDialog(): void {
-    const done = new EventEmitter<boolean>();
+    if (this.categoryActionPending) return;
+
+    const done = new EventEmitter<string>();
     const dialogRef = this.dialog.open(InputDialogComponent, {
       width: '300px',
       data: {
@@ -297,23 +336,45 @@ export class SettingsComponent implements OnInit, OnDestroy {
       }
     });
 
-    done.subscribe(name => {
+    done.pipe(takeUntil(this.destroyed)).subscribe(name => {
 
       // Eventually do additional checks on name
-      if (name) {
-        this.postsService.createCategory(name).subscribe(res => {
-          if (res['success']) {
+      if (name && !this.creatingCategory) {
+        this.creatingCategory = true;
+        this.postsService.createCategory(name).pipe(
+          takeUntil(this.destroyed),
+          finalize(() => {
+            this.creatingCategory = false;
+            dialogRef.componentInstance?.setPending(false);
+          })
+        ).subscribe({
+          next: res => {
+            if (!res['success'] || !res['new_category']) {
+              this.showCategoryCreationFailure();
+              return;
+            }
+
             this.postsService.reloadCategories();
             dialogRef.close();
-            const new_category = res['new_category'];
-            this.openEditCategoryDialog(new_category);
-          }
+            this.postsService.openSnackBar($localize`:@@category-create-success:Category created.`);
+            this.openEditCategoryDialog(res['new_category']);
+          },
+          error: () => this.showCategoryCreationFailure()
         });
       }
     });
   }
 
+  private showCategoryCreationFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@category-create-failed:Could not create category. Try again.`,
+      'Dismiss'
+    );
+  }
+
   deleteCategory(category: Category): void {
+    if (this.categoryActionPending) return;
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         dialogTitle: $localize`Delete category`,
@@ -322,18 +383,33 @@ export class SettingsComponent implements OnInit, OnDestroy {
         warnSubmitColor: true
       }
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.postsService.deleteCategory(category['uid']).subscribe(res => {
-          if (res['success']) {
-            this.postsService.openSnackBar($localize`Successfully deleted ${category['name']}:category name:!`);
-            this.postsService.reloadCategories();
+    dialogRef.afterClosed().pipe(takeUntil(this.destroyed)).subscribe(confirmed => {
+      if (!confirmed || this.categoryActionPending) return;
+
+      this.deletingCategoryId = category['uid'];
+      this.postsService.deleteCategory(category['uid']).pipe(
+        takeUntil(this.destroyed),
+        finalize(() => this.deletingCategoryId = null)
+      ).subscribe({
+        next: res => {
+          if (!res['success']) {
+            this.showCategoryDeleteFailure();
+            return;
           }
-        }, () => {
-          this.postsService.openSnackBar($localize`Failed to delete ${category['name']}:category name:!`);
-        });
-      }
+
+          this.postsService.openSnackBar($localize`Successfully deleted ${category['name']}:category name:!`);
+          this.postsService.reloadCategories();
+        },
+        error: () => this.showCategoryDeleteFailure()
+      });
     });
+  }
+
+  private showCategoryDeleteFailure(): void {
+    this.postsService.openSnackBar(
+      $localize`:@@category-delete-failed:Could not delete category. Try again.`,
+      'Dismiss'
+    );
   }
 
   openEditCategoryDialog(category: Category): void {
