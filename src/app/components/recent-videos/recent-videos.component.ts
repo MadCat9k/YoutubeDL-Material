@@ -626,18 +626,21 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   }
 
   fileSelectionChanged(event: MatSelectionListChange): void {
-    // TODO: make sure below line is possible (_selected is private)
-    const adding = event.option['_selected'];
-    const value = event.option.value;
-    if (adding) {
-      this.selected_data.push(value.uid);
-      this.selected_data_objs.push(value);
-    } else {
-      this.selected_data      = this.selected_data.filter(e => e !== value.uid);
-      this.selected_data_objs = this.selected_data_objs.filter(e => e.uid !== value.uid);
-    }
+    event.options.forEach(option => {
+      const value = option.value;
+      if (option.selected) {
+        this.selected_data.push(value.uid);
+        this.selected_data_objs.push(value);
+      } else {
+        this.selected_data      = this.selected_data.filter(e => e !== value.uid);
+        this.selected_data_objs = this.selected_data_objs.filter(e => e.uid !== value.uid);
+      }
+    });
 
-    this.fileSelectionEmitter.emit({new_selection: this.selected_data, thumbnailURL: this.selected_data_objs[0].thumbnailURL});
+    this.fileSelectionEmitter.emit({
+      new_selection: this.selected_data,
+      thumbnailURL: this.selected_data_objs[0]?.thumbnailURL
+    });
   }
 
   toggleSelectionOrder(): void {

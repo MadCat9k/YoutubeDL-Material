@@ -548,6 +548,96 @@ Verification:
   warning and existing custom-file-label selector warning;
 - cache-only image assembly passed for both `linux/amd64` and `linux/arm64`.
 
+## Node and dependency modernization (started 2026-11-02)
+
+### Target and invariants
+
+- The production target is Node.js 26 LTS with an Angular release that officially
+  supports it; Angular 22 is the current target. Do not deploy an intermediate
+  Node 18 or Node 20 checkpoint merely because it builds: both release lines are
+  end-of-life.
+- Upgrade Angular one major at a time and retain a buildable, testable checkpoint
+  after every major. Keep Angular core, CLI, Material/CDK, TypeScript, and RxJS in
+  their documented compatibility ranges.
+- Preserve the downloader invocation-time impersonation behavior, explicit
+  argument precedence, multi-architecture binary selection, entrypoint UID/GID
+  flow, database formats, and completed frontend behavior throughout the work.
+- Do not combine the runtime migration with storage changes or automatic audit
+  remediation. Review dependency replacements individually; never use
+  `npm audit fix --force`.
+
+### Phases
+
+1. Establish the Angular 16 / Node 18 migration checkpoint. Reconcile package
+   metadata and lockfiles, run Angular migrations, replace tooling that prevents
+   installation on the checkpoint runtime, and verify focused and full builds.
+   This is a migration waypoint, not a supported production release.
+2. Upgrade sequentially through Angular 17, 18, and 19 while moving CI/build
+   execution to Node 22 when the Angular compatibility table permits it. Remove
+   Protractor, TSLint/codelyzer, and other retired tooling only when required by
+   the corresponding migration.
+3. Upgrade through Angular 20 and 21 on Node 24, reviewing Material, routing,
+   RxJS, localization, and third-party component behavior at each checkpoint.
+4. Upgrade to Angular 22 and Node 26. Align the backend runtime, package engines,
+   development container, CI matrices, Docker build/runtime stages, and PM2 pin.
+5. Run the full frontend and backend suites, production frontend build, and
+   cache-only Buildx assembly for `linux/amd64` and `linux/arm64`. Then perform an
+   explicitly approved isolated runtime test with copied data before considering
+   a production cutover.
+
+### Initial implementation status
+
+- Repository pins and compatibility constraints have been inventoried. The
+  runtime and frontend Docker stages use different Node 16 declarations; both
+  package manifests contain stale engine metadata; CI has two independent Node
+  pins; and the development container already uses Node 18.
+- The first implementation checkpoint now uses Angular core/CLI 16.2, Material
+  and CDK 16.2, TypeScript 5.1, Zone.js 0.13, and Node 18.20.8. Docker runtime
+  and frontend stages, both package engine declarations, and both CI workflows
+  are aligned to the checkpoint. The development container was already on Node
+  18.
+- Angular's migrations removed a deprecated router guard interface from
+  `PostsService`. The test bootstrap now uses the supported `zone.js/testing`
+  entry point. The Material 16 selection-list event shape is handled without
+  reading a private field, with a focused regression test for selection and
+  deselection.
+- The retired standalone `karma-cli` dependency was removed because its engine
+  declaration supports no Node release newer than Node 6. The two lockfiles
+  were regenerated from the reviewed manifests; the existing `ajv` peer warning
+  remains and must be resolved in a later dependency checkpoint.
+- This remains a non-deployable migration waypoint. It has not been published,
+  loaded, run, or deployed.
+
+Verification:
+
+- focused `RecentVideosComponent` suite on Node 18.20.8: 30 passing;
+- production Angular build on Node 18.20.8: passed, with existing `file-saver`
+  and selector warnings plus Angular 16 warnings for the legacy Material theme
+  map shape;
+- full backend suite on Node 18.20.8: 140 passing and 30 pending; two tests fail
+  because FFmpeg is absent on the host, matching the existing host limitation;
+- full frontend suite: 356 passing and 10 failing legacy smoke tests whose
+  TestBeds omit required `PostsService`, `MatDialog`, `MAT_DIALOG_DATA`, or
+  `HttpClient` providers. These harness failures must be repaired before the
+  checkpoint can be called fully green;
+- cache-only Buildx assembly: passed for `linux/amd64` and `linux/arm64`. No
+  image was loaded, tagged, run, or published;
+- `git diff --check`: passed before the final documentation update and is rerun
+  during final review.
+
+Remaining checkpoint risks:
+
+- Node 18 is end-of-life and is used only because Angular 16 officially supports
+  it. Continuing through later Angular majors and supported Node LTS releases is
+  required before deployment.
+- The regenerated frontend dependency tree reports 94 audit findings and the
+  backend reports 45. No automatic audit fix was applied.
+- Angular 16 reports deprecated Material theme construction. This should be
+  migrated at the checkpoint where Material requires it, with visual review of
+  existing light/dark themes.
+- The frontend full-suite provider omissions prevent a clean regression signal.
+  Repair those test harnesses before starting the Angular 17 checkpoint.
+
 ## Delivery sequence
 
 1. Baseline and startup hardening (included in this initial scaffold).
