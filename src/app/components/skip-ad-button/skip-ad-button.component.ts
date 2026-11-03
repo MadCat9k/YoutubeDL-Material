@@ -4,9 +4,10 @@ import CryptoJS from 'crypto-js';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-skip-ad-button',
-  templateUrl: './skip-ad-button.component.html',
-  styleUrls: ['./skip-ad-button.component.scss']
+    selector: 'app-skip-ad-button',
+    templateUrl: './skip-ad-button.component.html',
+    styleUrls: ['./skip-ad-button.component.scss'],
+    standalone: false
 })
 export class SkipAdButtonComponent implements OnInit, OnChanges, OnDestroy {
 

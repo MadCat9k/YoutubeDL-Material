@@ -585,17 +585,22 @@ Verification:
    explicitly approved isolated runtime test with copied data before considering
    a production cutover.
 
-### Initial implementation status
+### Implementation status
 
-- Repository pins and compatibility constraints have been inventoried. The
-  runtime and frontend Docker stages use different Node 16 declarations; both
-  package manifests contain stale engine metadata; CI has two independent Node
-  pins; and the development container already uses Node 18.
-- The first implementation checkpoint now uses Angular core/CLI 16.2, Material
-  and CDK 16.2, TypeScript 5.1, Zone.js 0.13, and Node 18.20.8. Docker runtime
-  and frontend stages, both package engine declarations, and both CI workflows
-  are aligned to the checkpoint. The development container was already on Node
-  18.
+- The Angular 16 / Node 18 checkpoint was committed as `d1568b81`. The ten
+  legacy smoke-test TestBeds were then supplied with their required providers,
+  making the full frontend suite green before the next framework migration.
+- Angular 17 was applied and verified before proceeding. Its Material migration
+  moved the fork's light and dark themes to the supported module-based Sass API.
+- The current checkpoint uses Angular core/CLI 19.2, Material and CDK 19.2,
+  TypeScript 5.8, Zone.js 0.15, and Node 22.23.2. Docker runtime and frontend
+  stages, both package engine declarations, both CI workflows, and the
+  development container are aligned to Node 22.23.2.
+- Angular 18's migration replaced `HttpClientModule` with provider-based HTTP
+  configuration in the application module and affected service test.
+- Angular 19's migration explicitly marks declarations owned by the existing
+  `AppModule` as non-standalone. Node type declarations were aligned to Node 22,
+  and the router guard's synchronous result is wrapped in its declared promise.
 - Angular's migrations removed a deprecated router guard interface from
   `PostsService`. The test bootstrap now uses the supported `zone.js/testing`
   entry point. The Material 16 selection-list event shape is handled without
@@ -610,33 +615,33 @@ Verification:
 
 Verification:
 
-- focused `RecentVideosComponent` suite on Node 18.20.8: 30 passing;
-- production Angular build on Node 18.20.8: passed, with existing `file-saver`
-  and selector warnings plus Angular 16 warnings for the legacy Material theme
-  map shape;
-- full backend suite on Node 18.20.8: 140 passing and 30 pending; two tests fail
+- Angular 16 focused `RecentVideosComponent` suite: 30 passing;
+- Angular 17 full frontend suite: 366 passing, followed by a successful
+  production build;
+- Angular 18 full frontend suite on Node 22.23.2: 366 passing;
+- Angular 18 production build on Node 22.23.2: passed, with the inherited
+  `file-saver` CommonJS and custom-file-label selector warnings;
+- Angular 19 full frontend suite on Node 22.23.2: 366 passing;
+- Angular 19 production build on Node 22.23.2: passed, with the inherited
+  `file-saver` CommonJS warning and a Sass `@import` deprecation warning;
+- full backend suite on Node 22.23.2: 140 passing and 30 pending; two tests fail
   because FFmpeg is absent on the host, matching the existing host limitation;
-- full frontend suite: 356 passing and 10 failing legacy smoke tests whose
-  TestBeds omit required `PostsService`, `MatDialog`, `MAT_DIALOG_DATA`, or
-  `HttpClient` providers. These harness failures must be repaired before the
-  checkpoint can be called fully green;
-- cache-only Buildx assembly: passed for `linux/amd64` and `linux/arm64`. No
-  image was loaded, tagged, run, or published;
+- Node 22 cache-only Buildx assembly: passed for `linux/amd64` and
+  `linux/arm64`. No image was loaded, tagged, run, or published;
 - `git diff --check`: passed before the final documentation update and is rerun
   during final review.
 
 Remaining checkpoint risks:
 
-- Node 18 is end-of-life and is used only because Angular 16 officially supports
-  it. Continuing through later Angular majors and supported Node LTS releases is
-  required before deployment.
-- The regenerated frontend dependency tree reports 94 audit findings and the
+- Angular 20 through 22 and the final Node 26 alignment remain. The current
+  checkpoint is not a release candidate and has no container runtime evidence.
+- The regenerated frontend dependency tree reports 90 audit findings and the
   backend reports 45. No automatic audit fix was applied.
-- Angular 16 reports deprecated Material theme construction. This should be
-  migrated at the checkpoint where Material requires it, with visual review of
-  existing light/dark themes.
-- The frontend full-suite provider omissions prevent a clean regression signal.
-  Repair those test harnesses before starting the Angular 17 checkpoint.
+- The Material theme compiles with the Angular 19 API and automated tests pass,
+  but light/dark theme appearance still needs browser-level visual review.
+- Cache-only image assembly does not establish startup, healthcheck,
+  persistence, permissions, or reverse-proxy behavior. Those require an
+  explicitly approved isolated runtime test with copied data.
 
 ## Delivery sequence
 

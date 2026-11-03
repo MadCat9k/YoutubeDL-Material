@@ -43,10 +43,10 @@ image builds, and an isolated validation container have exercised the changed
 areas. These checks do not replace validation on the target Synology NAS.
 
 - Node modernization is in progress. The current working checkpoint uses
-  Angular 16 and Node.js 18.20.8 only as an incremental migration waypoint;
-  both Node 18 and the released Node 16 baseline are end-of-life, so this
-  checkpoint must not be deployed as the modernization result. The production
-  target and checkpoint evidence are tracked in `docs/PROJECT_PLAN.md`.
+  Angular 19 and Node.js 22.23.2 as an incremental migration waypoint. The
+  production target remains Angular 22 with Node.js 26, so this checkpoint must
+  not be deployed as the modernization result. Checkpoint evidence is tracked
+  in `docs/PROJECT_PLAN.md`.
 - The inherited dependency advisories have not yet been modernized.
 - Runtime observation of the `linux/arm64` image on the target NAS is still
   required; cache-only Buildx validation proves image assembly, not runtime

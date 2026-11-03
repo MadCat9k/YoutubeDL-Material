@@ -13,9 +13,10 @@ import { forkJoin, Observable, of, Subject, Subscription } from 'rxjs';
 import { catchError, takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-downloads',
-  templateUrl: './downloads.component.html',
-  styleUrls: ['./downloads.component.scss']
+    selector: 'app-downloads',
+    templateUrl: './downloads.component.html',
+    styleUrls: ['./downloads.component.scss'],
+    standalone: false
 })
 export class DownloadsComponent implements OnInit, OnDestroy {
 

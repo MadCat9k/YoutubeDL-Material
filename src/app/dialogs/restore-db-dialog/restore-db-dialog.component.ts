@@ -5,9 +5,10 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-restore-db-dialog',
-  templateUrl: './restore-db-dialog.component.html',
-  styleUrls: ['./restore-db-dialog.component.scss']
+    selector: 'app-restore-db-dialog',
+    templateUrl: './restore-db-dialog.component.html',
+    styleUrls: ['./restore-db-dialog.component.scss'],
+    standalone: false
 })
 export class RestoreDbDialogComponent implements OnInit, OnDestroy {
 

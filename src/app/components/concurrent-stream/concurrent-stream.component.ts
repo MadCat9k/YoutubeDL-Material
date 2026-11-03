@@ -3,9 +3,10 @@ import { PostsService } from 'app/posts.services';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-concurrent-stream',
-  templateUrl: './concurrent-stream.component.html',
-  styleUrls: ['./concurrent-stream.component.scss']
+    selector: 'app-concurrent-stream',
+    templateUrl: './concurrent-stream.component.html',
+    styleUrls: ['./concurrent-stream.component.scss'],
+    standalone: false
 })
 export class ConcurrentStreamComponent implements OnChanges, OnDestroy {
 

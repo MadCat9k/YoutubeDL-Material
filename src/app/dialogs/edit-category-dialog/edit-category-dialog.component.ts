@@ -5,9 +5,10 @@ import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-edit-category-dialog',
-  templateUrl: './edit-category-dialog.component.html',
-  styleUrls: ['./edit-category-dialog.component.scss']
+    selector: 'app-edit-category-dialog',
+    templateUrl: './edit-category-dialog.component.html',
+    styleUrls: ['./edit-category-dialog.component.scss'],
+    standalone: false
 })
 export class EditCategoryDialogComponent implements OnInit, OnDestroy {
 

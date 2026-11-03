@@ -4,9 +4,10 @@ import { PostsService } from 'app/posts.services';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-twitch-chat',
-  templateUrl: './twitch-chat.component.html',
-  styleUrls: ['./twitch-chat.component.scss']
+    selector: 'app-twitch-chat',
+    templateUrl: './twitch-chat.component.html',
+    styleUrls: ['./twitch-chat.component.scss'],
+    standalone: false
 })
 export class TwitchChatComponent implements OnInit, OnChanges, OnDestroy {
 

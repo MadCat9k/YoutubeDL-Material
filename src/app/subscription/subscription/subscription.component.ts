@@ -10,9 +10,10 @@ import { distinctUntilChanged, filter, map, switchMap, take, takeUntil, tap } fr
 type SubscriptionCheckStatus = 'idle' | 'starting' | 'scanning' | 'cancelling' | 'completed' | 'cancelled' | 'failed';
 
 @Component({
-  selector: 'app-subscription',
-  templateUrl: './subscription.component.html',
-  styleUrls: ['./subscription.component.scss']
+    selector: 'app-subscription',
+    templateUrl: './subscription.component.html',
+    styleUrls: ['./subscription.component.scss'],
+    standalone: false
 })
 export class SubscriptionComponent implements OnInit, OnDestroy {
 

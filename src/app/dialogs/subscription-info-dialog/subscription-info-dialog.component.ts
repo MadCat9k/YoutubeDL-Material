@@ -7,9 +7,10 @@ import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-subscription-info-dialog',
-  templateUrl: './subscription-info-dialog.component.html',
-  styleUrls: ['./subscription-info-dialog.component.scss']
+    selector: 'app-subscription-info-dialog',
+    templateUrl: './subscription-info-dialog.component.html',
+    styleUrls: ['./subscription-info-dialog.component.scss'],
+    standalone: false
 })
 export class SubscriptionInfoDialogComponent implements OnInit, OnDestroy {
 

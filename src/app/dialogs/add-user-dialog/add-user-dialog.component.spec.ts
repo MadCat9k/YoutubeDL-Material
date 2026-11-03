@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { MatDialogRef } from '@angular/material/dialog';
+import { PostsService } from 'app/posts.services';
 
 import { AddUserDialogComponent } from './add-user-dialog.component';
 
@@ -8,8 +10,13 @@ describe('AddUserDialogComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ AddUserDialogComponent ]
+      declarations: [ AddUserDialogComponent ],
+      providers: [
+        {provide: PostsService, useValue: {}},
+        {provide: MatDialogRef, useValue: {}}
+      ]
     })
+    .overrideComponent(AddUserDialogComponent, {set: {template: ''}})
     .compileComponents();
   }));
 

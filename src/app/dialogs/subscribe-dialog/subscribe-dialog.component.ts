@@ -5,9 +5,10 @@ import { Subscription } from 'rxjs';
 import { ArgModifierDialogComponent } from '../arg-modifier-dialog/arg-modifier-dialog.component';
 
 @Component({
-  selector: 'app-subscribe-dialog',
-  templateUrl: './subscribe-dialog.component.html',
-  styleUrls: ['./subscribe-dialog.component.scss']
+    selector: 'app-subscribe-dialog',
+    templateUrl: './subscribe-dialog.component.html',
+    styleUrls: ['./subscribe-dialog.component.scss'],
+    standalone: false
 })
 export class SubscribeDialogComponent implements OnInit, OnDestroy {
   // inputs

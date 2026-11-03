@@ -6,9 +6,10 @@ import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-task-settings',
-  templateUrl: './task-settings.component.html',
-  styleUrls: ['./task-settings.component.scss']
+    selector: 'app-task-settings',
+    templateUrl: './task-settings.component.html',
+    styleUrls: ['./task-settings.component.scss'],
+    standalone: false
 })
 export class TaskSettingsComponent implements OnInit, OnDestroy {
   task_key: TaskType;

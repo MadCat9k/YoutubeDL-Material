@@ -8,9 +8,10 @@ import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-custom-playlists',
-  templateUrl: './custom-playlists.component.html',
-  styleUrls: ['./custom-playlists.component.scss']
+    selector: 'app-custom-playlists',
+    templateUrl: './custom-playlists.component.html',
+    styleUrls: ['./custom-playlists.component.scss'],
+    standalone: false
 })
 export class CustomPlaylistsComponent implements OnInit, OnDestroy {
 

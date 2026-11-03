@@ -12,9 +12,10 @@ import { Subject, Subscription } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-archive-viewer',
-  templateUrl: './archive-viewer.component.html',
-  styleUrls: ['./archive-viewer.component.scss']
+    selector: 'app-archive-viewer',
+    templateUrl: './archive-viewer.component.html',
+    styleUrls: ['./archive-viewer.component.scss'],
+    standalone: false
 })
 export class ArchiveViewerComponent implements OnDestroy {
   readonly uploadLabel = $localize`:|Upload:Upload`;
