@@ -651,6 +651,12 @@ Verification:
   because FFmpeg is absent on the host, matching the existing host limitation;
 - Node 26 cache-only Buildx assembly: passed for `linux/amd64` and
   `linux/arm64`. No image was loaded, tagged, run, or published;
+- frontend-only browser smoke on the host Node 22 development server: the
+  unauthenticated login and registration tabs, responsive navigation drawer,
+  settings menu, light and dark themes, and About dialog rendered and remained
+  interactive. This is visual evidence for the migrated templates only; no
+  backend was running and the exact Node 26 build remains covered by the
+  automated and cache-only checks above;
 - `git diff --check`: passed before the final documentation update and is rerun
   during final review.
 
@@ -662,8 +668,9 @@ Remaining checkpoint risks:
   backend development tree reports 45. No automatic audit fix was applied.
 - Angular 22 reports that the legacy Webpack browser and Karma builders are
   deprecated. Migrating build and test systems is separate follow-up work.
-- The Material theme compiles with the Angular 22 API and automated tests pass,
-  but light/dark theme appearance still needs browser-level visual review.
+- The unauthenticated light/dark theme and primary responsive shell passed a
+  browser-level smoke review, but authenticated pages and data-dependent
+  dialogs still require visual review against an isolated running backend.
 - Cache-only image assembly does not establish startup, healthcheck,
   persistence, permissions, or reverse-proxy behavior. Those require an
   explicitly approved isolated runtime test with copied data.
