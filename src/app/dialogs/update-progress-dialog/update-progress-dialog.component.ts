@@ -1,12 +1,13 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { PostsService } from 'app/posts.services';
-import { UpdaterStatus } from '../../../api-types';
+import type { UpdaterStatus } from '../../../api-types';
 import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-update-progress-dialog',
     templateUrl: './update-progress-dialog.component.html',
     styleUrls: ['./update-progress-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class UpdateProgressDialogComponent implements OnInit, OnDestroy {

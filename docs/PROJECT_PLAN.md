@@ -592,15 +592,29 @@ Verification:
   making the full frontend suite green before the next framework migration.
 - Angular 17 was applied and verified before proceeding. Its Material migration
   moved the fork's light and dark themes to the supported module-based Sass API.
-- The current checkpoint uses Angular core/CLI 19.2, Material and CDK 19.2,
-  TypeScript 5.8, Zone.js 0.15, and Node 22.23.2. Docker runtime and frontend
+- The completed implementation checkpoint uses Angular core 22.2, CLI 22.2,
+  Material and CDK 22.2, TypeScript 6.0, Zone.js 0.15, and Node 26.13.0. Docker
+  runtime and frontend
   stages, both package engine declarations, both CI workflows, and the
-  development container are aligned to Node 22.23.2.
+  development container are aligned to Node 26.13.0.
 - Angular 18's migration replaced `HttpClientModule` with provider-based HTTP
   configuration in the application module and affected service test.
 - Angular 19's migration explicitly marks declarations owned by the existing
   `AppModule` as non-standalone. Node type declarations were aligned to Node 22,
   and the router guard's synchronous result is wrapped in its declared promise.
+- Angular 20's migration moved TypeScript module resolution to `bundler`, moved
+  the `DOCUMENT` token to `@angular/core`, and added supported workspace
+  generation defaults. Imports used only as types were marked type-only so the
+  production build does not emit invalid runtime imports.
+- Angular 21 converted legacy structural directives in 44 templates to block
+  control flow. Its test scheduler required explicit fixture stabilization and
+  teardown in the input-dialog and recent-videos regression suites.
+- Angular 22 added eager change detection metadata, retained the XHR HTTP
+  backend explicitly, and applied its safe-navigation migrations. TypeScript 6
+  uses explicit non-strict compatibility for this legacy codebase and scoped
+  path mappings instead of the deprecated `baseUrl` option.
+- Node 26 required Mocha 12 for the backend test runner and `jsonwebtoken`
+  9.0.3 so its JWA dependency no longer executes the removed `SlowBuffer` API.
 - Angular's migrations removed a deprecated router guard interface from
   `PostsService`. The test bootstrap now uses the supported `zone.js/testing`
   entry point. The Material 16 selection-list event shape is handled without
@@ -624,20 +638,31 @@ Verification:
 - Angular 19 full frontend suite on Node 22.23.2: 366 passing;
 - Angular 19 production build on Node 22.23.2: passed, with the inherited
   `file-saver` CommonJS warning and a Sass `@import` deprecation warning;
-- full backend suite on Node 22.23.2: 140 passing and 30 pending; two tests fail
+- Angular 20 full frontend suite on Node 24.22.2: 366 passing;
+- Angular 20 production build on Node 24.22.2: passed, with the inherited
+  `file-saver` CommonJS warning and unsupported Browserslist entries reported;
+- Angular 21 full frontend suite on Node 24.22.2: 366 passing;
+- Angular 21 production build and cache-only Buildx assembly for both supported
+  architectures on Node 24.22.2: passed;
+- Angular 22 full frontend suite on Node 26.13.0: 366 passing;
+- Angular 22 production build on Node 26.13.0: passed, with inherited Sass
+  `@import`, `file-saver` CommonJS, Browserslist, and legacy-builder warnings;
+- full backend suite on Node 26.13.0: 140 passing and 30 pending; two tests fail
   because FFmpeg is absent on the host, matching the existing host limitation;
-- Node 22 cache-only Buildx assembly: passed for `linux/amd64` and
+- Node 26 cache-only Buildx assembly: passed for `linux/amd64` and
   `linux/arm64`. No image was loaded, tagged, run, or published;
 - `git diff --check`: passed before the final documentation update and is rerun
   during final review.
 
 Remaining checkpoint risks:
 
-- Angular 20 through 22 and the final Node 26 alignment remain. The current
-  checkpoint is not a release candidate and has no container runtime evidence.
-- The regenerated frontend dependency tree reports 90 audit findings and the
-  backend reports 45. No automatic audit fix was applied.
-- The Material theme compiles with the Angular 19 API and automated tests pass,
+- The framework and Node target are implemented, but the checkpoint has no
+  container runtime evidence and is not yet approved for deployment.
+- The regenerated frontend dependency tree reports 35 audit findings and the
+  backend development tree reports 45. No automatic audit fix was applied.
+- Angular 22 reports that the legacy Webpack browser and Karma builders are
+  deprecated. Migrating build and test systems is separate follow-up work.
+- The Material theme compiles with the Angular 22 API and automated tests pass,
   but light/dark theme appearance still needs browser-level visual review.
 - Cache-only image assembly does not establish startup, healthcheck,
   persistence, permissions, or reverse-proxy behavior. Those require an

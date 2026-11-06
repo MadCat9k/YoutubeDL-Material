@@ -1,14 +1,14 @@
-import {Injectable, isDevMode, Inject} from '@angular/core';
+import {Injectable, isDevMode, Inject, DOCUMENT} from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/observable/throw';
 import { THEMES_CONFIG } from '../themes';
 import { Router, ActivatedRouteSnapshot } from '@angular/router';
-import { DOCUMENT } from '@angular/common';
+
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import {
+import type {
     ChangeRolePermissionsRequest,
     ChangeUserPermissionsRequest,
     ConfigResponse,
@@ -98,7 +98,6 @@ import {
     Category,
     UpdateFileRequest,
     Sort,
-    FileTypeFilter,
     GetAllFilesRequest,
     GetAllTasksResponse,
     DeleteNotificationRequest,
@@ -116,9 +115,10 @@ import {
     TaskType,
     CheckSubscriptionRequest
 } from '../api-types';
+import { FileTypeFilter } from '../api-types';
 import { isoLangs } from './dialogs/user-profile-dialog/locales_list';
 import { Title } from '@angular/platform-browser';
-import { MatDrawerMode } from '@angular/material/sidenav';
+import type { MatDrawerMode } from '@angular/material/sidenav';
 import { environment } from '../environments/environment';
 
 @Injectable()

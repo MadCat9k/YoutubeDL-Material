@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, Input, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, Input, EventEmitter, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { PostsService } from 'app/posts.services';
 import { trigger, transition, animateChild, stagger, query, style, animate } from '@angular/animations';
 import { Router } from '@angular/router';
@@ -16,6 +16,7 @@ import { catchError, takeUntil } from 'rxjs/operators';
     selector: 'app-downloads',
     templateUrl: './downloads.component.html',
     styleUrls: ['./downloads.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class DownloadsComponent implements OnInit, OnDestroy {
@@ -123,7 +124,7 @@ export class DownloadsComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize(): void {
     this.innerWidth = window.innerWidth;
     this.recalculateColumns();

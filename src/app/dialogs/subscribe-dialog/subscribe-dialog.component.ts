@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { PostsService } from 'app/posts.services';
 import { Subscription } from 'rxjs';
@@ -8,6 +8,7 @@ import { ArgModifierDialogComponent } from '../arg-modifier-dialog/arg-modifier-
     selector: 'app-subscribe-dialog',
     templateUrl: './subscribe-dialog.component.html',
     styleUrls: ['./subscribe-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class SubscribeDialogComponent implements OnInit, OnDestroy {

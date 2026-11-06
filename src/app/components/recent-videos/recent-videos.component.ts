@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, type SimpleChanges, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { PostsService } from 'app/posts.services';
 import { Router } from '@angular/router';
-import { DatabaseFile, FileType, FileTypeFilter, Sort } from '../../../api-types';
+import type { DatabaseFile, FileType, FileTypeFilter, Sort } from '../../../api-types';
 import { MatPaginator } from '@angular/material/paginator';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, skip, take, takeUntil } from 'rxjs/operators';
@@ -15,6 +15,7 @@ import { saveAs } from 'file-saver';
     selector: 'app-recent-videos',
     templateUrl: './recent-videos.component.html',
     styleUrls: ['./recent-videos.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {

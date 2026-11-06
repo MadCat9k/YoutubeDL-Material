@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { NgxFileDropEntry, FileSystemFileEntry, FileSystemDirectoryEntry } from 'ngx-file-drop';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { NgxFileDropEntry, type FileSystemFileEntry, type FileSystemDirectoryEntry } from 'ngx-file-drop';
 import { PostsService } from 'app/posts.services';
 import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
@@ -8,6 +8,7 @@ import { finalize } from 'rxjs/operators';
     selector: 'app-cookies-uploader-dialog',
     templateUrl: './cookies-uploader-dialog.component.html',
     styleUrls: ['./cookies-uploader-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class CookiesUploaderDialogComponent implements OnInit, OnDestroy {

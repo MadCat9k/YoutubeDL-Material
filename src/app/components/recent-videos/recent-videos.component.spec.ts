@@ -71,6 +71,9 @@ describe('RecentVideosComponent', () => {
   });
 
   afterEach(() => {
+    if (!fixture.componentRef.hostView.destroyed) {
+      fixture.destroy();
+    }
     localStorage.clear();
   });
 

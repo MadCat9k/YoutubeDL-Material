@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, Inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, Inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PostsService } from 'app/posts.services';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
@@ -10,6 +10,7 @@ import { finalize, takeUntil } from 'rxjs/operators';
     selector: 'app-subscription-info-dialog',
     templateUrl: './subscription-info-dialog.component.html',
     styleUrls: ['./subscription-info-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class SubscriptionInfoDialogComponent implements OnInit, OnDestroy {

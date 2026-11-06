@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, HostBinding, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, HostBinding, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
 import {MatDialogRef} from '@angular/material/dialog';
 import {PostsService} from './posts.services';
 import { MatDialog } from '@angular/material/dialog';
@@ -31,6 +31,7 @@ import { ArchiveViewerComponent } from './components/archive-viewer/archive-view
             provide: MatDialogRef,
             useValue: {}
         }],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class AppComponent implements OnInit, AfterViewInit {

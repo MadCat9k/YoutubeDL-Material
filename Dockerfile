@@ -10,7 +10,7 @@ RUN chmod +x fetch-twitchdownloader.sh
 RUN sh ./fetch-twitchdownloader.sh
 
 
-# Create our Ubuntu 22.04 runtime with the Node 22 migration checkpoint.
+# Create our Ubuntu 22.04 runtime with the Node 26 migration checkpoint.
 # Go to 20.04
 FROM ubuntu:22.04 AS base
 ARG TARGETPLATFORM
@@ -24,7 +24,7 @@ ENV ALLOW_CONFIG_MUTATIONS=true
 ENV npm_config_cache=/app/.npm
 
 # Use NVM to get specific node version
-ENV NODE_VERSION=22.23.2
+ENV NODE_VERSION=26.13.0
 RUN groupadd -g $GID $USER && useradd --system -m -g $USER --uid $UID $USER && \
     apt update && \
     apt install -y --no-install-recommends curl ca-certificates tzdata libicu70 libatomic1 && \
@@ -41,7 +41,7 @@ RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 
 # Build frontend
 ARG BUILDPLATFORM
-FROM --platform=${BUILDPLATFORM} node:22.23.2 AS frontend
+FROM --platform=${BUILDPLATFORM} node:26.13.0 AS frontend
 WORKDIR /build
 COPY [ "package.json", "package-lock.json", "angular.json", "tsconfig.json", "/build/" ]
 COPY [ "src/", "/build/src/" ]
