@@ -23,6 +23,14 @@ const AUTHENTICATION_POLICIES = Object.freeze({
     apiKeyGeneration: Object.freeze({
         windowMs: 60 * 60 * 1000,
         max: 5
+    }),
+    passwordChange: Object.freeze({
+        windowMs: 60 * 60 * 1000,
+        max: 5
+    }),
+    userMutation: Object.freeze({
+        windowMs: 15 * 60 * 1000,
+        max: 30
     })
 });
 
@@ -42,7 +50,9 @@ exports.createAuthenticationLimiters = (overrides = {}) => {
         login: createLimiter(policy('login')),
         registration: createLimiter(policy('registration')),
         jwtAuth: createLimiter(policy('jwtAuth')),
-        apiKeyGeneration: createLimiter(policy('apiKeyGeneration'))
+        apiKeyGeneration: createLimiter(policy('apiKeyGeneration')),
+        passwordChange: createLimiter(policy('passwordChange')),
+        userMutation: createLimiter(policy('userMutation'))
     };
 };
 

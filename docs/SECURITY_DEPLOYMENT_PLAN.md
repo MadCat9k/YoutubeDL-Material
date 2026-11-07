@@ -166,7 +166,7 @@ normal subscription cycle and a deliberate container restart without regression.
 | Database query/filter injection | Confirmed; draft central guard implemented | This project uses MongoDB-style filters and a local JSON equivalent, not SQL. Request-shaped object conditions could alter MongoDB queries, while an unknown object condition could match the first local record. Both paths now reject object/operator filters unless server code constructs an allowlisted condition. Update objects also reject MongoDB operator and prototype-related keys. Add endpoint-specific field allowlists separately. |
 | Session cookie / CSRF | Alert is secondary to the actual credential design | The Angular client sends a fixed public token on every API request. In multi-user mode it additionally stores a JWT in local storage and sends it as a query parameter; sessions are initialized but are not the primary API authorization mechanism. Cookie flags alone would not fix token leakage or the single-user trust model. Keep the test deployment LAN-only and require reverse-proxy access control or a dedicated authentication redesign before internet exposure. |
 | Request-derived paths | Confirmed weaknesses; persistent-file slices implemented | Media downloads, generated container archives, deletion, Twitch chat files, cookies upload, subscription folder names, and user-folder deletion are now constrained or validated; archive names are random rather than request-derived; and database restore accepts only existing generated backup files beneath the backup root. Re-run CodeQL and review the remaining database/application findings before closing the affected alerts. |
-| Missing rate limiting | Cookies upload fixed; architectural backlog remains | Cookies upload now allows five attempts per client address in a rolling 15-minute window before authentication or multipart parsing. The remaining alert count is dominated by route-level reports. Prioritize login, registration, token/API-key generation, Telegram, update, and other mutation endpoints; choose limits compatible with subscription polling and reverse proxies. |
+| Missing rate limiting | Authentication and user-mutation slices implemented; architectural backlog remains | Cookies upload, login, registration, JWT refresh, API-key rotation, password changes, and privileged user-management mutations now have bounded policies. Login and JWT refresh count only failed responses to reduce shared-proxy lockouts. Telegram, updater, task, and other mutation routes remain; choose limits compatible with subscription polling and reverse proxies. |
 | Prototype pollution | Confirmed task-key weakness fixed; frontend findings remain | Task operations now accept only own keys from the fixed server registry, so inherited names such as `__proto__` and `constructor` cannot reach registry assignment. Database updates already reject prototype-related keys recursively. Review the separate Angular findings and rerun CodeQL before closing. |
 | Incomplete sanitization | Confirmed RSS weakness fixed; extension finding is separate | RSS thumbnail URLs now escape every ampersand rather than only the first. The Chrome extension's YouTube substring check is not loaded by the NAS container and will be handled as a separate extension fix. Four URL-substring alerts are synthetic test assertions. |
 
@@ -344,3 +344,18 @@ normal subscription cycle and a deliberate container restart without regression.
   backend suite passed 146 tests with 30 intentionally pending in a disposable
   Node 26 container workspace containing only synthetic fixtures; it did not
   contact a subscription or media service or use repository/runtime appdata.
+- 2026-11-08: the user-management slice now enforces the multi-user authorization
+  boundary in the backend rather than relying on frontend visibility. Password
+  changes require the current user or a user with `settings` permission. API-key
+  rotation, user update/deletion, and user/role permission changes require
+  `settings`; permission names and values are allowlisted at the request boundary.
+  Registration remains available for initial `admin` bootstrap and when open
+  registration is configured, while closed registration requires `settings`.
+  Existing single-user behavior is preserved.
+- 2026-11-08: password changes allow five attempts per client address per hour;
+  the privileged user-mutation group allows 30 attempts per 15 minutes. Eight
+  focused authorization/rate-limit tests pass on Node 26.13.0. The full backend
+  suite passes 151 tests with 30 intentionally pending in a disposable workspace
+  with synthetic fixtures. Read-only user/role queries and the Telegram, updater,
+  task, and other mutation families remain separate review slices, as does the
+  authentication transport redesign required before internet exposure.

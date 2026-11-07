@@ -96,7 +96,9 @@ describe('Authentication rate limits', function() {
             login: {windowMs: 15 * 60 * 1000, max: 10, skipSuccessfulRequests: true},
             registration: {windowMs: 60 * 60 * 1000, max: 5},
             jwtAuth: {windowMs: 15 * 60 * 1000, max: 30, skipSuccessfulRequests: true},
-            apiKeyGeneration: {windowMs: 60 * 60 * 1000, max: 5}
+            apiKeyGeneration: {windowMs: 60 * 60 * 1000, max: 5},
+            passwordChange: {windowMs: 60 * 60 * 1000, max: 5},
+            userMutation: {windowMs: 15 * 60 * 1000, max: 30}
         });
     });
 });
