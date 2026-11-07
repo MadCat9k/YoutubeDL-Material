@@ -330,3 +330,17 @@ normal subscription cycle and a deliberate container restart without regression.
   alerts: 142 high and 2 medium, including 128 missing-rate-limiting reports.
   Open counts are triage inputs rather than proof that every report is reachable,
   but the security closeout remains separate follow-up work.
+- 2026-11-07: the first focused rate-limit slice now protects registration,
+  login, JWT refresh, and API-key generation before authentication or expensive
+  credential work. Login and JWT refresh count only failed responses, reducing
+  false lockouts when household clients share a Synology reverse-proxy address;
+  registration and API-key generation use conservative hourly limits. Rejected
+  requests return a fixed `429` response with standard retry metadata and never
+  echo credentials. This directly addresses the registration and API-key route
+  reports and adds brute-force protection to the Passport routes that CodeQL did
+  not identify as inline handlers. Password changes, user management, Telegram,
+  updater, task, and other mutation routes remain later rate-limit slices.
+- 2026-11-07: focused rate-limit tests passed 3 cases on Node 26.13.0. The full
+  backend suite passed 146 tests with 30 intentionally pending in a disposable
+  Node 26 container workspace containing only synthetic fixtures; it did not
+  contact a subscription or media service or use repository/runtime appdata.
