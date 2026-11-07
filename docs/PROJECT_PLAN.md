@@ -624,8 +624,9 @@ Verification:
   declaration supports no Node release newer than Node 6. The two lockfiles
   were regenerated from the reviewed manifests; the existing `ajv` peer warning
   remains and must be resolved in a later dependency checkpoint.
-- This remains a non-deployable migration waypoint. It has not been published,
-  loaded, run, or deployed.
+- The modernization checkpoint is complete, merged, and published as an
+  immutable multi-architecture image. It remains a release candidate rather
+  than an approved production deployment until target-NAS validation passes.
 
 Verification:
 
@@ -650,7 +651,7 @@ Verification:
 - full backend suite on Node 26.13.0: 140 passing and 30 pending; two tests fail
   because FFmpeg is absent on the host, matching the existing host limitation;
 - Node 26 cache-only Buildx assembly: passed for `linux/amd64` and
-  `linux/arm64`. No image was loaded, tagged, run, or published;
+  `linux/arm64`;
 - frontend-only browser smoke on the host Node 22 development server: the
   unauthenticated login and registration tabs, responsive navigation drawer,
   settings menu, light and dark themes, and About dialog rendered and remained
@@ -677,6 +678,16 @@ Verification:
   persistence marker created as UID/GID `1026:101` survived a container restart;
   health and HTTP 200 recovered with zero automatic restarts. The test container
   was removed after validation;
+- PR #3 merged the checkpoint to `master` as `10d9463`; backend tests, CodeQL,
+  continuous integration, and the pull-request multi-architecture build passed;
+- the merged-master workflow published
+  `ghcr.io/madcat9k/youtubedl-material:sha-10d9463` and `latest` for
+  `linux/amd64` and `linux/arm64`. Both tags resolved to image index digest
+  `sha256:7b72b76542836f2999308ef499b412a4db815123ec1c00e4aeb9bde0d3172d59`;
+- an isolated ARM64 container using preserved local validation volumes reached
+  health `healthy`, returned HTTP 200, and loaded one subscription plus 164 file
+  records without an automatic restart. Automatic subscription checks remained
+  disabled so the validation did not contact the configured source;
 - `git diff --check`: passed before the final documentation update and is rerun
   during final review.
 
@@ -692,9 +703,10 @@ Remaining checkpoint risks:
 - The unauthenticated light/dark theme and primary responsive shell passed a
   browser-level smoke review, but authenticated pages and data-dependent
   dialogs still require visual review against an isolated running backend.
-- The corrected isolated container established startup, health, restart, and
-  basic write persistence for synthetic empty mounts. It did not establish
-  copied-data behavior, permissions on the NAS, or reverse-proxy validation.
+- The corrected isolated containers established startup, health, restart, basic
+  write persistence for synthetic empty mounts, and loading preserved local
+  data. They did not establish copied-data permissions on the NAS or
+  reverse-proxy validation.
 
 ## Delivery sequence
 
@@ -702,8 +714,8 @@ Remaining checkpoint risks:
 2. Reproduce and fix subscription navigation; add focused frontend tests.
 3. Instrument, reproduce, and repair thumbnail persistence; add fallback UI.
 4. Verify and harden new-tab navigation.
-5. Build a multi-architecture image, deploy to a test port, then migrate port
-   `8084` after acceptance checks.
+5. Publish the multi-architecture image, deploy its immutable tag to a NAS test
+   port, then migrate port `8084` after acceptance checks.
 
 ## Test matrix
 
@@ -715,7 +727,7 @@ Remaining checkpoint risks:
 
 ## Open deployment details
 
-Before publishing an image or automating deployment, record:
+Before target-NAS validation or a production cutover, record:
 
 - Synology model/CPU architecture and DSM/Container Manager versions.
 - Whether access is direct at `http://NAS:8084` or through a reverse proxy and
@@ -723,4 +735,6 @@ Before publishing an image or automating deployment, record:
 - Whether disappearing thumbnails affect subscription downloads only or also
   one-off downloads, plus one failing video's `.info.json`, thumbnail filename,
   and the corresponding browser Network request status.
-- Desired image registry/repository for Synology to pull from.
+- Use the public immutable image
+  `ghcr.io/madcat9k/youtubedl-material:sha-10d9463`; do not deploy the moving
+  `latest` tag for the controlled NAS test or production cutover.

@@ -1,12 +1,19 @@
 # YoutubeDL-Material
 
-> [!IMPORTANT]
-> This repository is a Synology-focused fork of
-> [Tzahi12345/YoutubeDL-Material](https://github.com/Tzahi12345/YoutubeDL-Material),
-> not the upstream project. See [README.fork.md](README.fork.md) for the fork's
-> changes, supported deployment path, current limitations, and rollback guidance.
-> The upstream links and general development instructions below are retained for
-> background and may not describe this fork's images or deployment files.
+This Synology-focused fork of
+[Tzahi12345/YoutubeDL-Material](https://github.com/Tzahi12345/YoutubeDL-Material)
+improves yt-dlp updates, subscription scans, and thumbnail recovery for
+self-hosted deployments. The fork currently uses Angular 22 and Node.js 26 and
+publishes multi-architecture images for `linux/amd64` and `linux/arm64` at
+`ghcr.io/madcat9k/youtubedl-material`.
+
+**Start here on Synology:** [validate with Docker Compose](README.fork.md#test-deployment)
+or [use the Portainer test stack](README.fork.md#portainer-test-stack). The
+[fork guide](README.fork.md) covers deployment status, production migration, and rollback.
+
+## Upstream documentation
+
+The badges and setup commands below refer to the upstream project and its images.
 
 [![Docker pulls badge](https://img.shields.io/docker/pulls/tzahi12345/youtubedl-material.svg)](https://hub.docker.com/r/tzahi12345/youtubedl-material)
 [![Docker image size badge](https://img.shields.io/docker/image-size/tzahi12345/youtubedl-material?sort=date)](https://hub.docker.com/r/tzahi12345/youtubedl-material)

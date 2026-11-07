@@ -24,13 +24,13 @@ and phase evidence in `docs/PROJECT_PLAN.md` rather than expanding this file.
 
 ## Repository map
 
-- `src/app/`: Angular 15 frontend components, services, routing, and unit tests.
+- `src/app/`: Angular 22 frontend components, services, routing, and unit tests.
 - `src/assets/i18n/*.xlf`: tracked translation sources. The corresponding JSON
   files are generated during `prebuild` and are ignored.
 - `src/api-types/`: generated TypeScript models from `Public API v1.yaml`. Change
   the API specification and run `npm run generate`; do not hand-maintain generated
   models.
-- `backend/`: Node 16 / Express application. Backend tests live in `backend/test/`.
+- `backend/`: Node 26 / Express application. Backend tests live in `backend/test/`.
 - `backend/public/`: generated frontend build output. Do not edit or commit it.
 - `Dockerfile` and `docker-utils/`: multi-stage, multi-architecture image build.
 - `docker-compose.synology.yml`: reviewed Synology deployment definition.
@@ -47,11 +47,11 @@ and phase evidence in `docs/PROJECT_PLAN.md` rather than expanding this file.
   (`Dockerfile`, Compose, entrypoint), and source when the issue crosses layers.
 - Reuse the current npm-based toolchain. Do not introduce another package manager
   or silently update lockfiles.
-- `package.json` and `package-lock.json` currently disagree around `ajv`; do not
-  claim `npm ci` reproducibility or rewrite dependency metadata as a side effect.
-- Never run `npm audit fix --force`. The inherited advisories and Node 16 upgrade
-  require a dedicated, tested modernization phase.
-- Pin build/runtime tools that must remain compatible with Node 16. Do not replace
+- The reviewed manifests and lockfiles target Node 26. Preserve them together;
+  do not rewrite dependency metadata as a side effect of unrelated work.
+- Never run `npm audit fix --force`. The remaining inherited advisories require
+  a dedicated, tested dependency-hardening phase.
+- Pin build/runtime tools that must remain compatible with Node 26. Do not replace
   the PM2 pin or architecture-specific binary logic with an unbounded latest
   version.
 - Record durable architectural or operational decisions in the relevant fork
