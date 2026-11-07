@@ -36,8 +36,10 @@ const thumbnails_api = require('./thumbnails');
 const update_archive_api = require('./update-archive');
 const xml_safety = require('./xml-safety');
 const notifications_api = require('./notifications');
+const security_rate_limits = require('./security-rate-limits');
 
 var app = express();
+const authentication_limiters = security_rate_limits.createAuthenticationLimiters();
 
 // database setup
 const FileSync = require('lowdb/adapters/FileSync');
@@ -1531,7 +1533,7 @@ app.post('/api/updateServer', optionalJwt, async (req, res) => {
 
 // API Key API calls
 
-app.post('/api/generateNewAPIKey', optionalJwt, function (req, res) {
+app.post('/api/generateNewAPIKey', authentication_limiters.apiKeyGeneration, optionalJwt, function (req, res) {
     const new_api_key = uuid();
     config_api.setConfigItem('ytdl_api_key', new_api_key);
     res.send({new_api_key: new_api_key});
@@ -1871,7 +1873,7 @@ app.post('/api/clearAllLogs', optionalJwt, async function(req, res) {
 
 // user authentication
 
-app.post('/api/auth/register', optionalJwt, async (req, res) => {
+app.post('/api/auth/register', authentication_limiters.registration, optionalJwt, async (req, res) => {
     const userid = req.body.userid;
     const username = req.body.username;
     const plaintextPassword = req.body.password;
@@ -1904,11 +1906,13 @@ app.post('/api/auth/register', optionalJwt, async (req, res) => {
     });
 });
 app.post('/api/auth/login'
+        , authentication_limiters.login
         , auth_api.passport.authenticate(['local', 'ldapauth'], {})
         , auth_api.generateJWT
         , auth_api.returnAuthResponse
 );
 app.post('/api/auth/jwtAuth'
+        , authentication_limiters.jwtAuth
         , auth_api.passport.authenticate('jwt', { session: false })
         , auth_api.passport.authorize('jwt')
         , auth_api.generateJWT
