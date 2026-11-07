@@ -163,6 +163,7 @@ normal subscription cycle and a deliberate container restart without regression.
 | Remote-file SSRF | Confirmed weakness; draft fix implemented | Current callers use fixed GitHub repositories, but the generic helper previously trusted redirects and DNS. Focused tests now cover host/protocol restrictions, per-hop validation, private addresses, size limits, failed responses, and atomic replacement. Re-run CodeQL before closing. |
 | Update archive traversal | Confirmed and reachable; draft fix implemented | The updater previously joined archive paths directly to the backend root. Tests now cover traversal, absolute/foreign roots, release-tag traversal, persistent `appdata`, valid extraction, and existing symlink escapes. Re-run CodeQL before closing. |
 | Clear-text logging | Three confirmed sites; draft fix implemented | API keys and downloader argument values are no longer included. Fixed-message tests use synthetic secret values. Re-run CodeQL before closing. |
+| Credential fields in API responses | Confirmed bcrypt-hash exposure; response allowlist implemented | Registration, login, JWT refresh, and user-list responses previously serialized stored user records directly, including `passhash`. Public user responses now use an explicit field allowlist; user/role listings require `settings` permission in multi-user mode and share a bounded read limit. The larger JWT query-string transport issue remains separate. |
 | Database query/filter injection | Confirmed; draft central guard implemented | This project uses MongoDB-style filters and a local JSON equivalent, not SQL. Request-shaped object conditions could alter MongoDB queries, while an unknown object condition could match the first local record. Both paths now reject object/operator filters unless server code constructs an allowlisted condition. Update objects also reject MongoDB operator and prototype-related keys. Add endpoint-specific field allowlists separately. |
 | Session cookie / CSRF | Alert is secondary to the actual credential design | The Angular client sends a fixed public token on every API request. In multi-user mode it additionally stores a JWT in local storage and sends it as a query parameter; sessions are initialized but are not the primary API authorization mechanism. Cookie flags alone would not fix token leakage or the single-user trust model. Keep the test deployment LAN-only and require reverse-proxy access control or a dedicated authentication redesign before internet exposure. |
 | Request-derived paths | Confirmed weaknesses; persistent-file slices implemented | Media downloads, generated container archives, deletion, Twitch chat files, cookies upload, subscription folder names, and user-folder deletion are now constrained or validated; archive names are random rather than request-derived; and database restore accepts only existing generated backup files beneath the backup root. Re-run CodeQL and review the remaining database/application findings before closing the affected alerts. |
@@ -359,3 +360,17 @@ normal subscription cycle and a deliberate container restart without regression.
   with synthetic fixtures. Read-only user/role queries and the Telegram, updater,
   task, and other mutation families remain separate review slices, as does the
   authentication transport redesign required before internet exposure.
+- 2026-11-08: confirmed that registration, login, JWT refresh, and user-list
+  responses serialized complete stored user records, including the bcrypt
+  `passhash`. A shared response allowlist now emits only documented public user
+  fields and drops both known credential fields and any future unknown database
+  fields. The public API specification and generated `User` model no longer
+  advertise `passhash`. User and role listings now require `settings` permission
+  in multi-user mode while preserving single-user behavior, and the two listing
+  routes share a limit of 60 requests per client address per 15 minutes.
+- 2026-11-08: three focused user-response tests cover allowlisting, list
+  redaction, and the real login/JWT response path; the combined focused response
+  authorization, and rate-limit suite passes 11 tests on Node 26.13.0. The full
+  backend suite passes 154 tests with 30 intentionally pending in a disposable
+  workspace with synthetic fixtures. Broader settings, task, download-manager,
+  subscription, and other route-permission boundaries remain separate slices.
