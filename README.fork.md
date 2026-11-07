@@ -44,8 +44,10 @@ areas. These checks do not replace validation on the target Synology NAS.
 
 - The Node modernization implementation now uses Angular 22 and Node.js
   26.13.0. Automated tests, the production frontend build, and cache-only
-  multi-architecture image assembly pass, but the result still requires the
-  isolated runtime and NAS validation described below before deployment.
+  multi-architecture image assembly pass. An isolated ARM64 container also
+  passes clean empty-mount startup, health, restart, and basic persistence
+  checks, but the result still requires the copied-data NAS validation described
+  below before deployment.
   Detailed evidence is tracked in `docs/PROJECT_PLAN.md`.
 - The inherited dependency advisories have not yet been modernized.
 - Runtime observation of the `linux/arm64` image on the target NAS is still

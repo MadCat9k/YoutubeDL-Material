@@ -97,6 +97,10 @@ exports.setConfigFile = (config) => {
 }
 
 exports.getConfigItem = (key) => {
+    // Some modules read configuration while they are being imported, before
+    // app.js reaches initialize(). Keep first access safe for an empty appdata
+    // mount while preserving initialize() as the full validation pass.
+    ensureConfigFileExists();
     let config_json = exports.getConfigFile();
     if (!exports.CONFIG_ITEMS[key]) {
         logger.error(`Config item with key '${key}' is not recognized.`);

@@ -657,13 +657,34 @@ Verification:
   interactive. This is visual evidence for the migrated templates only; no
   backend was running and the exact Node 26 build remains covered by the
   automated and cache-only checks above;
+- isolated ARM64 runtime smoke using fresh temporary mounts and host port
+  `18084`: the Node 26.13.0 image built and loaded, created its local database,
+  configuration, and ARM64 yt-dlp binary, reached Docker health `healthy`,
+  returned HTTP 200, and reported zero container restarts. A first-process
+  failure exposed an empty-appdata ordering bug: `notifications.js` read config
+  during module import before `app.js` called `config.initialize()`. PM2
+  restarted that process and the original image recovered, but a clean first
+  process is required;
+- configuration first access now creates the default file idempotently before
+  reading it. The process-isolated regression test failed with the observed
+  `Cannot use 'in' operator ... in null` stack before the fix and passes after
+  it. The full backend suite reports 141 passing and 30 pending; its two failures
+  remain the known missing-host-FFmpeg tests;
+- rebuilt ARM64 runtime smoke after the empty-appdata fix: a fresh synthetic
+  mount started without the earlier TypeError or PM2 child-process exit, reached
+  Docker health `healthy`, and returned HTTP 200. The container reported Node
+  26.13.0 and yt-dlp listed Chrome and Safari targets backed by `curl_cffi`. A
+  persistence marker created as UID/GID `1026:101` survived a container restart;
+  health and HTTP 200 recovered with zero automatic restarts. The test container
+  was removed after validation;
 - `git diff --check`: passed before the final documentation update and is rerun
   during final review.
 
 Remaining checkpoint risks:
 
-- The framework and Node target are implemented, but the checkpoint has no
-  container runtime evidence and is not yet approved for deployment.
+- The framework and Node target passed the corrected ARM64 empty-mount startup,
+  health, restart, and basic persistence checks. The checkpoint is not approved
+  for deployment until copied-data and target-NAS validation are complete.
 - The regenerated frontend dependency tree reports 35 audit findings and the
   backend development tree reports 45. No automatic audit fix was applied.
 - Angular 22 reports that the legacy Webpack browser and Karma builders are
@@ -671,9 +692,9 @@ Remaining checkpoint risks:
 - The unauthenticated light/dark theme and primary responsive shell passed a
   browser-level smoke review, but authenticated pages and data-dependent
   dialogs still require visual review against an isolated running backend.
-- Cache-only image assembly does not establish startup, healthcheck,
-  persistence, permissions, or reverse-proxy behavior. Those require an
-  explicitly approved isolated runtime test with copied data.
+- The corrected isolated container established startup, health, restart, and
+  basic write persistence for synthetic empty mounts. It did not establish
+  copied-data behavior, permissions on the NAS, or reverse-proxy validation.
 
 ## Delivery sequence
 
