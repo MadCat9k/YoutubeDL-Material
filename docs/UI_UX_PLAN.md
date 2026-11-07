@@ -1542,6 +1542,24 @@ Verification:
   plus Home library action, sort-control, category-rule, and video-information
   action names use safe English fallbacks until translated.
 
+### Post-closeout: stable navigation drawer width (2026-11-07)
+
+- The application navigation drawer now uses a stable 280-pixel width capped at
+  85 percent of the viewport. Expanding or collapsing the subscription section
+  no longer changes the drawer or content width, while narrow-screen overlay
+  mode remains bounded by the viewport.
+- The rendered application-shell regression test opens the drawer with long
+  subscription names, activates the real collapse control, and verifies both
+  the disclosure state and unchanged measured width.
+
+Verification:
+
+- focused application-shell suite: 6 passing in Chrome Headless;
+- production frontend build: passed with the inherited `file-saver` CommonJS
+  warning and existing legacy-builder/Browserslist warnings;
+- Node 26.13.0 Docker frontend stage: passed, with the documented dependency,
+  Sass, legacy-builder, and CommonJS warnings.
+
 Each phase should remain independently reviewable and should include focused
 Jasmine/Karma coverage plus a production frontend build. Responsive phases
 should also be manually checked at representative phone, tablet, and desktop
