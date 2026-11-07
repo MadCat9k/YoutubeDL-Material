@@ -22,6 +22,11 @@
     z-index: -1 !important;
 }
 
+.navigation-sidenav {
+    width: 280px;
+    max-width: 85vw;
+}
+
 .top-toolbar {
     height: 64px;
     background: unset;
