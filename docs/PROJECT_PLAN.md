@@ -625,8 +625,8 @@ Verification:
   were regenerated from the reviewed manifests; the existing `ajv` peer warning
   remains and must be resolved in a later dependency checkpoint.
 - The modernization checkpoint is complete, merged, and published as an
-  immutable multi-architecture image. It remains a release candidate rather
-  than an approved production deployment until target-NAS validation passes.
+  immutable multi-architecture image. On 2026-11-07, the user reported that the
+  latest image also tested successfully on the target Synology NAS.
 
 Verification:
 
@@ -688,14 +688,24 @@ Verification:
   health `healthy`, returned HTTP 200, and loaded one subscription plus 164 file
   records without an automatic restart. Automatic subscription checks remained
   disabled so the validation did not contact the configured source;
+- PR #5 merged the stable navigation-drawer width follow-up to `master` as
+  `248c38b`; Tests, CodeQL, continuous integration, and multi-architecture image
+  publication passed. The resulting immutable image
+  `ghcr.io/madcat9k/youtubedl-material:sha-248c38b` contains `linux/amd64` and
+  `linux/arm64` manifests and resolves to image index digest
+  `sha256:483ecb6c4be544a2241a0419871c201baf7da716874537efd7660cc4b17e8fba`;
+- the user reported successful testing of that immutable image on the target
+  Synology NAS on 2026-11-07. NAS logs, host metadata, and sensitive runtime data
+  were not added to the repository;
 - `git diff --check`: passed before the final documentation update and is rerun
   during final review.
 
 Remaining checkpoint risks:
 
 - The framework and Node target passed the corrected ARM64 empty-mount startup,
-  health, restart, and basic persistence checks. The checkpoint is not approved
-  for deployment until copied-data and target-NAS validation are complete.
+  health, restart, and basic persistence checks. General target-NAS validation
+  of `sha-248c38b` was subsequently reported successful by the user; the exact
+  NAS checklist results were not captured in the repository.
 - The regenerated frontend dependency tree reports 35 audit findings and the
   backend development tree reports 45. No automatic audit fix was applied.
 - Angular 22 reports that the legacy Webpack browser and Karma builders are
@@ -705,8 +715,9 @@ Remaining checkpoint risks:
   dialogs still require visual review against an isolated running backend.
 - The corrected isolated containers established startup, health, restart, basic
   write persistence for synthetic empty mounts, and loading preserved local
-  data. They did not establish copied-data permissions on the NAS or
-  reverse-proxy validation.
+  data. The later target-NAS pass is user-reported, so environment-specific
+  permissions and reverse-proxy evidence should be recaptured during future
+  image upgrades if those details are needed for audit or troubleshooting.
 
 ## Delivery sequence
 
@@ -725,9 +736,10 @@ Remaining checkpoint risks:
 - Paths: spaces, Unicode, long titles, subscription channel and playlist paths.
 - Data: local JSON database now; MongoDB behavior should remain unchanged.
 
-## Open deployment details
+## Deployment record details
 
-Before target-NAS validation or a production cutover, record:
+The current image has a user-reported successful target-NAS test. Before a
+future image upgrade or production cutover, record:
 
 - Synology model/CPU architecture and DSM/Container Manager versions.
 - Whether access is direct at `http://NAS:8084` or through a reverse proxy and
@@ -736,5 +748,5 @@ Before target-NAS validation or a production cutover, record:
   one-off downloads, plus one failing video's `.info.json`, thumbnail filename,
   and the corresponding browser Network request status.
 - Use the public immutable image
-  `ghcr.io/madcat9k/youtubedl-material:sha-10d9463`; do not deploy the moving
+  `ghcr.io/madcat9k/youtubedl-material:sha-248c38b`; do not deploy the moving
   `latest` tag for the controlled NAS test or production cutover.
