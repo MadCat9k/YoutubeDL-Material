@@ -37,9 +37,16 @@ const update_archive_api = require('./update-archive');
 const xml_safety = require('./xml-safety');
 const notifications_api = require('./notifications');
 const security_rate_limits = require('./security-rate-limits');
+const security_authorization = require('./security-authorization');
 
 var app = express();
 const authentication_limiters = security_rate_limits.createAuthenticationLimiters();
+const user_authorization = security_authorization.createUserAuthorization({
+    getConfigItem: config_api.getConfigItem,
+    userHasPermission: auth_api.userHasPermission,
+    adminExists: auth_api.adminExists,
+    availablePermissions: CONSTS.AVAILABLE_PERMISSIONS
+});
 
 // database setup
 const FileSync = require('lowdb/adapters/FileSync');
@@ -1533,7 +1540,7 @@ app.post('/api/updateServer', optionalJwt, async (req, res) => {
 
 // API Key API calls
 
-app.post('/api/generateNewAPIKey', authentication_limiters.apiKeyGeneration, optionalJwt, function (req, res) {
+app.post('/api/generateNewAPIKey', authentication_limiters.apiKeyGeneration, optionalJwt, user_authorization.requireSettingsPermission, function (req, res) {
     const new_api_key = uuid();
     config_api.setConfigItem('ytdl_api_key', new_api_key);
     res.send({new_api_key: new_api_key});
@@ -1878,8 +1885,8 @@ app.post('/api/auth/register', authentication_limiters.registration, optionalJwt
     const username = req.body.username;
     const plaintextPassword = req.body.password;
 
-    if (userid !== 'admin' && !config_api.getConfigItem('ytdl_allow_registration') && !req.isAuthenticated() && (!req.user || !exports.userHasPermission(req.user.uid, 'settings'))) {
-        logger.error(`Registration failed for user ${userid}. Registration is disabled.`);
+    if (!await user_authorization.canRegister(req, userid)) {
+        logger.warn('Registration rejected because registration is disabled.');
         res.sendStatus(409);
         return;
     }
@@ -1918,7 +1925,7 @@ app.post('/api/auth/jwtAuth'
         , auth_api.generateJWT
         , auth_api.returnAuthResponse
 );
-app.post('/api/auth/changePassword', optionalJwt, async (req, res) => {
+app.post('/api/auth/changePassword', authentication_limiters.passwordChange, optionalJwt, user_authorization.requireSelfOrSettings, async (req, res) => {
     let user_uid = req.body.user_uid;
     let password = req.body.new_password;
     let success = await auth_api.changeUserPassword(user_uid, password);
@@ -1939,7 +1946,7 @@ app.post('/api/getRoles', optionalJwt, async (req, res) => {
     res.send({roles: roles});
 });
 
-app.post('/api/updateUser', optionalJwt, async (req, res) => {
+app.post('/api/updateUser', authentication_limiters.userMutation, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     let change_obj = req.body.change_object;
     try {
         if (change_obj.name) {
@@ -1955,7 +1962,7 @@ app.post('/api/updateUser', optionalJwt, async (req, res) => {
     }
 });
 
-app.post('/api/deleteUser', optionalJwt, async (req, res) => {
+app.post('/api/deleteUser', authentication_limiters.userMutation, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     let uid = req.body.uid;
     try {
         const success = await auth_api.deleteUser(uid);
@@ -1966,12 +1973,12 @@ app.post('/api/deleteUser', optionalJwt, async (req, res) => {
     }
 });
 
-app.post('/api/changeUserPermissions', optionalJwt, async (req, res) => {
+app.post('/api/changeUserPermissions', authentication_limiters.userMutation, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     const user_uid = req.body.user_uid;
     const permission = req.body.permission;
     const new_value = req.body.new_value;
 
-    if (!permission || !new_value) {
+    if (!user_authorization.isValidPermissionChange(permission, new_value, true)) {
         res.sendStatus(400);
         return;
     }
@@ -1981,12 +1988,12 @@ app.post('/api/changeUserPermissions', optionalJwt, async (req, res) => {
     res.send({success: success});
 });
 
-app.post('/api/changeRolePermissions', optionalJwt, async (req, res) => {
+app.post('/api/changeRolePermissions', authentication_limiters.userMutation, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     const role = req.body.role;
     const permission = req.body.permission;
     const new_value = req.body.new_value;
 
-    if (!permission || !new_value) {
+    if (!user_authorization.isValidPermissionChange(permission, new_value)) {
         res.sendStatus(400);
         return;
     }
