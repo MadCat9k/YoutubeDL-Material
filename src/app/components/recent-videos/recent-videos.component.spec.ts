@@ -71,6 +71,9 @@ describe('RecentVideosComponent', () => {
   });
 
   afterEach(() => {
+    if (!fixture.componentRef.hostView.destroyed) {
+      fixture.destroy();
+    }
     localStorage.clear();
   });
 
@@ -79,6 +82,24 @@ describe('RecentVideosComponent', () => {
       reverseOrder: 'Reverse selection order',
       removeItem: 'Remove selected item'
     });
+  });
+
+  it('handles the Angular Material 16 selection-change options array', () => {
+    const file = {uid: 'file-1', thumbnailURL: 'synthetic-thumbnail'} as DatabaseFile;
+    const emitSpy = spyOn(component.fileSelectionEmitter, 'emit');
+
+    component.fileSelectionChanged({options: [{selected: true, value: file}]} as any);
+
+    expect(component.selected_data).toEqual(['file-1']);
+    expect(emitSpy).toHaveBeenCalledWith({
+      new_selection: ['file-1'],
+      thumbnailURL: 'synthetic-thumbnail'
+    });
+
+    component.fileSelectionChanged({options: [{selected: false, value: file}]} as any);
+
+    expect(component.selected_data).toEqual([]);
+    expect(emitSpy).toHaveBeenCalledWith({new_selection: [], thumbnailURL: undefined});
   });
 
   it('persists and restores the selected library page size', () => {

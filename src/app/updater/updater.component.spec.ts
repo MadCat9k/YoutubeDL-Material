@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
+import { PostsService } from 'app/posts.services';
 
 import { UpdaterComponent } from './updater.component';
 
@@ -8,8 +11,13 @@ describe('UpdaterComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ UpdaterComponent ]
+      declarations: [ UpdaterComponent ],
+      providers: [
+        {provide: PostsService, useValue: {getAvailableRelease: () => of([])}},
+        {provide: MatDialog, useValue: {}}
+      ]
     })
+    .overrideComponent(UpdaterComponent, {set: {template: ''}})
     .compileComponents();
   }));
 

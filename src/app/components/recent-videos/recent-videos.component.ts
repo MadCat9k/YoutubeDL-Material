@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, type SimpleChanges, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { PostsService } from 'app/posts.services';
 import { Router } from '@angular/router';
-import { DatabaseFile, FileType, FileTypeFilter, Sort } from '../../../api-types';
+import type { DatabaseFile, FileType, FileTypeFilter, Sort } from '../../../api-types';
 import { MatPaginator } from '@angular/material/paginator';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, skip, take, takeUntil } from 'rxjs/operators';
@@ -12,9 +12,11 @@ import { LocationStrategy } from '@angular/common';
 import { saveAs } from 'file-saver';
 
 @Component({
-  selector: 'app-recent-videos',
-  templateUrl: './recent-videos.component.html',
-  styleUrls: ['./recent-videos.component.scss']
+    selector: 'app-recent-videos',
+    templateUrl: './recent-videos.component.html',
+    styleUrls: ['./recent-videos.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
 
@@ -626,18 +628,21 @@ export class RecentVideosComponent implements OnChanges, OnDestroy, OnInit {
   }
 
   fileSelectionChanged(event: MatSelectionListChange): void {
-    // TODO: make sure below line is possible (_selected is private)
-    const adding = event.option['_selected'];
-    const value = event.option.value;
-    if (adding) {
-      this.selected_data.push(value.uid);
-      this.selected_data_objs.push(value);
-    } else {
-      this.selected_data      = this.selected_data.filter(e => e !== value.uid);
-      this.selected_data_objs = this.selected_data_objs.filter(e => e.uid !== value.uid);
-    }
+    event.options.forEach(option => {
+      const value = option.value;
+      if (option.selected) {
+        this.selected_data.push(value.uid);
+        this.selected_data_objs.push(value);
+      } else {
+        this.selected_data      = this.selected_data.filter(e => e !== value.uid);
+        this.selected_data_objs = this.selected_data_objs.filter(e => e.uid !== value.uid);
+      }
+    });
 
-    this.fileSelectionEmitter.emit({new_selection: this.selected_data, thumbnailURL: this.selected_data_objs[0].thumbnailURL});
+    this.fileSelectionEmitter.emit({
+      new_selection: this.selected_data,
+      thumbnailURL: this.selected_data_objs[0]?.thumbnailURL
+    });
   }
 
   toggleSelectionOrder(): void {

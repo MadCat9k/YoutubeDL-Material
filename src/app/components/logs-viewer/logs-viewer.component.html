@@ -1,37 +1,41 @@
 <div class="logs-viewer">
-    <div *ngIf="logs_loading" class="logs-loading">
-        <mat-spinner [diameter]="32"></mat-spinner>
+  @if (logs_loading) {
+    <div class="logs-loading">
+      <mat-spinner [diameter]="32"></mat-spinner>
     </div>
-    <!-- Virtual mode (fast, select text buggy) -->
-    <!--<cdk-virtual-scroll-viewport style="height: 274px;" itemSize="50" class="example-viewport">
-        <div *cdkVirtualFor="let log of logs; let i = index" class="example-item">
-            <span [ngStyle]="{'color':log.color}">{{log.text}}</span>
-        </div>
-    </cdk-virtual-scroll-viewport>-->
+  }
+  <!-- Virtual mode (fast, select text buggy) -->
+  <!--<cdk-virtual-scroll-viewport style="height: 274px;" itemSize="50" class="example-viewport">
+  <div *cdkVirtualFor="let log of logs; let i = index" class="example-item">
+    <span [ngStyle]="{'color':log.color}">{{log.text}}</span>
+  </div>
+</cdk-virtual-scroll-viewport>-->
 
-    <!-- Non-virtual mode (slow, bug-free) -->
-    <div class="logs-output">
-        <div *ngFor="let log of logs; let i = index" class="example-item">
-            <span [ngStyle]="{'color':log.color}">{{log.text}}</span>
-        </div>
+<!-- Non-virtual mode (slow, bug-free) -->
+<div class="logs-output">
+  @for (log of logs; track log; let i = $index) {
+    <div class="example-item">
+      <span [ngStyle]="{'color':log.color}">{{log.text}}</span>
     </div>
+  }
+</div>
 
-    <div class="logs-toolbar">
-        <div class="logs-lines">
-            <ng-container i18n="Label for lines select in logger view">Lines:</ng-container>
-            <mat-form-field class="logs-lines-select">
-                <mat-select (selectionChange)="getLogs()" [(ngModel)]="requested_lines">
-                    <mat-option [value]="10">10</mat-option>
-                    <mat-option [value]="25">25</mat-option>
-                    <mat-option [value]="50">50</mat-option>
-                    <mat-option [value]="100">100</mat-option>
-                    <mat-option [value]="0">All</mat-option>
-                </mat-select>
-            </mat-form-field>
-        </div>
-        <div class="logs-actions">
-            <button [cdkCopyToClipboard]="logs_text" (click)="copiedLogsToClipboard()" [attr.aria-label]="copyLogsLabel" mat-mini-fab color="primary"><mat-icon>content_copy</mat-icon></button>
-            <button (click)="clearLogs()" mat-stroked-button color="warn"><ng-container i18n="Clear logs button">Clear logs</ng-container></button>
-        </div>
-    </div>
+<div class="logs-toolbar">
+  <div class="logs-lines">
+    <ng-container i18n="Label for lines select in logger view">Lines:</ng-container>
+    <mat-form-field class="logs-lines-select">
+      <mat-select (selectionChange)="getLogs()" [(ngModel)]="requested_lines">
+        <mat-option [value]="10">10</mat-option>
+        <mat-option [value]="25">25</mat-option>
+        <mat-option [value]="50">50</mat-option>
+        <mat-option [value]="100">100</mat-option>
+        <mat-option [value]="0">All</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <div class="logs-actions">
+    <button [cdkCopyToClipboard]="logs_text" (click)="copiedLogsToClipboard()" [attr.aria-label]="copyLogsLabel" mat-mini-fab color="primary"><mat-icon>content_copy</mat-icon></button>
+    <button (click)="clearLogs()" mat-stroked-button color="warn"><ng-container i18n="Clear logs button">Clear logs</ng-container></button>
+  </div>
+</div>
 </div>

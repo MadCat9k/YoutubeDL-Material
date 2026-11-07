@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { PostsService } from 'app/posts.services';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
@@ -8,9 +8,11 @@ import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-custom-playlists',
-  templateUrl: './custom-playlists.component.html',
-  styleUrls: ['./custom-playlists.component.scss']
+    selector: 'app-custom-playlists',
+    templateUrl: './custom-playlists.component.html',
+    styleUrls: ['./custom-playlists.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class CustomPlaylistsComponent implements OnInit, OnDestroy {
 

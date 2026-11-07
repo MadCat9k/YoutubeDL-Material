@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, HostBinding, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, HostBinding, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
 import {MatDialogRef} from '@angular/material/dialog';
 import {PostsService} from './posts.services';
 import { MatDialog } from '@angular/material/dialog';
@@ -24,13 +24,15 @@ import { NotificationsComponent } from './components/notifications/notifications
 import { ArchiveViewerComponent } from './components/archive-viewer/archive-viewer.component';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
-  providers: [{
-    provide: MatDialogRef,
-    useValue: {}
-  }]
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.css'],
+    providers: [{
+            provide: MatDialogRef,
+            useValue: {}
+        }],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class AppComponent implements OnInit, AfterViewInit {
 

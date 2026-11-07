@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { of } from 'rxjs';
+import { PostsService } from 'app/posts.services';
 
 import { AboutDialogComponent } from './about-dialog.component';
 
@@ -8,8 +10,12 @@ describe('AboutDialogComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ AboutDialogComponent ]
+      declarations: [ AboutDialogComponent ],
+      providers: [
+        {provide: PostsService, useValue: {getLatestGithubRelease: () => of(null)}}
+      ]
     })
+    .overrideComponent(AboutDialogComponent, {set: {template: ''}})
     .compileComponents();
   }));
 

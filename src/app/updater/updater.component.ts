@@ -1,12 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { PostsService } from 'app/posts.services';
 import { CURRENT_VERSION } from 'app/consts';
 import { MatDialog } from '@angular/material/dialog';
 import { UpdateProgressDialogComponent } from 'app/dialogs/update-progress-dialog/update-progress-dialog.component';
 @Component({
-  selector: 'app-updater',
-  templateUrl: './updater.component.html',
-  styleUrls: ['./updater.component.scss']
+    selector: 'app-updater',
+    templateUrl: './updater.component.html',
+    styleUrls: ['./updater.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class UpdaterComponent implements OnInit {
 

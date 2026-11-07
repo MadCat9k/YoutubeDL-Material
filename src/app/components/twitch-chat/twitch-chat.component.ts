@@ -1,12 +1,14 @@
-import { Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, QueryList, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, QueryList, type SimpleChanges, ViewChild, ViewChildren, ChangeDetectionStrategy } from '@angular/core';
 import { DatabaseFile } from 'api-types';
 import { PostsService } from 'app/posts.services';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-twitch-chat',
-  templateUrl: './twitch-chat.component.html',
-  styleUrls: ['./twitch-chat.component.scss']
+    selector: 'app-twitch-chat',
+    templateUrl: './twitch-chat.component.html',
+    styleUrls: ['./twitch-chat.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class TwitchChatComponent implements OnInit, OnChanges, OnDestroy {
 

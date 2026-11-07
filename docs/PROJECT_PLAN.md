@@ -548,6 +548,154 @@ Verification:
   warning and existing custom-file-label selector warning;
 - cache-only image assembly passed for both `linux/amd64` and `linux/arm64`.
 
+## Node and dependency modernization (started 2026-11-02)
+
+### Target and invariants
+
+- The production target is Node.js 26 LTS with an Angular release that officially
+  supports it; Angular 22 is the current target. Do not deploy an intermediate
+  Node 18 or Node 20 checkpoint merely because it builds: both release lines are
+  end-of-life.
+- Upgrade Angular one major at a time and retain a buildable, testable checkpoint
+  after every major. Keep Angular core, CLI, Material/CDK, TypeScript, and RxJS in
+  their documented compatibility ranges.
+- Preserve the downloader invocation-time impersonation behavior, explicit
+  argument precedence, multi-architecture binary selection, entrypoint UID/GID
+  flow, database formats, and completed frontend behavior throughout the work.
+- Do not combine the runtime migration with storage changes or automatic audit
+  remediation. Review dependency replacements individually; never use
+  `npm audit fix --force`.
+
+### Phases
+
+1. Establish the Angular 16 / Node 18 migration checkpoint. Reconcile package
+   metadata and lockfiles, run Angular migrations, replace tooling that prevents
+   installation on the checkpoint runtime, and verify focused and full builds.
+   This is a migration waypoint, not a supported production release.
+2. Upgrade sequentially through Angular 17, 18, and 19 while moving CI/build
+   execution to Node 22 when the Angular compatibility table permits it. Remove
+   Protractor, TSLint/codelyzer, and other retired tooling only when required by
+   the corresponding migration.
+3. Upgrade through Angular 20 and 21 on Node 24, reviewing Material, routing,
+   RxJS, localization, and third-party component behavior at each checkpoint.
+4. Upgrade to Angular 22 and Node 26. Align the backend runtime, package engines,
+   development container, CI matrices, Docker build/runtime stages, and PM2 pin.
+5. Run the full frontend and backend suites, production frontend build, and
+   cache-only Buildx assembly for `linux/amd64` and `linux/arm64`. Then perform an
+   explicitly approved isolated runtime test with copied data before considering
+   a production cutover.
+
+### Implementation status
+
+- The Angular 16 / Node 18 checkpoint was committed as `d1568b81`. The ten
+  legacy smoke-test TestBeds were then supplied with their required providers,
+  making the full frontend suite green before the next framework migration.
+- Angular 17 was applied and verified before proceeding. Its Material migration
+  moved the fork's light and dark themes to the supported module-based Sass API.
+- The completed implementation checkpoint uses Angular core 22.2, CLI 22.2,
+  Material and CDK 22.2, TypeScript 6.0, Zone.js 0.15, and Node 26.13.0. Docker
+  runtime and frontend
+  stages, both package engine declarations, both CI workflows, and the
+  development container are aligned to Node 26.13.0.
+- Angular 18's migration replaced `HttpClientModule` with provider-based HTTP
+  configuration in the application module and affected service test.
+- Angular 19's migration explicitly marks declarations owned by the existing
+  `AppModule` as non-standalone. Node type declarations were aligned to Node 22,
+  and the router guard's synchronous result is wrapped in its declared promise.
+- Angular 20's migration moved TypeScript module resolution to `bundler`, moved
+  the `DOCUMENT` token to `@angular/core`, and added supported workspace
+  generation defaults. Imports used only as types were marked type-only so the
+  production build does not emit invalid runtime imports.
+- Angular 21 converted legacy structural directives in 44 templates to block
+  control flow. Its test scheduler required explicit fixture stabilization and
+  teardown in the input-dialog and recent-videos regression suites.
+- Angular 22 added eager change detection metadata, retained the XHR HTTP
+  backend explicitly, and applied its safe-navigation migrations. TypeScript 6
+  uses explicit non-strict compatibility for this legacy codebase and scoped
+  path mappings instead of the deprecated `baseUrl` option.
+- Node 26 required Mocha 12 for the backend test runner and `jsonwebtoken`
+  9.0.3 so its JWA dependency no longer executes the removed `SlowBuffer` API.
+- Angular's migrations removed a deprecated router guard interface from
+  `PostsService`. The test bootstrap now uses the supported `zone.js/testing`
+  entry point. The Material 16 selection-list event shape is handled without
+  reading a private field, with a focused regression test for selection and
+  deselection.
+- The retired standalone `karma-cli` dependency was removed because its engine
+  declaration supports no Node release newer than Node 6. The two lockfiles
+  were regenerated from the reviewed manifests; the existing `ajv` peer warning
+  remains and must be resolved in a later dependency checkpoint.
+- This remains a non-deployable migration waypoint. It has not been published,
+  loaded, run, or deployed.
+
+Verification:
+
+- Angular 16 focused `RecentVideosComponent` suite: 30 passing;
+- Angular 17 full frontend suite: 366 passing, followed by a successful
+  production build;
+- Angular 18 full frontend suite on Node 22.23.2: 366 passing;
+- Angular 18 production build on Node 22.23.2: passed, with the inherited
+  `file-saver` CommonJS and custom-file-label selector warnings;
+- Angular 19 full frontend suite on Node 22.23.2: 366 passing;
+- Angular 19 production build on Node 22.23.2: passed, with the inherited
+  `file-saver` CommonJS warning and a Sass `@import` deprecation warning;
+- Angular 20 full frontend suite on Node 24.22.2: 366 passing;
+- Angular 20 production build on Node 24.22.2: passed, with the inherited
+  `file-saver` CommonJS warning and unsupported Browserslist entries reported;
+- Angular 21 full frontend suite on Node 24.22.2: 366 passing;
+- Angular 21 production build and cache-only Buildx assembly for both supported
+  architectures on Node 24.22.2: passed;
+- Angular 22 full frontend suite on Node 26.13.0: 366 passing;
+- Angular 22 production build on Node 26.13.0: passed, with inherited Sass
+  `@import`, `file-saver` CommonJS, Browserslist, and legacy-builder warnings;
+- full backend suite on Node 26.13.0: 140 passing and 30 pending; two tests fail
+  because FFmpeg is absent on the host, matching the existing host limitation;
+- Node 26 cache-only Buildx assembly: passed for `linux/amd64` and
+  `linux/arm64`. No image was loaded, tagged, run, or published;
+- frontend-only browser smoke on the host Node 22 development server: the
+  unauthenticated login and registration tabs, responsive navigation drawer,
+  settings menu, light and dark themes, and About dialog rendered and remained
+  interactive. This is visual evidence for the migrated templates only; no
+  backend was running and the exact Node 26 build remains covered by the
+  automated and cache-only checks above;
+- isolated ARM64 runtime smoke using fresh temporary mounts and host port
+  `18084`: the Node 26.13.0 image built and loaded, created its local database,
+  configuration, and ARM64 yt-dlp binary, reached Docker health `healthy`,
+  returned HTTP 200, and reported zero container restarts. A first-process
+  failure exposed an empty-appdata ordering bug: `notifications.js` read config
+  during module import before `app.js` called `config.initialize()`. PM2
+  restarted that process and the original image recovered, but a clean first
+  process is required;
+- configuration first access now creates the default file idempotently before
+  reading it. The process-isolated regression test failed with the observed
+  `Cannot use 'in' operator ... in null` stack before the fix and passes after
+  it. The full backend suite reports 141 passing and 30 pending; its two failures
+  remain the known missing-host-FFmpeg tests;
+- rebuilt ARM64 runtime smoke after the empty-appdata fix: a fresh synthetic
+  mount started without the earlier TypeError or PM2 child-process exit, reached
+  Docker health `healthy`, and returned HTTP 200. The container reported Node
+  26.13.0 and yt-dlp listed Chrome and Safari targets backed by `curl_cffi`. A
+  persistence marker created as UID/GID `1026:101` survived a container restart;
+  health and HTTP 200 recovered with zero automatic restarts. The test container
+  was removed after validation;
+- `git diff --check`: passed before the final documentation update and is rerun
+  during final review.
+
+Remaining checkpoint risks:
+
+- The framework and Node target passed the corrected ARM64 empty-mount startup,
+  health, restart, and basic persistence checks. The checkpoint is not approved
+  for deployment until copied-data and target-NAS validation are complete.
+- The regenerated frontend dependency tree reports 35 audit findings and the
+  backend development tree reports 45. No automatic audit fix was applied.
+- Angular 22 reports that the legacy Webpack browser and Karma builders are
+  deprecated. Migrating build and test systems is separate follow-up work.
+- The unauthenticated light/dark theme and primary responsive shell passed a
+  browser-level smoke review, but authenticated pages and data-dependent
+  dialogs still require visual review against an isolated running backend.
+- The corrected isolated container established startup, health, restart, and
+  basic write persistence for synthetic empty mounts. It did not establish
+  copied-data behavior, permissions on the NAS, or reverse-proxy validation.
+
 ## Delivery sequence
 
 1. Baseline and startup hardening (included in this initial scaffold).

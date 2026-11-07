@@ -59,9 +59,10 @@ describe('InputDialogComponent', () => {
     expect(component.inputSubmitted).toBeTrue();
   });
 
-  it('re-enables submission when pending state is cleared', () => {
+  it('re-enables submission when pending state is cleared', async () => {
     component.setPending(true);
     component.inputText = 'Synthetic name';
+    await fixture.whenStable();
     fixture.detectChanges();
 
     const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
@@ -70,6 +71,7 @@ describe('InputDialogComponent', () => {
     expect(buttons.every(button => button.disabled)).toBeTrue();
 
     component.setPending(false);
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(input.readOnly).toBeFalse();

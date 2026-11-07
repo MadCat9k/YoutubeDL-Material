@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Task, TaskType } from 'api-types';
 import { PostsService } from 'app/posts.services';
@@ -6,9 +6,11 @@ import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-task-settings',
-  templateUrl: './task-settings.component.html',
-  styleUrls: ['./task-settings.component.scss']
+    selector: 'app-task-settings',
+    templateUrl: './task-settings.component.html',
+    styleUrls: ['./task-settings.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class TaskSettingsComponent implements OnInit, OnDestroy {
   task_key: TaskType;

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, Inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, Inject, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { PostsService } from 'app/posts.services';
 import { ArgModifierDialogComponent } from '../arg-modifier-dialog/arg-modifier-dialog.component';
@@ -6,9 +6,11 @@ import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-edit-subscription-dialog',
-  templateUrl: './edit-subscription-dialog.component.html',
-  styleUrls: ['./edit-subscription-dialog.component.scss']
+    selector: 'app-edit-subscription-dialog',
+    templateUrl: './edit-subscription-dialog.component.html',
+    styleUrls: ['./edit-subscription-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class EditSubscriptionDialogComponent implements OnInit, OnDestroy {
 

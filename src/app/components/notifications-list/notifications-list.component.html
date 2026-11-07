@@ -1,42 +1,46 @@
 <cdk-virtual-scroll-viewport itemSize="50" class="viewport" minBufferPx="1200" maxBufferPx="1200">
-    <div #notification_parent class="notification-card-parent card-radius mat-elevation-z2" *cdkVirtualFor="let notification of notifications; let i = index;">
-        <mat-card class="notification-card card-radius" [class.unread-notification]="!notification.read">
-            <mat-card-header>
-                <mat-card-subtitle>
-                    <div>
-                        <span class="notification-timestamp">{{notification.timestamp * 1000 | date:'short'}}</span>
-                    </div>
-                </mat-card-subtitle>
-                <mat-card-title>
-                    <ng-container *ngIf="NOTIFICATION_PREFIX[notification.type]">
-                        {{NOTIFICATION_PREFIX[notification.type]}}
-                    </ng-container>
-                </mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-                <ng-container *ngIf="NOTIFICATION_SUFFIX_KEY[notification.type]">
-                    <div style="word-break: break-word">
-                        {{getNotificationDetail(notification)}}
-                    </div>
-                </ng-container>
-            </mat-card-content>
-            <mat-card-actions class="notification-actions">
-                <button class="notification-menu-trigger" mat-stroked-button [matMenuTriggerFor]="notificationMenu">
-                    <mat-icon aria-hidden="true">more_horiz</mat-icon>
-                    <span i18n="Actions">Actions</span>
-                </button>
-                <mat-menu #notificationMenu="matMenu">
-                    <button (click)="emitDeleteNotification(notification.uid)" mat-menu-item>
-                        <mat-icon aria-hidden="true">close</mat-icon>
-                        <span i18n="Remove">Remove</span>
-                    </button>
-                    <button *ngFor="let action of notification.actions" (click)="emitNotificationAction(notification, action)" mat-menu-item>
-                        <mat-icon aria-hidden="true">{{NOTIFICATION_ICON[action]}}</mat-icon>
-                        <span>{{NOTIFICATION_ACTION_TO_STRING[action]}}</span>
-                    </button>
-                </mat-menu>
-            </mat-card-actions>
-            <span *ngIf="!notification.read" class="dot"></span>
-        </mat-card>
-    </div>
+  <div #notification_parent class="notification-card-parent card-radius mat-elevation-z2" *cdkVirtualFor="let notification of notifications; let i = index;">
+    <mat-card class="notification-card card-radius" [class.unread-notification]="!notification.read">
+      <mat-card-header>
+        <mat-card-subtitle>
+          <div>
+            <span class="notification-timestamp">{{notification.timestamp * 1000 | date:'short'}}</span>
+          </div>
+        </mat-card-subtitle>
+        <mat-card-title>
+          @if (NOTIFICATION_PREFIX[notification.type]) {
+            {{NOTIFICATION_PREFIX[notification.type]}}
+          }
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (NOTIFICATION_SUFFIX_KEY[notification.type]) {
+          <div style="word-break: break-word">
+            {{getNotificationDetail(notification)}}
+          </div>
+        }
+      </mat-card-content>
+      <mat-card-actions class="notification-actions">
+        <button class="notification-menu-trigger" mat-stroked-button [matMenuTriggerFor]="notificationMenu">
+          <mat-icon aria-hidden="true">more_horiz</mat-icon>
+          <span i18n="Actions">Actions</span>
+        </button>
+        <mat-menu #notificationMenu="matMenu">
+          <button (click)="emitDeleteNotification(notification.uid)" mat-menu-item>
+            <mat-icon aria-hidden="true">close</mat-icon>
+            <span i18n="Remove">Remove</span>
+          </button>
+          @for (action of notification.actions; track action) {
+            <button (click)="emitNotificationAction(notification, action)" mat-menu-item>
+              <mat-icon aria-hidden="true">{{NOTIFICATION_ICON[action]}}</mat-icon>
+              <span>{{NOTIFICATION_ACTION_TO_STRING[action]}}</span>
+            </button>
+          }
+        </mat-menu>
+      </mat-card-actions>
+      @if (!notification.read) {
+        <span class="dot"></span>
+      }
+    </mat-card>
+  </div>
 </cdk-virtual-scroll-viewport>

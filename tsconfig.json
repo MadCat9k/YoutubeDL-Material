@@ -1,13 +1,12 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "downlevelIteration": true,
     "importHelpers": true,
     "outDir": "./dist/out-tsc",
-    "baseUrl": "src",
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "strict": false,
+    "moduleResolution": "bundler",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "ES2022",
@@ -16,10 +15,11 @@
     "typeRoots": [
       "node_modules/@types"
     ],
-    "lib": [
-      "es2019",
-      "dom"
-    ],
+    "paths": {
+      "app/*": ["./src/app/*"],
+      "api-types": ["./src/api-types/index"],
+      "api-types/*": ["./src/api-types/*"]
+    },
     "module": "es2020",
     "useDefineForClassFields": false
   },

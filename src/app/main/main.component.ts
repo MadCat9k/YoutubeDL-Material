@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ElementRef, ViewChild, ViewChildren, QueryList } from '@angular/core';
+import { Component, OnDestroy, OnInit, ElementRef, ViewChild, ViewChildren, QueryList, ChangeDetectionStrategy } from '@angular/core';
 import {PostsService} from '../posts.services';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
@@ -14,9 +14,11 @@ import { RecentVideosComponent } from 'app/components/recent-videos/recent-video
 import { DatabaseFile, Download, FileType, Playlist } from 'api-types';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './main.component.html',
-  styleUrls: ['./main.component.css']
+    selector: 'app-root',
+    templateUrl: './main.component.html',
+    styleUrls: ['./main.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class MainComponent implements OnInit, OnDestroy {
   youtubeAuthDisabledOverride = false;
