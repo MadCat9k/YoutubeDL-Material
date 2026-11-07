@@ -71,7 +71,7 @@ is not mounted by the test Stack.
 
 5. Confirm the rendered Stack has all of these properties before deployment:
 
-   - image `ghcr.io/madcat9k/youtubedl-material:sha-10d9463`;
+   - image `ghcr.io/madcat9k/youtubedl-material:sha-248c38b`;
    - container name `YouTube-Downloader-Test`;
    - host port `18084` mapped to container port `17442`;
    - UID `1026` and GID `101`, unless the NAS uses different owners;

@@ -7,19 +7,23 @@ risking the existing local database, users, subscriptions, or media library.
 Security changes and NAS deployment are separate phases: passing CI or building
 an image does not authorize or prove a safe production deployment.
 
-## Current release candidate
+## Current release image
 
-- Merged source commit: `10d9463` (`Modernize runtime to Node 26 and Angular 22`)
-- Immutable test image: `ghcr.io/madcat9k/youtubedl-material:sha-10d9463`
+- Merged source commit: `248c38b` (Node 26 / Angular 22 modernization plus the
+  stable subscription-navigation drawer width fix)
+- Immutable test image: `ghcr.io/madcat9k/youtubedl-material:sha-248c38b`
 - Image index digest:
-  `sha256:7b72b76542836f2999308ef499b412a4db815123ec1c00e4aeb9bde0d3172d59`
+  `sha256:483ecb6c4be544a2241a0419871c201baf7da716874537efd7660cc4b17e8fba`
 - Published platforms: `linux/amd64` and `linux/arm64`
-- Pull-request tests, CodeQL, continuous integration, and the merged-master
-  multi-architecture image publication completed successfully.
+- Tests, CodeQL, continuous integration, and the merged-master
+  multi-architecture image publication completed successfully for `248c38b`.
 
-This image is the current candidate for the isolated NAS procedure below. It is
-not approved for production until copied-data, permissions, restart,
-persistence, and reverse-proxy checks pass on the target NAS.
+On 2026-11-07, the user reported that this immutable image tested successfully
+on the target Synology NAS. No NAS logs, host metadata, subscription data, or
+other sensitive runtime evidence is stored in the repository. This report
+closes the general target-NAS runtime checkpoint, but it does not close the
+separate CodeQL, authentication, rate-limiting, dependency, backup, or rollback
+work described below.
 
 ## Historical security-review baseline
 
@@ -317,3 +321,12 @@ normal subscription cycle and a deliberate container restart without regression.
   though only `audio` and `video` passed validation. Path construction now uses
   fresh server-owned string literals selected from that two-value allowlist,
   never the request value itself. No CodeQL findings were dismissed.
+- 2026-11-07: `248c38b` passed the fork's Tests, CodeQL, continuous-integration,
+  and multi-architecture publication workflows. The published immutable image
+  contains `linux/amd64` and `linux/arm64` manifests. The user subsequently
+  reported successful testing on the target NAS; detailed NAS logs and runtime
+  data were intentionally not added to the repository.
+- 2026-11-07: the GitHub code-scanning API still reported 144 open inherited
+  alerts: 142 high and 2 medium, including 128 missing-rate-limiting reports.
+  Open counts are triage inputs rather than proof that every report is reachable,
+  but the security closeout remains separate follow-up work.

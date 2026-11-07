@@ -1,7 +1,7 @@
 services:
   youtubedownloader-test:
     container_name: YouTube-Downloader-Test
-    image: ghcr.io/madcat9k/youtubedl-material:sha-10d9463
+    image: ghcr.io/madcat9k/youtubedl-material:sha-248c38b
     user: "0:0"
     init: true
 
