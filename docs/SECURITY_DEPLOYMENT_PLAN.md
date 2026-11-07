@@ -7,7 +7,21 @@ risking the existing local database, users, subscriptions, or media library.
 Security changes and NAS deployment are separate phases: passing CI or building
 an image does not authorize or prove a safe production deployment.
 
-## Known-good baseline
+## Current release candidate
+
+- Merged source commit: `10d9463` (`Modernize runtime to Node 26 and Angular 22`)
+- Immutable test image: `ghcr.io/madcat9k/youtubedl-material:sha-10d9463`
+- Image index digest:
+  `sha256:7b72b76542836f2999308ef499b412a4db815123ec1c00e4aeb9bde0d3172d59`
+- Published platforms: `linux/amd64` and `linux/arm64`
+- Pull-request tests, CodeQL, continuous integration, and the merged-master
+  multi-architecture image publication completed successfully.
+
+This image is the current candidate for the isolated NAS procedure below. It is
+not approved for production until copied-data, permissions, restart,
+persistence, and reverse-proxy checks pass on the target NAS.
+
+## Historical security-review baseline
 
 - Reviewed source/image commit: `fd31fda` (`Repair security and backend workflows`)
 - Immutable test image: `ghcr.io/madcat9k/youtubedl-material:sha-fd31fda`

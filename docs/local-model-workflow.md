@@ -4,9 +4,9 @@ Codex may delegate one bounded implementation draft to a local Ollama model.
 Ollama is a worker, not an authority: Codex owns the design, reviews the complete
 patch, runs verification, and decides whether any part is accepted.
 
-Run this workflow with Node 16 or newer, matching the frontend build stage in the
-Dockerfile. The root package's historical Node 12 engine declaration predates the
-current Docker toolchain and is not sufficient for these local scripts.
+Run this workflow with Node 26, matching the root package engine declaration and
+the frontend build stage in the Dockerfile. Node 26.13.0 is the reviewed runtime
+used by the Docker image and CI workflows.
 
 ## Safety boundary
 

@@ -37,22 +37,24 @@ recorded in [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md) and
 
 ## Status and limitations
 
-The functional stabilization and six-phase UI/UX plan are complete. Focused
-frontend and backend suites, production frontend builds, two-platform cache-only
-image builds, and an isolated validation container have exercised the changed
-areas. These checks do not replace validation on the target Synology NAS.
+The functional stabilization, six-phase UI/UX plan, and Node 26 / Angular 22
+modernization are complete. Focused frontend and backend suites, production
+frontend builds, two-platform image publication, and isolated validation
+containers have exercised the changed areas. These checks do not replace
+validation on the target Synology NAS.
 
-- The Node modernization implementation now uses Angular 22 and Node.js
-  26.13.0. Automated tests, the production frontend build, and cache-only
-  multi-architecture image assembly pass. An isolated ARM64 container also
-  passes clean empty-mount startup, health, restart, and basic persistence
-  checks, but the result still requires the copied-data NAS validation described
-  below before deployment.
+- The Node modernization implementation uses Angular 22 and Node.js 26.13.0.
+  Automated tests, the production frontend build, and multi-architecture image
+  publication pass. Isolated ARM64 containers also pass clean empty-mount
+  startup, health, restart, basic persistence, and loading of preserved local
+  validation data. The result still requires the copied-data NAS validation
+  described below before deployment.
   Detailed evidence is tracked in `docs/PROJECT_PLAN.md`.
-- The inherited dependency advisories have not yet been modernized.
-- Runtime observation of the `linux/arm64` image on the target NAS is still
-  required; cache-only Buildx validation proves image assembly, not runtime
-  health or bind-mount permissions.
+- The inherited dependency advisories remain unresolved; no automatic audit fix
+  was applied during the runtime modernization.
+- Runtime observation of the matching image architecture on the target NAS is
+  still required; local validation does not prove NAS bind-mount permissions or
+  reverse-proxy behavior.
 - Production migration still requires an isolated test using copied data,
   followed by a fresh backup and a controlled cutover. Do not run old and new
   containers against the same writable mounts.
@@ -96,7 +98,7 @@ areas. These checks do not replace validation on the target Synology NAS.
 
 [`docker-compose.synology.portainer.test.yml`](docker-compose.synology.portainer.test.yml)
 provides the same isolated test layout without a local image build. It pulls the
-public, immutable GHCR image `ghcr.io/madcat9k/youtubedl-material:sha-e603edc`
+public, immutable GHCR image `ghcr.io/madcat9k/youtubedl-material:sha-10d9463`
 and defaults to port `18084` and the dedicated test roots listed above.
 
 Before deploying the Stack, populate those roots with independent copies of the
