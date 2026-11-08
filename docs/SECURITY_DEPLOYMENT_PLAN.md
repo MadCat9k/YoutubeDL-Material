@@ -374,3 +374,7 @@ normal subscription cycle and a deliberate container restart without regression.
   backend suite passes 154 tests with 30 intentionally pending in a disposable
   workspace with synthetic fixtures. Broader settings, task, download-manager,
   subscription, and other route-permission boundaries remain separate slices.
+- 2026-11-08: PR #9's first CodeQL policy check correctly identified the newly
+  authorized user and role listing handlers as missing rate limits. Both routes
+  now share the bounded `userRead` policy before authentication; no alert was
+  dismissed or suppressed.
