@@ -35,6 +35,14 @@ const AUTHENTICATION_POLICIES = Object.freeze({
     userRead: Object.freeze({
         windowMs: 15 * 60 * 1000,
         max: 60
+    }),
+    settingsRead: Object.freeze({
+        windowMs: 15 * 60 * 1000,
+        max: 60
+    }),
+    settingsMutation: Object.freeze({
+        windowMs: 15 * 60 * 1000,
+        max: 30
     })
 });
 
@@ -57,7 +65,9 @@ exports.createAuthenticationLimiters = (overrides = {}) => {
         apiKeyGeneration: createLimiter(policy('apiKeyGeneration')),
         passwordChange: createLimiter(policy('passwordChange')),
         userMutation: createLimiter(policy('userMutation')),
-        userRead: createLimiter(policy('userRead'))
+        userRead: createLimiter(policy('userRead')),
+        settingsRead: createLimiter(policy('settingsRead')),
+        settingsMutation: createLimiter(policy('settingsMutation'))
     };
 };
 

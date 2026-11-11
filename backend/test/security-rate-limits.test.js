@@ -99,7 +99,9 @@ describe('Authentication rate limits', function() {
             apiKeyGeneration: {windowMs: 60 * 60 * 1000, max: 5},
             passwordChange: {windowMs: 60 * 60 * 1000, max: 5},
             userMutation: {windowMs: 15 * 60 * 1000, max: 30},
-            userRead: {windowMs: 15 * 60 * 1000, max: 60}
+            userRead: {windowMs: 15 * 60 * 1000, max: 60},
+            settingsRead: {windowMs: 15 * 60 * 1000, max: 60},
+            settingsMutation: {windowMs: 15 * 60 * 1000, max: 30}
         });
     });
 });

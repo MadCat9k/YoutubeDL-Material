@@ -20,8 +20,13 @@ describe('SettingsComponent', () => {
   beforeEach(() => {
     postsService = {
       config: {Advanced: {multi_user_mode: false}},
+      debugMode: false,
       initialized: false,
       service_initialized: new Subject<boolean>(),
+      getSettingsConfig: jasmine.createSpy('getSettingsConfig').and.returnValue(of({
+        config_file: {YoutubeDLMaterial: {Host: {port: '17442'}, Advanced: {multi_user_mode: false}}},
+        success: true
+      })),
       getLatestGithubRelease: () => of(null),
       getDBInfo: jasmine.createSpy('getDBInfo').and.returnValue(of({using_local_db: true})),
       generateNewAPIKey: jasmine.createSpy('generateNewAPIKey'),
@@ -131,6 +136,38 @@ describe('SettingsComponent', () => {
       deleteCategory: 'Delete category',
       addCategory: 'Add category'
     });
+  });
+
+  it('loads the complete protected settings config instead of the public bootstrap config', () => {
+    postsService.config = {Advanced: {multi_user_mode: false}, API: {API_key: undefined}};
+    postsService.getSettingsConfig.and.returnValue(of({
+      config_file: {
+        YoutubeDLMaterial: {
+          Host: {port: '17442'},
+          Advanced: {multi_user_mode: false},
+          API: {API_key: 'synthetic-settings-key'}
+        }
+      },
+      success: true
+    }));
+
+    component.getConfig();
+
+    expect(postsService.getSettingsConfig).toHaveBeenCalled();
+    expect(component.initial_config.API.API_key).toBe('synthetic-settings-key');
+    expect(component.new_config).toEqual(component.initial_config);
+    expect(component.new_config).not.toBe(component.initial_config);
+    expect(component.loading_config).toBeFalse();
+  });
+
+  it('does not populate settings from a failed protected config request', () => {
+    postsService.getSettingsConfig.and.returnValue(throwError(() => new Error('synthetic failure')));
+
+    component.getConfig();
+
+    expect(component.initial_config).toBeNull();
+    expect(component.new_config).toBeNull();
+    expect(component.loading_config).toBeFalse();
   });
 
   it('finds settings sections by labels and help concepts', () => {
@@ -908,8 +945,13 @@ describe('SettingsComponent layout', () => {
           provide: PostsService,
           useValue: {
             config: {Advanced: {multi_user_mode: false}},
+            debugMode: false,
             initialized: false,
             service_initialized: new Subject<boolean>(),
+            getSettingsConfig: () => of({
+              config_file: {YoutubeDLMaterial: {Host: {port: '17442'}, Advanced: {multi_user_mode: false}}},
+              success: true
+            }),
             getLatestGithubRelease: () => of(null),
             theme: null
           }
