@@ -200,8 +200,21 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   getConfig(): void {
-    this.initial_config = this.postsService.config;
-    this.new_config = JSON.parse(JSON.stringify(this.initial_config));
+    if (this.loading_config) return;
+
+    this.loading_config = true;
+    this.postsService.getSettingsConfig().pipe(
+      takeUntil(this.destroyed),
+      finalize(() => this.loading_config = false)
+    ).subscribe({
+      next: res => {
+        const result = this.postsService.debugMode ? res : res['config_file'];
+        if (!result?.YoutubeDLMaterial) return;
+        this.initial_config = result.YoutubeDLMaterial;
+        this.new_config = JSON.parse(JSON.stringify(this.initial_config));
+      },
+      error: () => undefined
+    });
   }
 
   settingsSame(): boolean {

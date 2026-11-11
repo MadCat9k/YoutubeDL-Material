@@ -778,8 +778,23 @@ paths:
     get:
       tags: []
       summary: Get config
-      description: "Gets the config file stored in 'default.json'"
+      description: Gets the public application bootstrap configuration. Credential and settings-only fields are omitted.
       operationId: get-config
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+      security:
+        - Auth query parameter: []
+  /api/settingsConfig:
+    get:
+      tags: []
+      summary: Get settings config
+      description: Gets the complete configuration for a user with settings permission.
+      operationId: get-settingsConfig
       responses:
         '200':
           description: OK

@@ -163,11 +163,11 @@ normal subscription cycle and a deliberate container restart without regression.
 | Remote-file SSRF | Confirmed weakness; draft fix implemented | Current callers use fixed GitHub repositories, but the generic helper previously trusted redirects and DNS. Focused tests now cover host/protocol restrictions, per-hop validation, private addresses, size limits, failed responses, and atomic replacement. Re-run CodeQL before closing. |
 | Update archive traversal | Confirmed and reachable; draft fix implemented | The updater previously joined archive paths directly to the backend root. Tests now cover traversal, absolute/foreign roots, release-tag traversal, persistent `appdata`, valid extraction, and existing symlink escapes. Re-run CodeQL before closing. |
 | Clear-text logging | Three confirmed sites; draft fix implemented | API keys and downloader argument values are no longer included. Fixed-message tests use synthetic secret values. Re-run CodeQL before closing. |
-| Credential fields in API responses | Confirmed bcrypt-hash exposure; response allowlist implemented | Registration, login, JWT refresh, and user-list responses previously serialized stored user records directly, including `passhash`. Public user responses now use an explicit field allowlist; user/role listings require `settings` permission in multi-user mode and share a bounded read limit. The larger JWT query-string transport issue remains separate. |
+| Credential fields in API responses | Confirmed user and config exposure; response allowlists implemented | Registration, login, JWT refresh, and user-list responses previously serialized stored user records directly, including `passhash`. The public config endpoint also returned settings-only API keys, notification tokens and URLs, LDAP credentials, and the MongoDB connection string. Public user and config responses now use explicit field allowlists; complete config and user/role listings require `settings` permission in multi-user mode and use bounded read limits. The browser-based YouTube search still requires its configured YouTube API key in the public bootstrap response, and the larger JWT query-string transport issue remains separate. |
 | Database query/filter injection | Confirmed; draft central guard implemented | This project uses MongoDB-style filters and a local JSON equivalent, not SQL. Request-shaped object conditions could alter MongoDB queries, while an unknown object condition could match the first local record. Both paths now reject object/operator filters unless server code constructs an allowlisted condition. Update objects also reject MongoDB operator and prototype-related keys. Add endpoint-specific field allowlists separately. |
 | Session cookie / CSRF | Alert is secondary to the actual credential design | The Angular client sends a fixed public token on every API request. In multi-user mode it additionally stores a JWT in local storage and sends it as a query parameter; sessions are initialized but are not the primary API authorization mechanism. Cookie flags alone would not fix token leakage or the single-user trust model. Keep the test deployment LAN-only and require reverse-proxy access control or a dedicated authentication redesign before internet exposure. |
 | Request-derived paths | Confirmed weaknesses; persistent-file slices implemented | Media downloads, generated container archives, deletion, Twitch chat files, cookies upload, subscription folder names, and user-folder deletion are now constrained or validated; archive names are random rather than request-derived; and database restore accepts only existing generated backup files beneath the backup root. Re-run CodeQL and review the remaining database/application findings before closing the affected alerts. |
-| Missing rate limiting | Authentication and user-mutation slices implemented; architectural backlog remains | Cookies upload, login, registration, JWT refresh, API-key rotation, password changes, and privileged user-management mutations now have bounded policies. Login and JWT refresh count only failed responses to reduce shared-proxy lockouts. Telegram, updater, task, and other mutation routes remain; choose limits compatible with subscription polling and reverse proxies. |
+| Missing rate limiting | Authentication, user, and settings slices implemented; architectural backlog remains | Cookies upload, login, registration, JWT refresh, API-key rotation, password changes, privileged user-management mutations, settings reads, and settings mutations now have bounded policies. Login and JWT refresh count only failed responses to reduce shared-proxy lockouts. Telegram, task, download-manager, subscription, and other mutation routes remain; choose limits compatible with subscription polling and reverse proxies. |
 | Prototype pollution | Confirmed task-key weakness fixed; frontend findings remain | Task operations now accept only own keys from the fixed server registry, so inherited names such as `__proto__` and `constructor` cannot reach registry assignment. Database updates already reject prototype-related keys recursively. Review the separate Angular findings and rerun CodeQL before closing. |
 | Incomplete sanitization | Confirmed RSS weakness fixed; extension finding is separate | RSS thumbnail URLs now escape every ampersand rather than only the first. The Chrome extension's YouTube substring check is not loaded by the NAS container and will be handled as a separate extension fix. Four URL-substring alerts are synthetic test assertions. |
 
@@ -378,3 +378,24 @@ normal subscription cycle and a deliberate container restart without regression.
   authorized user and role listing handlers as missing rate limits. Both routes
   now share the bounded `userRead` policy before authentication; no alert was
   dismissed or suppressed.
+- 2026-11-11: PR #10 merged the user-response allowlist and user/role read
+  boundary into `master`. GitHub did not create workflow runs for the final PR
+  head or merge commit, so that merge has local test evidence but no GitHub
+  Actions or published-image evidence. Do not treat the older release image as
+  containing PR #10.
+- 2026-11-11: the settings boundary now requires `settings` permission for the
+  complete configuration, database inspection/transfer, category mutations,
+  cookies upload, updater controls, server restart, and log access/clearing in
+  multi-user mode while preserving single-user behavior. Settings reads allow
+  60 requests and mutations 30 requests per client address per 15 minutes.
+  The public bootstrap config is now an explicit allowlist rather than the full
+  `default.json`; settings-only public API credentials, notification endpoints
+  and tokens, LDAP configuration, database connection strings, and other admin
+  values are omitted. The existing client-side YouTube search still receives
+  the configured YouTube API key and needs a separate proxy redesign to remove
+  that browser exposure without dropping the feature.
+- 2026-11-11: 10 focused backend security tests and 73 focused Settings tests
+  pass. The production Angular build passes, and the full backend suite passes
+  156 tests with 30 intentionally pending in the existing Node 26 local image,
+  using a disposable backend copy and synthetic fixtures. No subscription or
+  media service was contacted.

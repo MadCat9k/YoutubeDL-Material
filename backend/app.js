@@ -39,6 +39,7 @@ const notifications_api = require('./notifications');
 const security_rate_limits = require('./security-rate-limits');
 const security_authorization = require('./security-authorization');
 const user_response = require('./security-user-response');
+const config_response = require('./security-config-response');
 
 var app = express();
 const authentication_limiters = security_rate_limits.createAuthenticationLimiters();
@@ -630,6 +631,14 @@ const optionalJwt = async function (req, res, next) {
 };
 
 app.get('/api/config', function(req, res) {
+    let config_file = config_response.toPublicConfig(config_api.getConfigFile());
+    res.send({
+        config_file: config_file,
+        success: !!config_file
+    });
+});
+
+app.get('/api/settingsConfig', authentication_limiters.settingsRead, optionalJwt, user_authorization.requireSettingsPermission, function(req, res) {
     let config_file = config_api.getConfigFile();
     res.send({
         config_file: config_file,
@@ -637,7 +646,7 @@ app.get('/api/config', function(req, res) {
     });
 });
 
-app.post('/api/setConfig', optionalJwt, function(req, res) {
+app.post('/api/setConfig', authentication_limiters.settingsMutation, optionalJwt, user_authorization.requireSettingsPermission, function(req, res) {
     let new_config_file = req.body.new_config_file;
     if (new_config_file && new_config_file['YoutubeDLMaterial']) {
         let success = config_api.setConfigFile(new_config_file);
@@ -655,18 +664,18 @@ app.get('/api/versionInfo', (req, res) => {
     res.send({version_info: version_info});
 });
 
-app.post('/api/restartServer', optionalJwt, (req, res) => {
+app.post('/api/restartServer', authentication_limiters.settingsMutation, optionalJwt, user_authorization.requireSettingsPermission, (req, res) => {
     // delayed by a little bit so that the client gets a response
     setTimeout(() => {utils.restartServer()}, 100);
     res.send({success: true});
 });
 
-app.get('/api/getDBInfo', optionalJwt, async (req, res) => {
+app.get('/api/getDBInfo', authentication_limiters.settingsRead, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     const db_info = await db_api.getDBStats();
     res.send(db_info);
 });
 
-app.post('/api/transferDB', optionalJwt, async (req, res) => {
+app.post('/api/transferDB', authentication_limiters.settingsMutation, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     const local_to_remote = req.body.local_to_remote;
     let success = null;
     let error = '';
@@ -683,7 +692,7 @@ app.post('/api/transferDB', optionalJwt, async (req, res) => {
     res.send({success: success, error: error});
 });
 
-app.post('/api/testConnectionString', optionalJwt, async (req, res) => {
+app.post('/api/testConnectionString', authentication_limiters.settingsMutation, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     const connection_string = req.body.connection_string;
     let success = null;
     let error = '';
@@ -1007,7 +1016,7 @@ app.post('/api/getAllCategories', optionalJwt, async (req, res) => {
     res.send({categories: categories});
 });
 
-app.post('/api/createCategory', optionalJwt, async (req, res) => {
+app.post('/api/createCategory', authentication_limiters.settingsMutation, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     const name = req.body.name;
     const new_category = {
         name: name,
@@ -1024,7 +1033,7 @@ app.post('/api/createCategory', optionalJwt, async (req, res) => {
     });
 });
 
-app.post('/api/deleteCategory', optionalJwt, async (req, res) => {
+app.post('/api/deleteCategory', authentication_limiters.settingsMutation, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     const category_uid = req.body.category_uid;
 
     await db_api.removeRecord('categories', {uid: category_uid});
@@ -1034,13 +1043,13 @@ app.post('/api/deleteCategory', optionalJwt, async (req, res) => {
     });
 });
 
-app.post('/api/updateCategory', optionalJwt, async (req, res) => {
+app.post('/api/updateCategory', authentication_limiters.settingsMutation, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     const category = req.body.category;
     await db_api.updateRecord('categories', {uid: category.uid}, category)
     res.send({success: true});
 });
 
-app.post('/api/updateCategories', optionalJwt, async (req, res) => {
+app.post('/api/updateCategories', authentication_limiters.settingsMutation, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     const categories = req.body.categories;
     await db_api.removeAllRecords('categories');
     await db_api.insertRecordsIntoTable('categories', categories);
@@ -1499,7 +1508,7 @@ const upload_cookies_limiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false
 });
-app.post('/api/uploadCookies', upload_cookies_limiter, optionalJwt, function(req, res, next) {
+app.post('/api/uploadCookies', upload_cookies_limiter, optionalJwt, user_authorization.requireSettingsPermission, function(req, res, next) {
     upload_cookies(req, res, function(error) {
         if (!error) return next();
         logger.warn('Rejected cookies file upload.');
@@ -1517,7 +1526,7 @@ app.post('/api/uploadCookies', upload_cookies_limiter, optionalJwt, function(req
 
 // Updater API calls
 
-app.get('/api/updaterStatus', optionalJwt, async (req, res) => {
+app.get('/api/updaterStatus', authentication_limiters.settingsRead, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     let status = updaterStatus;
 
     if (status) {
@@ -1528,7 +1537,7 @@ app.get('/api/updaterStatus', optionalJwt, async (req, res) => {
 
 });
 
-app.post('/api/updateServer', optionalJwt, async (req, res) => {
+app.post('/api/updateServer', authentication_limiters.settingsMutation, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     let tag = req.body.tag;
 
     updateServer(tag);
@@ -1834,7 +1843,7 @@ app.post('/api/restoreDBBackup', optionalJwt, async (req, res) => {
 
 // logs management
 
-app.post('/api/logs', optionalJwt, async function(req, res) {
+app.post('/api/logs', authentication_limiters.settingsRead, optionalJwt, user_authorization.requireSettingsPermission, async function(req, res) {
     let logs = null;
     let lines = req.body.lines;
     const logs_path = path.join('appdata', 'logs', 'combined.log')
@@ -1851,7 +1860,7 @@ app.post('/api/logs', optionalJwt, async function(req, res) {
     });
 });
 
-app.post('/api/clearAllLogs', optionalJwt, async function(req, res) {
+app.post('/api/clearAllLogs', authentication_limiters.settingsMutation, optionalJwt, user_authorization.requireSettingsPermission, async function(req, res) {
     const logs_path = path.join('appdata', 'logs', 'combined.log');
     const logs_err_path = path.join('appdata', 'logs', 'error.log');
     let success = false;

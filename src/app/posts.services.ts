@@ -350,6 +350,14 @@ export class PostsService {
         }
     }
 
+    getSettingsConfig() {
+        if (isDevMode()) {
+            return this.http.get('./assets/default.json');
+        } else {
+            return this.http.get<ConfigResponse>(this.path + 'settingsConfig', this.httpOptions);
+        }
+    }
+
     loadAsset(name) {
         return this.http.get(`./assets/${name}`);
     }
