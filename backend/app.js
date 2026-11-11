@@ -38,6 +38,7 @@ const xml_safety = require('./xml-safety');
 const notifications_api = require('./notifications');
 const security_rate_limits = require('./security-rate-limits');
 const security_authorization = require('./security-authorization');
+const user_response = require('./security-user-response');
 
 var app = express();
 const authentication_limiters = security_rate_limits.createAuthenticationLimiters();
@@ -1909,7 +1910,7 @@ app.post('/api/auth/register', authentication_limiters.registration, optionalJwt
     }
   
     res.send({
-      user: new_user
+      user: user_response.toPublicUser(new_user)
     });
 });
 app.post('/api/auth/login'
@@ -1937,11 +1938,11 @@ app.post('/api/auth/adminExists', async (req, res) => {
 });
 
 // user management
-app.post('/api/getUsers', optionalJwt, async (req, res) => {
+app.post('/api/getUsers', authentication_limiters.userRead, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     let users = await db_api.getRecords('users');
-    res.send({users: users});
+    res.send({users: user_response.toPublicUsers(users)});
 });
-app.post('/api/getRoles', optionalJwt, async (req, res) => {
+app.post('/api/getRoles', authentication_limiters.userRead, optionalJwt, user_authorization.requireSettingsPermission, async (req, res) => {
     let roles = await db_api.getRecords('roles');
     res.send({roles: roles});
 });

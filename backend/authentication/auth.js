@@ -9,6 +9,7 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs-extra');
 const path = require('path');
 const user_paths = require('../user-paths');
+const user_response = require('../security-user-response');
 
 var LocalStrategy = require('passport-local').Strategy;
 var LdapStrategy = require('passport-ldapauth');
@@ -231,7 +232,7 @@ exports.generateJWT = function(req, res, next) {
 
 exports.returnAuthResponse = async function(req, res) {
   res.status(200).json({
-    user: req.user,
+    user: user_response.toPublicUser(req.user),
     token: req.token,
     permissions: await exports.userPermissions(req.user.uid),
     available_permissions: CONSTS.AVAILABLE_PERMISSIONS

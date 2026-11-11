@@ -2934,8 +2934,6 @@ components:
           type: string
         name:
           type: string
-        passhash:
-          type: string
         subscriptions:
           type: array
           items:

@@ -8,7 +8,6 @@ import type { UserPermission } from './UserPermission';
 export type User = {
     uid?: string;
     name?: string;
-    passhash?: string;
     subscriptions?: Array<Subscription>;
     created?: number;
     role?: string;
